@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+import "xrescode_extensions_v3.proto";
+
+import "fa_game_msg_const.proto";
+import "fa_game_msg_struct.proto";
+import "fa_camprelation.proto";
+import "fa_grid_info.proto";
+
+package FaGame;
+
+message FaGridConfig {
+
+    FaGridEnum FaGridEnumId = 1;
+
+    FaVector2 Pos = 2;
+}
+
+message FaTerrainInfo {
+    
+    int32 Id = 1;
+
+    FaVector2 Size = 2;
+    
+    string Resource = 10;
+    
+    repeated FaGridConfig GridConfigs = 20;
+}
+
+message FaBornActor {
+
+    int32 ActorId = 1;
+
+    FaVector2 Position = 2;
+
+    FaCamp Camp = 3;
+}
+
+message FaMapInfo {
+
+    int32 Id = 1;
+
+    int32 TerrainInfoId = 2;
+
+    int32 RandomSeed = 3;
+
+    repeated FaBornActor InitedBornActors = 4;
+}
+
+message FaMapInfo_Tbl {
+    option (xrescode.file_path)    = "Maps/DefaultMap.bytes";
+    option (xrescode.indexes) = {
+        fields: "Id"
+
+        index_type: EN_INDEX_KV
+    };
+    option (xrescode.tags)            = "client";
+    option (xrescode.tags)            = "server";
+
+    repeated FaMapInfo items = 1 [(xrescode.excel_row) = true]; // table data array
+};
+
+message FaTerrainInfo_Tbl {
+    option (xrescode.file_path)    = "Terrains/TerrainInfo_0.bytes";
+    option (xrescode.indexes) = {
+        fields: "Id"
+        index_type: EN_INDEX_KV
+    };
+    option (xrescode.tags)            = "client";
+    option (xrescode.tags)            = "server";
+
+    repeated FaTerrainInfo items = 1 [(xrescode.excel_row) = true]; // table data array
+};

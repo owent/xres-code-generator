@@ -102,3 +102,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# editors
+.vscode
+.idea
+
+# python
+*.pyc
+.mako_modules
+__pycache__

@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+import "fa_game_extensions.proto";
+
+package FaGame;
+
+enum FaLevelStateType {
+    LEVELSTATE_INVALID  = 0;
+    LEVELSTATE_INITED   = 1;
+    LEVELSTATE_CHOOSING = 2;
+    LEVELSTATE_GAMING   = 3;
+    LEVELSTATE_FAILED   = 4;
+    LEVELSTATE_SUCCESS  = 5;
+}
+
+enum FaDirection {
+    DIRECTION_NONE      = 0;
+    DIRECTION_UP        = 1;
+    DIRECTION_RIGHT     = 2;
+    DIRECTION_DOWN      = 3;
+    DIRECTION_LEFT      = 4;
+    DIRECTION_FORWARD   = 5;
+    DIRECTION_BACKWARD  = 6;
+}
+
+enum FaCoreErrorCode {
+    EN_FAERR_SUCCESS             = 0 [ (ev_description) = "Success" ];
+    EN_FAERR_CONFIGURE_NOT_FOUND = -101
+                                   [(ev_description) = "配置无效"];
+    EN_FAERR_PARAMETER_INVALID = -102
+                                 [(ev_description) = "参数无效"];
+    EN_FAERR_MALLOC_FAILED = -103
+                             [(ev_description) = "分配失败"];
+
+    EN_FAERR_MSG_DECODE = -151
+                          [(ev_description) = "消息解包失败"];
+    EN_FAERR_MSG_ENCODE = -152
+                          [(ev_description) = "消息打包失败"];
+
+    EN_FAERR_CONTEXT_NOT_INITED = -201
+                                  [(ev_description) = "未初始化"];
+    EN_FAERR_CONTEXT_NOT_STARTED = -202
+                                   [(ev_description) = "未开始"];
+    EN_FAERR_CONTEXT_ALREADY_INITED = -203
+                                      [(ev_description) = "已初始化"];
+    EN_FAERR_CONTEXT_ALREADY_STARTED = -204
+                                       [(ev_description) = "已开始"];
+    EN_FAERR_CONTEXT_ACCESS_DENY_IN_CALLBACK = -205
+                                               [(ev_description) = "不能再回调函数内调用"];
+    EN_FAERR_CONTEXT_EXTEND_MAX_STEPS = -301
+                                        [(ev_description) = "超出最大次数"];
+}

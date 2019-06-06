@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package xrescode;
+
+import "google/protobuf/descriptor.proto";
+
+enum xrescode_index_type {
+    EN_INDEX_KV = 0;
+    EN_INDEX_KL = 1;
+    EN_INDEX_IV = 2;
+    EN_INDEX_IL = 3;
+}
+
+message xrescode_index {
+    string              name         = 1;
+    repeated string     fields       = 2;
+    xrescode_index_type index_type   = 3;
+    string              file_mapping = 4;
+}
+
+extend google.protobuf.MessageOptions {
+    string                  file_list    = 1351;
+    string                  file_path = 1352;
+    repeated xrescode_index indexes      = 1353;
+    repeated string         tags         = 1354;
+    string                  class_name   = 1355;
+}
+
+extend google.protobuf.FieldOptions {
+    bool excel_row = 1351;
+}

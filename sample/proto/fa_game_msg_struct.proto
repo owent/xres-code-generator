@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+import "fa_game_msg_const.proto";
+
+package FaGame;
+
+message FaVector2 {
+    int32 x = 1;
+    int32 y = 2;
+}
+
+message FaProtoDataObject {
+    uint32 object_id = 1;
+    int32  type_id   = 2;
+}
+
+message FaMovePath {
+    repeated FaVector2 path_list = 1;
+    FaVector2 target_grid = 2;
+}

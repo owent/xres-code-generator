@@ -114,6 +114,12 @@ namespace excel {
             return 0;
         }
 
+        config_group_ptr_t cfg_group = get_current_config_group();
+        if (!cfg_group) {
+            WLOGERROR("mutable config group failed");
+            return -2;
+        }
+
         // 触发加载所有表
         int res = 0;
 % for pb_msg in pb_set.generate_message:
@@ -127,15 +133,6 @@ namespace excel {
 % endfor
 
         return ret;
-    }
-
-    void config_manager::add_config_set(config_set_base* cs) {
-        if (NULL == cs) {
-            WLOGERROR("add null config set is not allowed.");
-            return;
-        }
-
-        return config_set_list_.push_back(cs);
     }
 
     config_manager::read_buffer_func_t config_manager::get_buffer_loader() const { 
@@ -162,7 +159,7 @@ namespace excel {
         read_version_handle_ = fn; 
     }
 
-    config_manager::config_group_ptr_t config_manager::get_current_config_group() const {
+    config_manager::config_group_ptr_t config_manager::get_current_config_group() {
         {
             ::util::lock::read_lock_holder rlh(config_group_lock_);
             if (likely(!config_group_list_.empty())) {

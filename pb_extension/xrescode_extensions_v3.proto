@@ -12,20 +12,19 @@ enum xrescode_index_type {
 }
 
 message xrescode_index {
-    string              name         = 1;
-    repeated string     fields       = 2;
-    xrescode_index_type index_type   = 3;
-    string              file_mapping = 4;
+    string   name                       = 1;
+    repeated string     fields          = 2;
+    xrescode_index_type index_type      = 3;
+    string              file_mapping    = 4;
+    bool                allow_not_found = 5;
 }
 
 extend google.protobuf.MessageOptions {
-    string                  file_list    = 1351;
-    string                  file_path = 1352;
-    repeated xrescode_index indexes      = 1353;
-    repeated string         tags         = 1354;
-    string                  class_name   = 1355;
+    string   file_list              = 1351;
+    string   file_path              = 1352;
+    repeated xrescode_index indexes = 1353;
+    repeated string tags            = 1354;
+    string          class_name      = 1355;
 }
 
-extend google.protobuf.FieldOptions {
-    bool excel_row = 1351;
-}
+extend google.protobuf.FieldOptions { bool excel_row = 1351; }

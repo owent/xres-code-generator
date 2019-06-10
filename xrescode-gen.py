@@ -78,6 +78,12 @@ if __name__ == '__main__':
         help="just generate message for tags",
         dest="tags",
         default=[])
+    parser.add_option(
+        "--pb-include-prefix",
+        action="store",
+        help="set include prefix of generated protobuf header",
+        dest="pb_include_prefix",
+        default="")
 
     (options, left_args) = parser.parse_args()
 
@@ -103,7 +109,8 @@ if __name__ == '__main__':
 
     # parse pb file
     from pb_loader import PbDescSet
-    pb_set = PbDescSet(options.pb, tags=options.tags, msg_prefix=options.msg_prefix, proto_v3=options.proto_v3)
+    pb_set = PbDescSet(options.pb, tags=options.tags, msg_prefix=options.msg_prefix, 
+        proto_v3=options.proto_v3, pb_include_prefix=options.pb_include_prefix)
 
     # render templates
     from mako.template import Template

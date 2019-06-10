@@ -2,13 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 
 from google.protobuf import descriptor_pb2 as pb2
 import xrescode_extensions_v3_pb2 as ext
-
-def PbMsgGetPbFieldFn(self, field):
-    return "{0}()".format(field.name.lower())
-
 
 pb_msg_cpp_type_map = {
     pb2.FieldDescriptorProto.TYPE_BOOL: "bool",
@@ -29,11 +26,93 @@ pb_msg_cpp_type_map = {
     pb2.FieldDescriptorProto.TYPE_UINT64: "uint64_t"
 }
 
+pb_msg_cpp_type_is_signed_map = {
+    pb2.FieldDescriptorProto.TYPE_BOOL: False,
+    pb2.FieldDescriptorProto.TYPE_BYTES: False,
+    pb2.FieldDescriptorProto.TYPE_DOUBLE: True,
+    pb2.FieldDescriptorProto.TYPE_ENUM: True,
+    pb2.FieldDescriptorProto.TYPE_FIXED32: True,
+    pb2.FieldDescriptorProto.TYPE_FIXED64: True,
+    pb2.FieldDescriptorProto.TYPE_FLOAT: True,
+    pb2.FieldDescriptorProto.TYPE_INT32: True,
+    pb2.FieldDescriptorProto.TYPE_INT64: True,
+    pb2.FieldDescriptorProto.TYPE_SFIXED32: True,
+    pb2.FieldDescriptorProto.TYPE_SFIXED64: True,
+    pb2.FieldDescriptorProto.TYPE_SINT32: True,
+    pb2.FieldDescriptorProto.TYPE_SINT64: True,
+    pb2.FieldDescriptorProto.TYPE_STRING: False,
+    pb2.FieldDescriptorProto.TYPE_UINT32: False,
+    pb2.FieldDescriptorProto.TYPE_UINT64: False,
+    pb2.FieldDescriptorProto.TYPE_MESSAGE: False
+}
+
+pb_msg_cpp_fmt_map = {
+    pb2.FieldDescriptorProto.TYPE_BOOL: "%s",
+    pb2.FieldDescriptorProto.TYPE_BYTES: "%s",
+    pb2.FieldDescriptorProto.TYPE_DOUBLE: "%lf",
+    pb2.FieldDescriptorProto.TYPE_ENUM: "%d",
+    pb2.FieldDescriptorProto.TYPE_FIXED32: "%d",
+    pb2.FieldDescriptorProto.TYPE_FIXED64: "%lld",
+    pb2.FieldDescriptorProto.TYPE_FLOAT: "%f",
+    pb2.FieldDescriptorProto.TYPE_INT32: "%d",
+    pb2.FieldDescriptorProto.TYPE_INT64: "%lld",
+    pb2.FieldDescriptorProto.TYPE_SFIXED32: "%d",
+    pb2.FieldDescriptorProto.TYPE_SFIXED64: "%lld",
+    pb2.FieldDescriptorProto.TYPE_SINT32: "%d",
+    pb2.FieldDescriptorProto.TYPE_SINT64: "%lld",
+    pb2.FieldDescriptorProto.TYPE_STRING: "%s",
+    pb2.FieldDescriptorProto.TYPE_UINT32: "%u",
+    pb2.FieldDescriptorProto.TYPE_UINT64: "%u",
+    pb2.FieldDescriptorProto.TYPE_MESSAGE: "%s"
+}
+
+pb_msg_cpp_fmt_val_map = {
+    pb2.FieldDescriptorProto.TYPE_BOOL: "({0}?\"true\": \"false\")",
+    pb2.FieldDescriptorProto.TYPE_BYTES: "\"BYTES: {0}\"",
+    pb2.FieldDescriptorProto.TYPE_DOUBLE: "{0}",
+    pb2.FieldDescriptorProto.TYPE_ENUM: "static_cast<int>({0})",
+    pb2.FieldDescriptorProto.TYPE_FIXED32: "static_cast<int>({0})",
+    pb2.FieldDescriptorProto.TYPE_FIXED64: "static_cast<long long>({0})",
+    pb2.FieldDescriptorProto.TYPE_FLOAT: "{0}",
+    pb2.FieldDescriptorProto.TYPE_INT32: "static_cast<int>({0})",
+    pb2.FieldDescriptorProto.TYPE_INT64: "static_cast<long long>({0})",
+    pb2.FieldDescriptorProto.TYPE_SFIXED32: "static_cast<int>({0})",
+    pb2.FieldDescriptorProto.TYPE_SFIXED64: "static_cast<long long>({0})",
+    pb2.FieldDescriptorProto.TYPE_SINT32: "static_cast<int>({0})",
+    pb2.FieldDescriptorProto.TYPE_SINT64: "static_cast<long long>({0})",
+    pb2.FieldDescriptorProto.TYPE_STRING: "{0}.c_str()",
+    pb2.FieldDescriptorProto.TYPE_UINT32: "static_cast<unsigned int>({0})",
+    pb2.FieldDescriptorProto.TYPE_UINT64: "static_cast<unsgined long long>({0})",
+    pb2.FieldDescriptorProto.TYPE_MESSAGE: "\"MESSAGE: {0}\""
+}
+
+def PbMsgGetPbFieldFn(field):
+    return "{0}()".format(field.name.lower())
+
+
 def PbMsgGetPbFieldCppType(field):
     global pb_msg_cpp_type_map
     if field.type in pb_msg_cpp_type_map:
         return pb_msg_cpp_type_map[field.type]
     return field.type_name
+
+def PbMsgPbFieldisSigned(field):
+    global pb_msg_cpp_type_is_signed_map
+    if field.type in pb_msg_cpp_type_is_signed_map:
+        return pb_msg_cpp_type_is_signed_map[field.type]
+    return False
+
+def PbMsgPbFieldFmt(field):
+    global pb_msg_cpp_fmt_map
+    if field.type in pb_msg_cpp_fmt_map:
+        return pb_msg_cpp_fmt_map[field.type]
+    return "%s"
+
+def PbMsgPbFieldFmtValue(field, input):
+    global pb_msg_cpp_fmt_val_map
+    if field.type in pb_msg_cpp_fmt_val_map:
+        return pb_msg_cpp_fmt_val_map[field.type].format(input)
+    return "\"UNKNOWN TYPE: {0}\"".format(input)
 
 class PbMsgIndexType:
     KV = ext.EN_INDEX_KV
@@ -47,10 +126,12 @@ class PbMsgIndex:
         if pb_ext_index.name:
             self.name = pb_ext_index.name
         else:
-            self.name = "_".join(pb_ext_index.fields)
+            self.name = "_".join(pb_ext_index.fields).lower()
 
         self.file_mapping = pb_ext_index.file_mapping
-        #self.index_type
+        self.allow_not_found = pb_ext_index.allow_not_found
+        self.get_file_expression = None
+        # self.index_type
         self.fields = []
         for fd in pb_ext_index.fields:
             pb_fd = None
@@ -78,7 +159,13 @@ class PbMsgIndex:
             self.index_type = PbMsgIndexType.KV
 
     def is_valid(self):
-        return len(self.fields) > 0
+        if len(self.fields) <= 0:
+            return False
+        if self.index_type == PbMsgIndexType.IV or self.index_type == PbMsgIndexType.IL:
+            if len(self.fields) != 1:
+                print('[ERROR] index {0} invalid, vector index only can has only 1 integer key field'.format(self.name))
+                return False
+        return True
 
     def is_list(self):
         return self.index_type == PbMsgIndexType.KL or self.index_type == PbMsgIndexType.IL
@@ -92,10 +179,78 @@ class PbMsgIndex:
             decls.append("{0} {1}".format(PbMsgGetPbFieldCppType(fd), fd.name))
         return ", ".join(decls)
 
+    def get_key_params(self):
+        decls = []
+        for fd in self.fields:
+            decls.append(fd.name)
+        return ", ".join(decls)
+
+    def get_load_file_code(self, var_name):
+        code_lines = []
+        code_lines.append("std::string {0};".format(var_name))
+        code_lines.append("do {")
+        
+        if not self.get_file_expression:
+            fileds_mapping = dict()
+            for fd in self.fields:
+                fileds_mapping[fd.name.lower()] = fd.name
+            self.get_file_expression = []
+            self.get_file_expression.append("    std::stringstream {0}_generated_file_path;".format(self.name))
+            if self.file_mapping:
+                next_index = 0
+                for mo in re.finditer('\{\s*([\w_]+)s*\}', self.file_mapping):
+                    key_var_name = mo.group(1).lower()
+                    if key_var_name not in fileds_mapping:
+                        print("[ERROR] {0} in file_mapping is not exists in key fields of index {1}", mo.group(1), self.name)
+                    else:
+                        if next_index < mo.start():
+                            self.get_file_expression.append(
+                                "    {0}_generated_file_path<< \"{1}\";".format(self.name, self.file_mapping[next_index:mo.start()])
+                            )
+                        self.get_file_expression.append(
+                            "    {0}_generated_file_path<< {1};".format(self.name, fileds_mapping[key_var_name])
+                        )
+
+                    next_index = mo.end()
+                if next_index < len(self.file_mapping):
+                    self.get_file_expression.append(
+                        "    {0}_generated_file_path<< \"{1}\";".format(self.name, self.file_mapping[next_index:])
+                    )
+            else:
+                self.get_file_expression.append("    {0}_generated_file_path << \"{0}\";".format(self.name))
+        code_lines.extend(self.get_file_expression)
+        code_lines.append("    {0} = {1}_generated_file_path.str();".format(var_name, self.name))
+        code_lines.append("} while (false);")
+        return code_lines
+
+    def get_key_params_fmt_value_list(self):
+        decls = []
+        for fd in self.fields:
+            decls.append(PbMsgPbFieldFmtValue(fd, fd.name))
+        return ", ".join(decls)
+
     def get_key_type_list(self):
         decls = []
         for fd in self.fields:
             decls.append(PbMsgGetPbFieldCppType(fd))
+        return ", ".join(decls)
+
+    def get_key_value_list(self, prefix=''):
+        decls = []
+        for fd in self.fields:
+            decls.append("{0}{1}".format(prefix, PbMsgGetPbFieldFn(fd)))
+        return ", ".join(decls)
+
+    def get_key_fmt_list(self):
+        decls = []
+        for fd in self.fields:
+            decls.append(PbMsgPbFieldFmt(fd))
+        return ", ".join(decls)
+
+    def get_key_fmt_value_list(self, prefix=''):
+        decls = []
+        for fd in self.fields:
+            decls.append(PbMsgPbFieldFmtValue(fd, "{0}{1}".format(prefix, PbMsgGetPbFieldFn(fd))))
         return ", ".join(decls)
 
 class PbMsgCodeExt:
@@ -145,6 +300,7 @@ class PbMsg:
         self.cpp_if_guard_name = None
 
     def setup_code(self, fds):
+        fallback_items_field = None
         for fd in self.pb_msg.field:
             if fd.options.HasExtension(ext.excel_row) and fd.options.Extensions[ext.excel_row]:
                 inner_msg = fds.get_msg_by_type(fd.type_name)
@@ -156,15 +312,31 @@ class PbMsg:
                         break
                 else:
                     print('[ERROR] excel_row message {0} not found for {1}'.format(fd.type_name, self.full_name))
+            elif fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
+                if fallback_items_field is None:
+                    fallback_items_field = fd
+                else:
+                    print('[WARNING] message {0} has no field with excel_row and more than 1 fields is repeated message, we will only use the first one'.format(self.full_name))
+
+        if self.code is None and fallback_items_field is not None:
+            inner_msg = fds.get_msg_by_type(fallback_items_field.type_name)
+            if inner_msg is not None:
+                code_ext = PbMsgCodeExt(self.pb_msg, inner_msg.pb_msg)
+                if code_ext.is_valid():
+                    self.code = code_ext
+                    self.code_field = fallback_items_field
+            else:
+                print('[ERROR] fallback item message {0} not found for {1}'.format(fallback_items_field.type_name, self.full_name))
 
         if self.code is None:
             if self.pb_msg.options.HasExtension(ext.file_list):
-                print('[WARNING] message {0} has file_list but withou excel_row, ignored'.format(self.full_name))
+                print('[WARNING] message {0} has file_list but without valid excel_row or item field, ignored'.format(self.full_name))
             if self.pb_msg.options.HasExtension(ext.file_path):
-                print('[WARNING] message {0} has file_path but withou excel_row, ignored'.format(self.full_name))
+                print('[WARNING] message {0} has file_path but without valid excel_row or item field, ignored'.format(self.full_name))
         else:
             if self.pb_msg.options.HasExtension(ext.file_list) and self.pb_msg.options.HasExtension(ext.file_path):
                 print('[WARNING] message {0} has both file_list and file_path, should only has one'.format(self.full_name))
+
     def has_code(self):
         return self.code is not None
 
@@ -180,7 +352,7 @@ class PbMsg:
     def get_pb_outer_class_name(self):
         if self.pb_outer_class_name is not None:
             return self.pb_outer_class_name
-        self.pb_outer_class_name = self.cpp_package_prefix + "::" + self.pb_msg.name
+        self.pb_outer_class_name = "::" + self.cpp_package_prefix + "::" + self.pb_msg.name
         return self.pb_outer_class_name
 
     def get_pb_inner_class_name(self):
@@ -189,7 +361,7 @@ class PbMsg:
 
         if self.code is None:
             return ""
-        self.pb_inner_class_name = self.cpp_package_prefix + "::" + self.code.inner_msg.name
+        self.pb_inner_class_name =  "::" + self.cpp_package_prefix + "::" + self.code.inner_msg.name
         return self.pb_inner_class_name
 
     def get_cpp_class_name(self):
@@ -207,6 +379,32 @@ class PbMsg:
 
     def get_cpp_class_full_name(self):
         return self.cpp_package_prefix + "::" + self.get_cpp_class_name()
+
+    def get_cpp_namespace_decl_begin(self):
+        if not self.cpp_package_prefix:
+            return ""
+
+        package_names = self.cpp_package_prefix.strip().split("::")
+        if not package_names:
+            return ""
+
+        ns_ls = []
+        for ns in package_names:
+            ns_ls.append("namespace {0} {1}".format(ns, "{"))
+        return " ".join(ns_ls)
+
+    def get_cpp_namespace_decl_end(self):
+        if not self.cpp_package_prefix:
+            return ""
+
+        package_names = self.cpp_package_prefix.strip().split("::")
+        if not package_names:
+            return ""
+
+        ns_ls = []
+        for ns in package_names:
+            ns_ls.append("{0} /*{1}*/".format("}", ns))
+        return " ".join(ns_ls)
 
     def get_cpp_if_guard_name(self):
         if self.cpp_if_guard_name is not None:
@@ -233,9 +431,10 @@ class PbMsg:
         return "{0}.cpp".format(self.get_cpp_class_name())
 
 class PbDescSet:
-    def __init__(self, pb_file_path, tags=[], msg_prefix='', proto_v3 = False):
+    def __init__(self, pb_file_path, tags=[], msg_prefix='', proto_v3 = False, pb_include_prefix=""):
         self.pb_file = pb_file_path
         self.proto_v3 = proto_v3
+        self.pb_include_prefix = pb_include_prefix
         self.pb_fds = pb2.FileDescriptorSet.FromString(open(pb_file_path, 'rb').read())
         self.generate_message = []
         self.pb_msgs = dict()

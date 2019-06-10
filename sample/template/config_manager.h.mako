@@ -24,23 +24,22 @@ import time
 #include <lock/spin_rw_lock.h>
 
 % for pb_msg in pb_set.generate_message:
-#include <${pb_msg.get_cpp_header_path()}>
+#include "${pb_msg.get_cpp_header_path()}"
 % endfor
 
 namespace excel {
+    struct config_group_t {
+        std::string version;
+
+% for pb_msg in pb_set.generate_message:
+        ${pb_msg.get_cpp_class_full_name()} ${pb_msg.get_cpp_public_var_name()} ;
+% endfor
+    } ;
+
     class config_manager : public util::design_pattern::singleton<config_manager> {
     public:
         typedef std::function<bool(std::string&, const char* path)> read_buffer_func_t;
         typedef std::function<bool(std::string&)> read_version_func_t;
-
-        typedef struct {
-            std::string version;
-
-% for pb_msg in pb_set.generate_message:
-            ${pb_msg.get_cpp_class_full_name()} ${pb_msg.get_cpp_public_var_name()} ;
-% endfor
-
-        } config_group_t;
         typedef std::shared_ptr<config_group_t> config_group_ptr_t;
 
     protected:
@@ -70,7 +69,7 @@ namespace excel {
         read_version_func_t get_version_loader() const;
         void set_version_loader(read_version_func_t fn);
 
-        config_group_ptr_t get_current_config_group() const;
+        config_group_ptr_t get_current_config_group();
     private:
         static bool default_buffer_loader(std::string&, const char* path);
         static bool default_version_loader(std::string&);

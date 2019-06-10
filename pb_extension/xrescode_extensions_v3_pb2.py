@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='xrescode',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1cxrescode_extensions_v3.proto\x12\x08xrescode\x1a google/protobuf/descriptor.proto\"w\n\x0exrescode_index\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x66ields\x18\x02 \x03(\t\x12\x31\n\nindex_type\x18\x03 \x01(\x0e\x32\x1d.xrescode.xrescode_index_type\x12\x14\n\x0c\x66ile_mapping\x18\x04 \x01(\t*Y\n\x13xrescode_index_type\x12\x0f\n\x0b\x45N_INDEX_KV\x10\x00\x12\x0f\n\x0b\x45N_INDEX_KL\x10\x01\x12\x0f\n\x0b\x45N_INDEX_IV\x10\x02\x12\x0f\n\x0b\x45N_INDEX_IL\x10\x03:3\n\tfile_list\x12\x1f.google.protobuf.MessageOptions\x18\xc7\n \x01(\t:3\n\tfile_path\x12\x1f.google.protobuf.MessageOptions\x18\xc8\n \x01(\t:K\n\x07indexes\x12\x1f.google.protobuf.MessageOptions\x18\xc9\n \x03(\x0b\x32\x18.xrescode.xrescode_index:.\n\x04tags\x12\x1f.google.protobuf.MessageOptions\x18\xca\n \x03(\t:4\n\nclass_name\x12\x1f.google.protobuf.MessageOptions\x18\xcb\n \x01(\t:1\n\texcel_row\x12\x1d.google.protobuf.FieldOptions\x18\xc7\n \x01(\x08\x62\x06proto3')
+  serialized_pb=_b('\n\x1cxrescode_extensions_v3.proto\x12\x08xrescode\x1a google/protobuf/descriptor.proto\"\x90\x01\n\x0exrescode_index\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x66ields\x18\x02 \x03(\t\x12\x31\n\nindex_type\x18\x03 \x01(\x0e\x32\x1d.xrescode.xrescode_index_type\x12\x14\n\x0c\x66ile_mapping\x18\x04 \x01(\t\x12\x17\n\x0f\x61llow_not_found\x18\x05 \x01(\x08*Y\n\x13xrescode_index_type\x12\x0f\n\x0b\x45N_INDEX_KV\x10\x00\x12\x0f\n\x0b\x45N_INDEX_KL\x10\x01\x12\x0f\n\x0b\x45N_INDEX_IV\x10\x02\x12\x0f\n\x0b\x45N_INDEX_IL\x10\x03:3\n\tfile_list\x12\x1f.google.protobuf.MessageOptions\x18\xc7\n \x01(\t:3\n\tfile_path\x12\x1f.google.protobuf.MessageOptions\x18\xc8\n \x01(\t:K\n\x07indexes\x12\x1f.google.protobuf.MessageOptions\x18\xc9\n \x03(\x0b\x32\x18.xrescode.xrescode_index:.\n\x04tags\x12\x1f.google.protobuf.MessageOptions\x18\xca\n \x03(\t:4\n\nclass_name\x12\x1f.google.protobuf.MessageOptions\x18\xcb\n \x01(\t:1\n\texcel_row\x12\x1d.google.protobuf.FieldOptions\x18\xc7\n \x01(\x08\x62\x06proto3')
   ,
   dependencies=[google_dot_protobuf_dot_descriptor__pb2.DESCRIPTOR,])
 
@@ -51,8 +51,8 @@ _XRESCODE_INDEX_TYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=197,
-  serialized_end=286,
+  serialized_start=223,
+  serialized_end=312,
 )
 _sym_db.RegisterEnumDescriptor(_XRESCODE_INDEX_TYPE)
 
@@ -147,6 +147,13 @@ _XRESCODE_INDEX = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='allow_not_found', full_name='xrescode.xrescode_index.allow_not_found', index=4,
+      number=5, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -159,8 +166,8 @@ _XRESCODE_INDEX = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=76,
-  serialized_end=195,
+  serialized_start=77,
+  serialized_end=221,
 )
 
 _XRESCODE_INDEX.fields_by_name['index_type'].enum_type = _XRESCODE_INDEX_TYPE

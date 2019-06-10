@@ -300,7 +300,8 @@ class PbMsg:
         self.cpp_if_guard_name = None
 
     def setup_code(self, fds):
-        fallback_items_field = None
+        fallback_items_field = []
+        using_fallback_items = True
         for fd in self.pb_msg.field:
             if fd.options.HasExtension(ext.excel_row) and fd.options.Extensions[ext.excel_row]:
                 inner_msg = fds.get_msg_by_type(fd.type_name)
@@ -309,24 +310,24 @@ class PbMsg:
                     if code_ext.is_valid():
                         self.code = code_ext
                         self.code_field = fd
+                        using_fallback_items = False
                         break
                 else:
                     print('[ERROR] excel_row message {0} not found for {1}'.format(fd.type_name, self.full_name))
             elif fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
                 if fallback_items_field is None:
-                    fallback_items_field = fd
-                else:
-                    print('[WARNING] message {0} has no field with excel_row and more than 1 fields is repeated message, we will only use the first one'.format(self.full_name))
+                    fallback_items_field.append(fd)
 
-        if self.code is None and fallback_items_field is not None:
-            inner_msg = fds.get_msg_by_type(fallback_items_field.type_name)
+        if self.code is None and fallback_items_field:
+            fd = fallback_items_field[0]
+            inner_msg = fds.get_msg_by_type(fd.type_name)
             if inner_msg is not None:
                 code_ext = PbMsgCodeExt(self.pb_msg, inner_msg.pb_msg)
                 if code_ext.is_valid():
                     self.code = code_ext
-                    self.code_field = fallback_items_field
+                    self.code_field = fd
             else:
-                print('[ERROR] fallback item message {0} not found for {1}'.format(fallback_items_field.type_name, self.full_name))
+                print('[ERROR] fallback item message {0} not found for {1}'.format(fd.type_name, self.full_name))
 
         if self.code is None:
             if self.pb_msg.options.HasExtension(ext.file_list):
@@ -336,6 +337,8 @@ class PbMsg:
         else:
             if self.pb_msg.options.HasExtension(ext.file_list) and self.pb_msg.options.HasExtension(ext.file_path):
                 print('[WARNING] message {0} has both file_list and file_path, should only has one'.format(self.full_name))
+            if using_fallback_items and len(fallback_items_field) > 0:
+                print('[WARNING] message {0} has no field with excel_row and more than 1 fields is repeated message, we will only use the first one'.format(self.full_name))
 
     def has_code(self):
         return self.code is not None

@@ -23,6 +23,8 @@ import time
 
 namespace excel {
     config_manager::config_manager() : 
+        override_same_version_(false),
+        max_group_number_(8),
         read_file_handle_(config_manager::default_buffer_loader), 
         read_version_handle_(default_version_loader) {}
 
@@ -32,7 +34,7 @@ namespace excel {
         return 0;
     }
 
-    int config_manager::init_group() {
+    int config_manager::init_new_group() {
         std::string version;
         {
             ::util::lock::read_lock_holder rlh(handle_lock_);
@@ -55,6 +57,11 @@ namespace excel {
             }
 
             if (!config_group_list_.back()) {
+                break;
+            }
+
+            // 如果强制覆盖新版本号则不用检查版本号
+            if (override_same_version_) {
                 break;
             }
 
@@ -88,6 +95,18 @@ namespace excel {
         if (ret >= 0) {
             ::util::lock::write_lock_holder wlh(config_group_lock_);
             config_group_list_.push_back(cfg_group);
+            if (on_group_created_ && cfg_group) {
+                on_group_created_(cfg_group);
+            }
+
+            if (config_group_list_.size() > 1 && config_group_list_.size() > max_group_number_) {
+                config_group_ptr_t first_group = config_group_list_.front();
+                config_group_list_.pop_front();
+
+                if (on_group_destroyed_ && first_group) {
+                    on_group_destroyed_(first_group);
+                }
+            }
         }
 
         return ret;
@@ -105,10 +124,10 @@ namespace excel {
     }
 
     int config_manager::reload() {
-        return init_group();
+        return init_new_group();
     }
 
-    int config_manager::reload_all() {
+    int config_manager::reload_all(bool del_when_failed) {
         int ret = reload();
         if (0 != ret) {
             return 0;
@@ -131,6 +150,20 @@ namespace excel {
             ret += res;
         }
 % endfor
+
+        if (del_when_failed && ret < 0) {
+            ::util::lock::write_lock_holder wlh(config_group_lock_);
+            config_group_list_.pop_back();
+
+            if (on_group_destroyed_ && cfg_group) {
+                on_group_destroyed_(cfg_group);
+            }
+            return ret;
+        }
+
+        if (on_group_reload_all_ && cfg_group) {
+            on_group_reload_all_(cfg_group);
+        }
 
         return ret;
     }
@@ -167,7 +200,7 @@ namespace excel {
             }
         }
 
-        if (0 == init_group()) {
+        if (0 == init_new_group()) {
             ::util::lock::read_lock_holder rlh(config_group_lock_);
             if (likely(!config_group_list_.empty())) {
                 return *config_group_list_.rbegin();

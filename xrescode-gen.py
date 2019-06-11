@@ -84,6 +84,12 @@ if __name__ == '__main__':
         help="set include prefix of generated protobuf header",
         dest="pb_include_prefix",
         default="")
+    parser.add_option(
+        "--print-output-file",
+        action="store_true",
+        help="print output file list but generate it",
+        dest="print_output_file",
+        default=False)
 
     (options, left_args) = parser.parse_args()
 
@@ -176,17 +182,20 @@ if __name__ == '__main__':
             if os.path.exists(output_name):
                 os.chmod(output_name, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO)
 
-            print("Genarate template from {0} to {1}".format(source_template, output_name))
-            codecs.open(output_name, mode='w', encoding='utf8').write(
-                source_tmpl.render(
-                    pb_set=pb_set,
-                    pb_msg=pb_msg,
-                    output_dir=output_dir,
-                    output_file=output_name,
-                    input_file=source_template,
-                    msg_prefix=options.msg_prefix
+            if options.print_output_file:
+                print(output_name)
+            else:
+                print("Genarate template from {0} to {1}".format(source_template, output_name))
+                codecs.open(output_name, mode='w', encoding='utf8').write(
+                    source_tmpl.render(
+                        pb_set=pb_set,
+                        pb_msg=pb_msg,
+                        output_dir=output_dir,
+                        output_file=output_name,
+                        input_file=source_template,
+                        msg_prefix=options.msg_prefix
+                    )
                 )
-            )
 
     gen_source(options.global_template, None)
     for pb_msg in pb_set.generate_message:

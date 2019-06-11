@@ -71,13 +71,17 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
         typedef item_ptr_type ${code_index.name}_value_type;
         ${code_index.name}_value_type get_by_${code_index.name}(${code_index.get_key_decl()});
 % endif
+% if code_index.is_vector():
+        typedef std::vector<${code_index.name}_value_type> ${code_index.name}_container_type;
+% else:
+        typedef std::map<std::tuple<${code_index.get_key_type_list()}>, ${code_index.name}_value_type> ${code_index.name}_container_type;
+% endif
+        const ${code_index.name}_container_type& get_all_of_${code_index.name}() const;
 
     private:
 % if code_index.is_vector():
-        typedef std::vector<${code_index.name}_value_type> ${code_index.name}_container_type;
         ${code_index.name}_container_type ${code_index.name}_data_;
 % else:
-        typedef std::map<std::tuple<${code_index.get_key_type_list()}>, ${code_index.name}_value_type> ${code_index.name}_container_type;
         ${code_index.name}_container_type ${code_index.name}_data_;
 % endif
 

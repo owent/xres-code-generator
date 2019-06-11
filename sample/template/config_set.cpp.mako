@@ -225,6 +225,8 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 % endfor
     }
 
+% for code_index in pb_msg.code.indexes:
+// ------------------- index: ${code_index.name} APIs -------------------
 % if code_index.is_list():
     const ${pb_msg_class_name}::${code_index.name}_value_type* ${pb_msg_class_name}::get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
         ::util::lock::read_lock_holder rlh(load_file_lock_);
@@ -390,6 +392,11 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 % endif
     }
 % endif
+
+    const ${pb_msg_class_name}::${code_index.name}_container_type& ${pb_msg_class_name}::get_all_of_${code_index.name}() const {
+        return ${code_index.name}_data_;
+    }
+% endfor
 
 ${pb_msg.get_cpp_namespace_decl_end()}
 }

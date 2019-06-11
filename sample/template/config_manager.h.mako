@@ -23,9 +23,26 @@ import time
 
 #include <lock/spin_rw_lock.h>
 
+#if defined(_MSC_VER) && ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
+
+#ifdef max
+#undef max
+#endif
+
+#ifdef min
+#undef min
+#endif
+
 % for pb_msg in pb_set.generate_message:
 #include "${pb_msg.get_cpp_header_path()}"
 % endfor
+
+#if defined(_MSC_VER) && ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+#pragma warning(pop)
+#endif
 
 namespace excel {
     struct config_group_t {
@@ -41,6 +58,7 @@ namespace excel {
         typedef std::function<bool(std::string&, const char* path)> read_buffer_func_t;
         typedef std::function<bool(std::string&)> read_version_func_t;
         typedef std::shared_ptr<config_group_t> config_group_ptr_t;
+        typedef std::function<void(config_group_ptr_t)> on_load_func_t;
 
     protected:
         config_manager();
@@ -49,7 +67,7 @@ namespace excel {
     public:
         int init();
 
-        int init_group();
+        int init_new_group();
 
         bool load_file_data(std::string& write_to, const std::string& file_path);
 
@@ -60,8 +78,9 @@ namespace excel {
 
         /**
          * @brief 执行reload加载所有资源
+         * @param del_when_failed 如果失败是否删除分组
          */
-        int reload_all();
+        int reload_all(bool del_when_failed = false);
 
         read_buffer_func_t get_buffer_loader() const;
         void set_buffer_loader(read_buffer_func_t fn);
@@ -70,11 +89,32 @@ namespace excel {
         void set_version_loader(read_version_func_t fn);
 
         config_group_ptr_t get_current_config_group();
+
+        inline void set_override_same_version(bool v) { override_same_version_ = v; }
+        inline bool get_override_same_version() const { return override_same_version_; }
+
+        inline void set_group_number(size_t sz) { max_group_number_ = sz; }
+        inline size_t get_group_number() const { return max_group_number_; }
+
+        inline void set_on_group_created(on_load_func_t func) { on_group_created_ = func; }
+        inline const on_load_func_t& get_n_group_created() const { return on_group_created_; }
+
+        inline void set_on_group_reload_all(on_load_func_t func) { on_group_reload_all_ = func; }
+        inline const on_load_func_t& get_on_group_reload_all() const { return on_group_reload_all_; }
+
+        inline void set_on_group_destroyed(on_load_func_t func) { on_group_destroyed_ = func; }
+        inline const on_load_func_t& get_on_group_destroyed() const { return on_group_destroyed_; }
     private:
         static bool default_buffer_loader(std::string&, const char* path);
         static bool default_version_loader(std::string&);
 
     private:
+        bool override_same_version_;
+        size_t max_group_number_;
+        on_load_func_t on_group_created_;
+        on_load_func_t on_group_reload_all_;
+        on_load_func_t on_group_destroyed_;
+
         read_buffer_func_t read_file_handle_;
         read_version_func_t read_version_handle_;
         mutable ::util::lock::spin_rw_lock handle_lock_;

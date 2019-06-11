@@ -315,8 +315,7 @@ class PbMsg:
                 else:
                     print('[ERROR] excel_row message {0} not found for {1}'.format(fd.type_name, self.full_name))
             elif fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
-                if fallback_items_field is None:
-                    fallback_items_field.append(fd)
+                fallback_items_field.append(fd)
 
         if self.code is None and fallback_items_field:
             fd = fallback_items_field[0]
@@ -337,7 +336,7 @@ class PbMsg:
         else:
             if self.pb_msg.options.HasExtension(ext.file_list) and self.pb_msg.options.HasExtension(ext.file_path):
                 print('[WARNING] message {0} has both file_list and file_path, should only has one'.format(self.full_name))
-            if using_fallback_items and len(fallback_items_field) > 0:
+            if using_fallback_items and len(fallback_items_field) > 1:
                 print('[WARNING] message {0} has no field with excel_row and more than 1 fields is repeated message, we will only use the first one'.format(self.full_name))
 
     def has_code(self):

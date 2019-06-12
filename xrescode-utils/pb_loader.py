@@ -11,7 +11,7 @@ pb_msg_cpp_type_map = {
     pb2.FieldDescriptorProto.TYPE_BOOL: "bool",
     pb2.FieldDescriptorProto.TYPE_BYTES: "std::string",
     pb2.FieldDescriptorProto.TYPE_DOUBLE: "double",
-    pb2.FieldDescriptorProto.TYPE_ENUM: "int",
+    pb2.FieldDescriptorProto.TYPE_ENUM: "int32_t",
     pb2.FieldDescriptorProto.TYPE_FIXED32: "int32_t",
     pb2.FieldDescriptorProto.TYPE_FIXED64: "int64_t",
     pb2.FieldDescriptorProto.TYPE_FLOAT: "float",

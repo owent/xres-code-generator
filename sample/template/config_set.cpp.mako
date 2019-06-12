@@ -2,6 +2,8 @@
 <%!
 import time
 
+from pb_loader import PbMsgPbFieldisSigned,PbMsgGetPbFieldFn
+
 %><%
 pb_msg_class_name = pb_msg.get_cpp_class_name()
 %>
@@ -199,8 +201,12 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 %       endif
             idx = static_cast<size_t>(item->${PbMsgGetPbFieldFn(idx_field)});
 %   endfor
+            if (${code_index.name}_data_.capacity() <= idx) {
+                ${code_index.name}_data_.reserve(idx * 2 + 1);
+            }
+
             if (${code_index.name}_data_.size() <= idx) {
-                ${code_index.name}_data_.resize(idx * 2 + 1);
+                ${code_index.name}_data_.resize(idx + 1);
             }
 
 %   if code_index.is_list():

@@ -186,7 +186,7 @@ if __name__ == '__main__':
                 print(output_name)
             else:
                 print("Genarate template from {0} to {1}".format(source_template, output_name))
-                codecs.open(output_name, mode='w', encoding='utf8').write(
+                codecs.open(output_name, mode='w', encoding='utf-8-sig').write(
                     source_tmpl.render(
                         pb_set=pb_set,
                         pb_msg=pb_msg,

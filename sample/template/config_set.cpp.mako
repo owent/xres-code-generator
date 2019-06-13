@@ -20,6 +20,7 @@ pb_msg_class_name = pb_msg.get_cpp_class_name()
 #include <string>
 #include <tuple>
 #include <vector>
+#include <sstream>
 
 // 禁用掉unordered_map，我们要保证mt_core中逻辑有序
 #if 0 && defined(__cplusplus) && __cplusplus >= 201103L

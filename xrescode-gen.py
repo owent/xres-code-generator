@@ -106,6 +106,7 @@ if __name__ == '__main__':
 
     sys.path.append(os.path.join(script_dir, '3rd_party', 'protobuf'))
     sys.path.append(os.path.join(script_dir, '3rd_party', 'mako'))
+    sys.path.append(os.path.join(script_dir, '3rd_party', 'six'))
     sys.path.append(os.path.join(script_dir, 'xrescode-utils'))
     sys.path.append(os.path.join(script_dir, 'pb_extension'))
 

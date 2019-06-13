@@ -63,7 +63,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
     }
 
     int ${pb_msg_class_name}::on_inited() {
-        ::util::lock::write_lock_holder wlh(load_file_lock_);
+        ::util::lock::write_lock_holder<::util::lock::spin_rw_lock> wlh(load_file_lock_);
         
         file_status_.clear();
         return reload_file_lists();
@@ -71,7 +71,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 
     int ${pb_msg_class_name}::load_all() {
         int ret = 0;
-        ::util::lock::write_lock_holder wlh(load_file_lock_);
+        ::util::lock::write_lock_holder<::util::lock::spin_rw_lock> wlh(load_file_lock_);
         for (std::unordered_map<std::string, bool>::iterator iter = file_status_.begin(); iter != file_status_.end(); ++ iter) {
             if (!iter->second) {
                 int res = load_file(iter->first);
@@ -88,7 +88,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
     }
 
     void ${pb_msg_class_name}::clear() {
-        ::util::lock::write_lock_holder wlh(load_file_lock_);
+        ::util::lock::write_lock_holder<::util::lock::spin_rw_lock> wlh(load_file_lock_);
 % for code_index in pb_msg.code.indexes:
         ${code_index.name}_data_.clear();
 % endfor
@@ -236,12 +236,12 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 // ------------------- index: ${code_index.name} APIs -------------------
 % if code_index.is_list():
     const ${pb_msg_class_name}::${code_index.name}_value_type* ${pb_msg_class_name}::get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
-        ::util::lock::read_lock_holder rlh(load_file_lock_);
+        ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(load_file_lock_);
         return _get_list_by_${code_index.name}(${code_index.get_key_params()});
     }
 
     ${pb_msg_class_name}::item_ptr_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index) {
-        ::util::lock::read_lock_holder rlh(load_file_lock_);
+        ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(load_file_lock_);
         const ${pb_msg_class_name}::${code_index.name}_value_type* list_item = _get_list_by_${code_index.name}(${code_index.get_key_params()});
         if (nullptr == list_item) {
 %   if not code_index.allow_not_found:
@@ -351,7 +351,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
             return ${code_index.name}_data_[idx];
         }
 % else:
-        ::util::lock::read_lock_holder rlh(load_file_lock_);
+        ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(load_file_lock_);
         ${code_index.name}_container_type::iterator iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
         if (iter != ${code_index.name}_data_.end()) {
             return iter->second;

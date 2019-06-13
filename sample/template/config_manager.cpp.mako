@@ -37,7 +37,7 @@ namespace excel {
     int config_manager::init_new_group() {
         std::string version;
         {
-            ::util::lock::read_lock_holder rlh(handle_lock_);
+            ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(handle_lock_);
             if (!read_version_handle_) {
                 WLOGERROR("config_manager version handle not set");
                 return -1;
@@ -51,7 +51,7 @@ namespace excel {
 
         do {
             // 检查版本号
-            ::util::lock::read_lock_holder wlh(config_group_lock_);
+            ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> wlh(config_group_lock_);
             if (config_group_list_.empty()) {
                 break;
             }
@@ -93,7 +93,7 @@ namespace excel {
 % endfor
 
         if (ret >= 0) {
-            ::util::lock::write_lock_holder wlh(config_group_lock_);
+            ::util::lock::write_lock_holder<::util::lock::spin_rw_lock> wlh(config_group_lock_);
             config_group_list_.push_back(cfg_group);
             if (on_group_created_ && cfg_group) {
                 on_group_created_(cfg_group);
@@ -113,7 +113,7 @@ namespace excel {
     }
 
     bool config_manager::load_file_data(std::string& write_to, const std::string& file_path) {
-        ::util::lock::read_lock_holder rlh(handle_lock_);
+        ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(handle_lock_);
 
         if (!read_file_handle_) {
             WLOGERROR("invalid file data excel.");
@@ -152,7 +152,7 @@ namespace excel {
 % endfor
 
         if (del_when_failed && ret < 0) {
-            ::util::lock::write_lock_holder wlh(config_group_lock_);
+            ::util::lock::write_lock_holder<::util::lock::spin_rw_lock> wlh(config_group_lock_);
             config_group_list_.pop_back();
 
             if (on_group_destroyed_ && cfg_group) {
@@ -169,39 +169,39 @@ namespace excel {
     }
 
     config_manager::read_buffer_func_t config_manager::get_buffer_loader() const { 
-        ::util::lock::read_lock_holder rlh(handle_lock_);
+        ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(handle_lock_);
         
         return read_file_handle_;
     }
 
     void config_manager::set_buffer_loader(read_buffer_func_t fn) { 
-        ::util::lock::write_lock_holder wlh(handle_lock_);
+        ::util::lock::write_lock_holder<::util::lock::spin_rw_lock> wlh(handle_lock_);
 
         read_file_handle_ = fn; 
     }
 
     config_manager::read_version_func_t config_manager::get_version_loader() const { 
-        ::util::lock::read_lock_holder rlh(handle_lock_);
+        ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(handle_lock_);
 
         return read_version_handle_; 
     }
 
     void config_manager::set_version_loader(read_version_func_t fn) { 
-        ::util::lock::write_lock_holder wlh(handle_lock_);
+        ::util::lock::write_lock_holder<::util::lock::spin_rw_lock> wlh(handle_lock_);
 
         read_version_handle_ = fn; 
     }
 
     config_manager::config_group_ptr_t config_manager::get_current_config_group() {
         {
-            ::util::lock::read_lock_holder rlh(config_group_lock_);
+            ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(config_group_lock_);
             if (likely(!config_group_list_.empty())) {
                 return *config_group_list_.rbegin();
             }
         }
 
         if (0 == init_new_group()) {
-            ::util::lock::read_lock_holder rlh(config_group_lock_);
+            ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(config_group_lock_);
             if (likely(!config_group_list_.empty())) {
                 return *config_group_list_.rbegin();
             }

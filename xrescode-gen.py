@@ -124,7 +124,7 @@ if __name__ == '__main__':
     from mako.lookup import TemplateLookup
     from mako.runtime import supports_caller
 
-    make_module_cache_dir = os.path.join(script_dir, '.mako_modules')
+    make_module_cache_dir = os.path.join(script_dir, '.mako_modules-{0}.{1}.{2}'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
     def gen_source(list_container, pb_msg=None):
         for input_file in list_container:
             is_message_header = False

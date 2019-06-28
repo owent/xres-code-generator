@@ -1,4 +1,4 @@
-## -*- coding: utf-8 -*-
+﻿## -*- coding: utf-8 -*-
 <%!
 import time
 %>
@@ -39,12 +39,12 @@ namespace excel {
         {
             ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(handle_lock_);
             if (!read_version_handle_) {
-                WLOGERROR("config_manager version handle not set");
+                WLOGERROR("[EXCEL] config_manager version handle not set");
                 return -1;
             }
         
             if (!read_version_handle_(version)) {
-                WLOGERROR("config_manager read version failed");
+                WLOGERROR("[EXCEL] config_manager read version failed");
                 return -2;
             }
         }
@@ -74,7 +74,7 @@ namespace excel {
 
         config_group_ptr_t cfg_group = std::make_shared<config_group_t>();
         if (!cfg_group) {
-            WLOGERROR("config_manager malloc config group failed");
+            WLOGERROR("[EXCEL] config_manager malloc config group failed");
             return -3;
         }
         cfg_group->version = version;
@@ -85,10 +85,14 @@ namespace excel {
 % for pb_msg in pb_set.generate_message:
         res = cfg_group->${pb_msg.get_cpp_public_var_name()}.on_inited();
         if (res < 0) {
-            WLOGERROR("${pb_msg.get_cpp_public_var_name()}.on_inited() failed, res: %d", res);
+            WLOGERROR("[EXCEL] ${pb_msg.get_cpp_public_var_name()}.on_inited() failed, res: %d", res);
             ret = res;
-        } else if (ret >= 0) {
-            ret += res;
+        } else {
+            if (ret >= 0) {
+                ret += res;
+            }
+
+            WLOGINFO("[EXCEL] initialize %s for new config_group success", "${pb_msg.get_cpp_public_var_name()}");
         }
 % endfor
 
@@ -112,11 +116,32 @@ namespace excel {
         return ret;
     }
 
+    void config_manager::reset() {
+        {
+            ::util::lock::write_lock_holder<::util::lock::spin_rw_lock> wlh(handle_lock_);
+            max_group_number_ = 8;
+            override_same_version_ = false;
+
+            read_file_handle_ = nullptr;
+            read_version_handle_ = nullptr;
+            on_group_created_ = nullptr;
+            on_group_reload_all_ = nullptr;
+            on_group_destroyed_ = nullptr;
+        }
+
+        clear();
+    }
+
+    void config_manager::clear() {
+        ::util::lock::write_lock_holder<::util::lock::spin_rw_lock> wlh(config_group_lock_);
+        config_group_list_.clear();
+    }
+
     bool config_manager::load_file_data(std::string& write_to, const std::string& file_path) {
         ::util::lock::read_lock_holder<::util::lock::spin_rw_lock> rlh(handle_lock_);
 
         if (!read_file_handle_) {
-            WLOGERROR("invalid file data excel.");
+            WLOGERROR("[EXCEL] invalid file data excel.");
             return false;
         }
 
@@ -135,7 +160,7 @@ namespace excel {
 
         config_group_ptr_t cfg_group = get_current_config_group();
         if (!cfg_group) {
-            WLOGERROR("mutable config group failed");
+            WLOGERROR("[EXCEL] mutable config group failed");
             return -2;
         }
 
@@ -144,7 +169,7 @@ namespace excel {
 % for pb_msg in pb_set.generate_message:
         res = cfg_group->${pb_msg.get_cpp_public_var_name()}.load_all();
         if (res < 0) {
-            WLOGERROR("${pb_msg.get_cpp_public_var_name()}.load_all() failed, res: %d", res);
+            WLOGERROR("[EXCEL] ${pb_msg.get_cpp_public_var_name()}.load_all() failed, res: %d", res);
             ret = res;
         } else if (ret >= 0) {
             ret += res;

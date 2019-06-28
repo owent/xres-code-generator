@@ -1,4 +1,4 @@
-## -*- coding: utf-8 -*-
+﻿## -*- coding: utf-8 -*-
 <%!
 import time
 %>
@@ -34,7 +34,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 
     class ${pb_msg.get_cpp_class_name()} {
     public:
-        typedef ${pb_msg.get_pb_inner_class_name()} item_type;
+        typedef const ${pb_msg.get_pb_inner_class_name()} item_type;
         typedef ${pb_msg.get_pb_inner_class_name()} proto_type;
         typedef std::shared_ptr<item_type> item_ptr_type;
 
@@ -67,6 +67,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
         item_ptr_type get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index);
     private:
         const ${code_index.name}_value_type* _get_list_by_${code_index.name}(${code_index.get_key_decl()});
+    public:
 % else:
         typedef item_ptr_type ${code_index.name}_value_type;
         ${code_index.name}_value_type get_by_${code_index.name}(${code_index.get_key_decl()});

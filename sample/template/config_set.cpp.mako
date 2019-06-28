@@ -1,4 +1,4 @@
-## -*- coding: utf-8 -*-
+﻿## -*- coding: utf-8 -*-
 <%!
 import time
 
@@ -34,6 +34,14 @@ pb_msg_class_name = pb_msg.get_cpp_class_name()
 #include <Windows.h>
 #endif
 
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)  // && (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#elif defined(__clang__) || defined(__apple_build_version__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#endif
+
 #include <google/protobuf/arena.h>
 #include <google/protobuf/arenastring.h>
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
@@ -45,6 +53,11 @@ pb_msg_class_name = pb_msg.get_cpp_class_name()
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/stubs/common.h>
 
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)  // && (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#pragma GCC diagnostic pop
+#elif defined(__clang__) || defined(__apple_build_version__)
+#pragma clang diagnostic pop
+#endif
 
 #include <log/log_wrapper.h>
 #include <lock/lock_holder.h>
@@ -76,7 +89,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
             if (!iter->second) {
                 int res = load_file(iter->first);
                 if (res < 0) {
-                    WLOGERROR("load config file %s for %s failed", iter->first.c_str(), "${pb_msg_class_name}");
+                    WLOGERROR("[EXCEL] load config file %s for %s failed", iter->first.c_str(), "${pb_msg_class_name}");
                     ret = res;
                 } else if (ret >= 0) {
                     ret += res;
@@ -99,7 +112,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
     int ${pb_msg_class_name}::load_file(const std::string& file_path) {
         std::unordered_map<std::string, bool>::iterator iter = file_status_.find(file_path);
         if (iter == file_status_.end()) {
-            WLOGERROR("load config file %s for %s failed, not exist in any file_list/file_path", file_path.c_str(), "${pb_msg_class_name}");
+            WLOGERROR("[EXCEL] load config file %s for %s failed, not exist in any file_list/file_path", file_path.c_str(), "${pb_msg_class_name}");
             return -2;
         }
 
@@ -110,13 +123,13 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 
         std::string content;
         if (!config_manager::me()->load_file_data(content, file_path)) {
-            WLOGERROR("load file %s for %s failed", file_path.c_str(), "${pb_msg_class_name}");
+            WLOGERROR("[EXCEL] load file %s for %s failed", file_path.c_str(), "${pb_msg_class_name}");
             return -3;
         }
 
         ${pb_msg.get_pb_outer_class_name()} outer_data;
         if (!outer_data.ParseFromString(content)) {
-            WLOGERROR("parse file %s for %s(message type: %s) failed, msg: %s",
+            WLOGERROR("[EXCEL] parse file %s for %s(message type: %s) failed, msg: %s",
                 file_path.c_str(), "${pb_msg_class_name}", "${pb_msg.get_pb_outer_class_name()}",
                 outer_data.InitializationErrorString().c_str()
             );
@@ -136,13 +149,18 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
             merge_data(std::make_shared<item_type>(outer_data.${pb_msg.code_field.name.lower()}(i)));
         }
 
+        WLOGINFO("[EXCEL] load file %s for %s(message type: %s) with %d item(s) success",
+            file_path.c_str(), "${pb_msg_class_name}", "${pb_msg.get_pb_outer_class_name()}",
+            outer_data.${pb_msg.code_field.name.lower()}_size()
+        );
+
         return 1;
     }
 
     int ${pb_msg_class_name}::load_list(const char* file_list_path) {
         std::string content;
         if (!config_manager::me()->load_file_data(content, file_list_path)) {
-            WLOGERROR("load file %s for %s failed", file_list_path, "${pb_msg_class_name}");
+            WLOGERROR("[EXCEL] load file %s for %s failed", file_list_path, "${pb_msg_class_name}");
             return -1;
         }
 
@@ -182,7 +200,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 
     void ${pb_msg_class_name}::merge_data(item_ptr_type item) {
         if (!item) {
-            WLOGERROR("merge_data(nullptr) is not allowed for %s", "${pb_msg_class_name}");
+            WLOGERROR("[EXCEL] merge_data(nullptr) is not allowed for %s", "${pb_msg_class_name}");
             return;
         }
 
@@ -194,7 +212,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 %   for idx_field in code_index.fields:
 %       if PbMsgPbFieldisSigned(idx_field):
             if (item->${PbMsgGetPbFieldFn(idx_field)} < 0) {
-                WLOGERROR("merge_data with vector index %lld for %s is not allowed",
+                WLOGERROR("[EXCEL] merge_data with vector index %lld for %s is not allowed",
                     static_cast<long long>(item->${PbMsgGetPbFieldFn(idx_field)}), "${pb_msg_class_name}"
                 );
                 break;
@@ -221,7 +239,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 %   else:
             std::tuple<${code_index.get_key_type_list()}> key = std::make_tuple(${code_index.get_key_value_list("item->")});
             if (${code_index.name}_data_.end() != ${code_index.name}_data_.find(key)) {
-                WLOGERROR("merge_data() with key=<${code_index.get_key_fmt_list()}> for %s is already exists, we will cover it with the newer value", 
+                WLOGERROR("[EXCEL] merge_data() with key=<${code_index.get_key_fmt_list()}> for %s is already exists, we will cover it with the newer value", 
                     ${code_index.get_key_fmt_value_list("item->")}, "${pb_msg_class_name}");
             }
             ${code_index.name}_data_[key] = item;
@@ -245,7 +263,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
         const ${pb_msg_class_name}::${code_index.name}_value_type* list_item = _get_list_by_${code_index.name}(${code_index.get_key_params()});
         if (nullptr == list_item) {
 %   if not code_index.allow_not_found:
-            WLOGERROR("load index %s with key=<${code_index.get_key_fmt_list()}>, index=%llu for %s failed, list not found",
+            WLOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}>, index=%llu for %s failed, list not found",
                 "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, 
                 static_cast<unsigned long long>(index), "${pb_msg_class_name}"
             );
@@ -255,7 +273,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 
         if (list_item->size() <= index) {
 %   if not code_index.allow_not_found:
-            WLOGERROR("load index %s with key=<${code_index.get_key_fmt_list()}>, index=%llu for %s failed, index entend %llu",
+            WLOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}>, index=%llu for %s failed, index entend %llu",
                 "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, 
                 static_cast<unsigned long long>(index), "${pb_msg_class_name}", static_cast<unsigned long long>(list_item->size())
             );
@@ -272,7 +290,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 %   for idx_field in code_index.fields:
 %       if PbMsgPbFieldisSigned(idx_field):
         if (${idx_field.name} < 0) {
-            WLOGERROR("vector index %lld for %s is not allowed",
+            WLOGERROR("[EXCEL] vector index %lld for %s is not allowed",
                 static_cast<long long>(${idx_field.name}), "${pb_msg_class_name}"
             );
             return nullptr;
@@ -300,7 +318,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 
         int res = load_file(file_path);
         if (res < 0) {
-            WLOGERROR("load file %s for %s failed, res: %d", file_path.c_str(), "${pb_msg_class_name}", res);
+            WLOGERROR("[EXCEL] load file %s for %s failed, res: %d", file_path.c_str(), "${pb_msg_class_name}", res);
             return nullptr;
         }
 
@@ -310,7 +328,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
         }
 
 %   if not code_index.allow_not_found:
-        WLOGERROR("load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+        WLOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
             "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
         );
 %   endif
@@ -320,7 +338,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
         iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
         if (iter == ${code_index.name}_data_.end()) {
 %   if not code_index.allow_not_found:
-            WLOGERROR("load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+            WLOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
                 "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
             );
 %   endif
@@ -339,7 +357,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 %   for idx_field in code_index.fields:
 %       if PbMsgPbFieldisSigned(idx_field):
         if (${idx_field.name} < 0) {
-            WLOGERROR("vector index %lld for %s is not allowed",
+            WLOGERROR("[EXCEL] vector index %lld for %s is not allowed",
                 static_cast<long long>(${idx_field.name}), "${pb_msg_class_name}"
             );
             return nullptr;
@@ -368,7 +386,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
 
         int res = load_file(file_path);
         if (res < 0) {
-            WLOGERROR("load file %s for %s failed, res: %d", file_path.c_str(), "${pb_msg_class_name}", res);
+            WLOGERROR("[EXCEL] load file %s for %s failed, res: %d", file_path.c_str(), "${pb_msg_class_name}", res);
             return nullptr;
         }
 
@@ -378,7 +396,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
         }
 
 %   if not code_index.allow_not_found:
-        WLOGERROR("load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+        WLOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
             "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
         );
 %   endif
@@ -388,7 +406,7 @@ ${pb_msg.get_cpp_namespace_decl_begin()}
         iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
         if (iter == ${code_index.name}_data_.end()) {
 %   if not code_index.allow_not_found:
-            WLOGERROR("load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+            WLOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
                 "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
             );
 %   endif

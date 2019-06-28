@@ -1,4 +1,4 @@
-## -*- coding: utf-8 -*-
+﻿## -*- coding: utf-8 -*-
 <%!
 import time
 %>
@@ -36,9 +36,23 @@ import time
 #undef min
 #endif
 
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)  // && (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#elif defined(__clang__) || defined(__apple_build_version__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#endif
+
 % for pb_msg in pb_set.generate_message:
 #include "${pb_msg.get_cpp_header_path()}"
 % endfor
+
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)  // && (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#pragma GCC diagnostic pop
+#elif defined(__clang__) || defined(__apple_build_version__)
+#pragma clang diagnostic pop
+#endif
 
 #if defined(_MSC_VER) && ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
 #pragma warning(pop)
@@ -50,6 +64,10 @@ namespace excel {
 
 % for pb_msg in pb_set.generate_message:
         ${pb_msg.get_cpp_class_full_name()} ${pb_msg.get_cpp_public_var_name()} ;
+% endfor
+
+% for block_file in pb_set.get_custom_blocks("custom_config_group"):
+<%include file="${block_file}" />
 % endfor
     } ;
 
@@ -68,6 +86,10 @@ namespace excel {
         int init();
 
         int init_new_group();
+
+        void reset();
+
+        void clear();
 
         bool load_file_data(std::string& write_to, const std::string& file_path);
 

@@ -79,6 +79,13 @@ if __name__ == '__main__':
         dest="tags",
         default=[])
     parser.add_option(
+        "-c",
+        "--custom-group",
+        action="append",
+        help="add custom group with format 'NAME:FILE_NAME'(example: custom_config_group:custom_group_fields.h.mako)",
+        dest="custom_group",
+        default=[])
+    parser.add_option(
         "--pb-include-prefix",
         action="store",
         help="set include prefix of generated protobuf header",
@@ -119,6 +126,10 @@ if __name__ == '__main__':
     pb_set = PbDescSet(options.pb, tags=options.tags, msg_prefix=options.msg_prefix, 
         proto_v3=options.proto_v3, pb_include_prefix=options.pb_include_prefix)
 
+    for cg in options.custom_group:
+        name_idx = cg.find(":")
+        if name_idx > 0 and name_idx < len(cg):
+            pb_set.add_custom_blocks(cg[0:name_idx], cg[name_idx+1:])
     # render templates
     from mako.template import Template
     from mako.lookup import TemplateLookup

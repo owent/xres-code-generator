@@ -440,6 +440,7 @@ class PbDescSet:
         self.pb_fds = pb2.FileDescriptorSet.FromString(open(pb_file_path, 'rb').read())
         self.generate_message = []
         self.pb_msgs = dict()
+        self.custom_blocks = dict()
         for pb_file in self.pb_fds.file:
             for pb_msg in pb_file.message_type:
                 msg_obj = PbMsg(pb_file, pb_msg, msg_prefix)
@@ -462,3 +463,14 @@ class PbDescSet:
         if type_name and type_name[0:1] == ".":
             type_name = type_name[1:]
         return self.pb_msgs.get(type_name, None)
+
+    def get_custom_blocks(self, block_name):
+        if block_name in self.custom_blocks:
+            return self.custom_blocks[block_name]
+        return []
+
+    def add_custom_blocks(self, block_name, block_file):
+        if block_name in self.custom_blocks:
+            self.custom_blocks[block_name].append(block_file)
+        else:
+            self.custom_blocks[block_name] = [block_file]

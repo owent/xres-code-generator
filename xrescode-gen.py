@@ -212,3 +212,5 @@ if __name__ == '__main__':
     gen_source(options.global_template, None)
     for pb_msg in pb_set.generate_message:
         gen_source(options.message_template, pb_msg=pb_msg)
+
+    exit(pb_set.failed_count)

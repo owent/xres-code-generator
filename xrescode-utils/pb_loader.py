@@ -257,6 +257,7 @@ class PbMsgCodeExt:
     def __init__(self, outer_msg, inner_msg):
         self.outer_msg = outer_msg
         self.inner_msg = inner_msg
+        self.invalid_index_count = 0
         if outer_msg.options.HasExtension(ext.file_list):
             self.file_list = outer_msg.options.Extensions[ext.file_list]
         else:
@@ -272,6 +273,8 @@ class PbMsgCodeExt:
             index = PbMsgIndex(inner_msg, idx)
             if index.is_valid():
                 self.indexes.append(index)
+            else:
+                self.invalid_index_count = self.invalid_index_count + 1
 
         self.tags = set()
         for tag in outer_msg.options.Extensions[ext.tags]:
@@ -313,6 +316,7 @@ class PbMsg:
                         using_fallback_items = False
                         break
                 else:
+                    fds.add_failed_count()
                     print('[ERROR] excel_row message {0} not found for {1}'.format(fd.type_name, self.full_name))
             elif fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
                 fallback_items_field.append(fd)
@@ -326,17 +330,24 @@ class PbMsg:
                     self.code = code_ext
                     self.code_field = fd
             else:
+                fds.add_failed_count()
                 print('[ERROR] fallback item message {0} not found for {1}'.format(fd.type_name, self.full_name))
 
         if self.code is None:
             if self.pb_msg.options.HasExtension(ext.file_list):
+                fds.add_failed_count()
                 print('[WARNING] message {0} has file_list but without valid excel_row or item field, ignored'.format(self.full_name))
             if self.pb_msg.options.HasExtension(ext.file_path):
+                fds.add_failed_count()
                 print('[WARNING] message {0} has file_path but without valid excel_row or item field, ignored'.format(self.full_name))
         else:
+            if self.code.invalid_index_count > 0:
+                fds.add_failed_count()
             if self.pb_msg.options.HasExtension(ext.file_list) and self.pb_msg.options.HasExtension(ext.file_path):
+                fds.add_failed_count()
                 print('[WARNING] message {0} has both file_list and file_path, should only has one'.format(self.full_name))
             if using_fallback_items and len(fallback_items_field) > 1:
+                fds.add_failed_count()
                 print('[WARNING] message {0} has no field with excel_row and more than 1 fields is repeated message, we will only use the first one'.format(self.full_name))
 
     def has_code(self):
@@ -441,6 +452,7 @@ class PbDescSet:
         self.generate_message = []
         self.pb_msgs = dict()
         self.custom_blocks = dict()
+        self.failed_count = 0
         for pb_file in self.pb_fds.file:
             for pb_msg in pb_file.message_type:
                 msg_obj = PbMsg(pb_file, pb_msg, msg_prefix)
@@ -474,3 +486,6 @@ class PbDescSet:
             self.custom_blocks[block_name].append(block_file)
         else:
             self.custom_blocks[block_name] = [block_file]
+
+    def add_failed_count(self):
+        self.failed_count = self.failed_count + 1

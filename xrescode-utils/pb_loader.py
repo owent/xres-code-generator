@@ -26,6 +26,25 @@ pb_msg_cpp_type_map = {
     pb2.FieldDescriptorProto.TYPE_UINT64: "uint64_t"
 }
 
+pb_msg_cs_type_map = {
+    pb2.FieldDescriptorProto.TYPE_BOOL: "bool",
+    pb2.FieldDescriptorProto.TYPE_BYTES: "byte[]",
+    pb2.FieldDescriptorProto.TYPE_DOUBLE: "double",
+    pb2.FieldDescriptorProto.TYPE_ENUM: "int",
+    pb2.FieldDescriptorProto.TYPE_FIXED32: "int",
+    pb2.FieldDescriptorProto.TYPE_FIXED64: "long",
+    pb2.FieldDescriptorProto.TYPE_FLOAT: "float",
+    pb2.FieldDescriptorProto.TYPE_INT32: "int",
+    pb2.FieldDescriptorProto.TYPE_INT64: "long",
+    pb2.FieldDescriptorProto.TYPE_SFIXED32: "int",
+    pb2.FieldDescriptorProto.TYPE_SFIXED64: "long",
+    pb2.FieldDescriptorProto.TYPE_SINT32: "int",
+    pb2.FieldDescriptorProto.TYPE_SINT64: "long",
+    pb2.FieldDescriptorProto.TYPE_STRING: "string",
+    pb2.FieldDescriptorProto.TYPE_UINT32: "uint",
+    pb2.FieldDescriptorProto.TYPE_UINT64: "ulong"
+}
+
 pb_msg_cpp_type_is_signed_map = {
     pb2.FieldDescriptorProto.TYPE_BOOL: False,
     pb2.FieldDescriptorProto.TYPE_BYTES: False,
@@ -86,6 +105,18 @@ pb_msg_cpp_fmt_val_map = {
     pb2.FieldDescriptorProto.TYPE_MESSAGE: "\"MESSAGE: {0}\""
 }
 
+
+def FirstCharUpper(str):
+    return str[0:1].upper() + str[1:]
+
+
+def ToCamelName(str):
+    strlist = str.split("_")
+    for i in range(len(strlist)):
+        strlist[i] = FirstCharUpper(strlist[i])
+    return "".join(strlist)
+
+
 def PbMsgGetPbFieldFn(field):
     return "{0}()".format(field.name.lower())
 
@@ -96,11 +127,20 @@ def PbMsgGetPbFieldCppType(field):
         return pb_msg_cpp_type_map[field.type]
     return field.type_name
 
+
+def PbMsgGetPbFieldCsType(field):
+    global pb_msg_cs_type_map
+    if field.type in pb_msg_cs_type_map:
+        return pb_msg_cs_type_map[field.type]
+    return field.type_name
+
+
 def PbMsgPbFieldisSigned(field):
     global pb_msg_cpp_type_is_signed_map
     if field.type in pb_msg_cpp_type_is_signed_map:
         return pb_msg_cpp_type_is_signed_map[field.type]
     return False
+
 
 def PbMsgPbFieldFmt(field):
     global pb_msg_cpp_fmt_map
@@ -108,17 +148,20 @@ def PbMsgPbFieldFmt(field):
         return pb_msg_cpp_fmt_map[field.type]
     return "%s"
 
+
 def PbMsgPbFieldFmtValue(field, input):
     global pb_msg_cpp_fmt_val_map
     if field.type in pb_msg_cpp_fmt_val_map:
         return pb_msg_cpp_fmt_val_map[field.type].format(input)
     return "\"UNKNOWN TYPE: {0}\"".format(input)
 
+
 class PbMsgIndexType:
     KV = ext.EN_INDEX_KV
     KL = ext.EN_INDEX_KL
     IV = ext.EN_INDEX_IV
     IL = ext.EN_INDEX_IL
+
 
 class PbMsgIndex:
     def __init__(self, pb_msg, pb_ext_index):
@@ -127,6 +170,8 @@ class PbMsgIndex:
             self.name = pb_ext_index.name
         else:
             self.name = "_".join(pb_ext_index.fields).lower()
+
+        self.camelname = ToCamelName(self.name)
 
         self.file_mapping = pb_ext_index.file_mapping
         self.allow_not_found = pb_ext_index.allow_not_found
@@ -172,11 +217,18 @@ class PbMsgIndex:
 
     def is_vector(self):
         return self.index_type == PbMsgIndexType.IV or self.index_type == PbMsgIndexType.IL
-    
+
     def get_key_decl(self):
         decls = []
         for fd in self.fields:
             decls.append("{0} {1}".format(PbMsgGetPbFieldCppType(fd), fd.name))
+        return ", ".join(decls)
+
+    def get_cs_key_decl(self):
+        decls = []
+        for fd in self.fields:
+            decls.append("{0} {1}".format(
+                PbMsgGetPbFieldCsType(fd), ToCamelName(fd.name)))
         return ", ".join(decls)
 
     def get_key_params(self):
@@ -185,11 +237,17 @@ class PbMsgIndex:
             decls.append(fd.name)
         return ", ".join(decls)
 
+    def get_cs_key_params(self):
+        decls = []
+        for fd in self.fields:
+            decls.append(ToCamelName(fd.name))
+        return ", ".join(decls)
+
     def get_load_file_code(self, var_name):
         code_lines = []
         code_lines.append("std::string {0};".format(var_name))
         code_lines.append("do {")
-        
+
         if not self.get_file_expression:
             fileds_mapping = dict()
             for fd in self.fields:
@@ -235,6 +293,12 @@ class PbMsgIndex:
             decls.append(PbMsgGetPbFieldCppType(fd))
         return ", ".join(decls)
 
+    def get_cs_key_type_list(self):
+        decls = []
+        for fd in self.fields:
+            decls.append(PbMsgGetPbFieldCsType(fd))
+        return ", ".join(decls)
+
     def get_key_value_list(self, prefix=''):
         decls = []
         for fd in self.fields:
@@ -252,6 +316,7 @@ class PbMsgIndex:
         for fd in self.fields:
             decls.append(PbMsgPbFieldFmtValue(fd, "{0}{1}".format(prefix, PbMsgGetPbFieldFn(fd))))
         return ", ".join(decls)
+
 
 class PbMsgCodeExt:
     def __init__(self, outer_msg, inner_msg):
@@ -288,6 +353,7 @@ class PbMsgCodeExt:
     def is_valid(self):
         return self.file_list is not None or self.file_path is not None
 
+
 class PbMsg:
     def __init__(self, pb_file, pb_msg, msg_prefix):
         self.pb_file = pb_file
@@ -301,6 +367,9 @@ class PbMsg:
         self.pb_inner_class_name = None
         self.cpp_class_name = None
         self.cpp_if_guard_name = None
+        self.cs_class_name = None
+        self.cs_pb_inner_class_name = None
+        self.cs_pb_outer_class_name = None
 
     def setup_code(self, fds):
         fallback_items_field = []
@@ -361,7 +430,6 @@ class PbMsg:
         else:
             return base_file[0:suffix_pos] + ".pb.h"
 
-
     def get_pb_outer_class_name(self):
         if self.pb_outer_class_name is not None:
             return self.pb_outer_class_name
@@ -389,6 +457,36 @@ class PbMsg:
         else:
             self.cpp_class_name = self.code.class_name
         return self.cpp_class_name
+
+    def get_cs_class_name(self):
+        if self.cs_class_name is not None:
+            return self.cs_class_name
+
+        if self.code is None:
+            return ""
+
+        if self.msg_prefix:
+            self.cs_class_name = "{0}{1}".format(
+                self.msg_prefix, self.code.class_name)
+        else:
+            self.cs_class_name = self.code.class_name
+        return self.cs_class_name
+
+    def get_cs_pb_outer_class_name(self):
+        if self.cs_pb_outer_class_name is not None:
+            return self.pb_outer_class_name
+        self.cs_pb_outer_class_name = self.cpp_package_prefix + "." + self.pb_msg.name
+        return self.cs_pb_outer_class_name
+
+    def get_cs_pb_inner_class_name(self):
+        if self.cs_pb_inner_class_name is not None:
+            return self.cs_pb_inner_class_name
+
+        if self.code is None:
+            return ""
+        self.cs_pb_inner_class_name = self.cpp_package_prefix + \
+            "." + self.code.inner_msg.name
+        return self.cs_pb_inner_class_name
 
     def get_cpp_class_full_name(self):
         return self.cpp_package_prefix + "::" + self.get_cpp_class_name()
@@ -428,7 +526,7 @@ class PbMsg:
     def get_cpp_public_var_name(self):
         if self.code is None:
             return ""
-        
+
         return self.code.class_name.replace(".", "_")
 
     def get_cpp_private_var_name(self):
@@ -442,6 +540,10 @@ class PbMsg:
 
     def get_cpp_source_path(self):
         return "{0}.cpp".format(self.get_cpp_class_name())
+
+    def get_camel_code_field_name(self):
+        return ToCamelName(self.code_field.name)
+
 
 class PbDescSet:
     def __init__(self, pb_file_path, tags=[], msg_prefix='', proto_v3 = False, pb_include_prefix=""):
@@ -467,7 +569,7 @@ class PbDescSet:
                 for tag in tags:
                     if tag in v.tags:
                         self.generate_message.append(v)
-                        break        
+                        break
             else:
                 self.generate_message.append(v)
 

@@ -546,7 +546,7 @@ class PbMsg:
 
 
 class PbDescSet:
-    def __init__(self, pb_file_path, tags=[], msg_prefix='', proto_v3 = False, pb_include_prefix=""):
+    def __init__(self, pb_file_path, tags=[], msg_prefix='', proto_v3 = False, pb_include_prefix="", exclude_tags=[]):
         self.pb_file = pb_file_path
         self.proto_v3 = proto_v3
         self.pb_include_prefix = pb_include_prefix
@@ -564,6 +564,14 @@ class PbDescSet:
             v = self.pb_msgs[k]
             v.setup_code(self)
             if not v.has_code():
+                continue
+            skip_message = False
+            if exclude_tags:
+                for tag in exclude_tags:
+                    if tag in v.tags:
+                        skip_message = True
+                        break
+            if skip_message:
                 continue
             if tags:
                 for tag in tags:

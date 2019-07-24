@@ -79,6 +79,13 @@ if __name__ == '__main__':
         dest="tags",
         default=[])
     parser.add_option(
+        "-e",
+        "--exclude-tags",
+        action="store",
+        help="do not generate message for tags",
+        dest="exclude_tags",
+        default=[])
+    parser.add_option(
         "-c",
         "--custom-group",
         action="append",
@@ -124,7 +131,8 @@ if __name__ == '__main__':
     # parse pb file
     from pb_loader import PbDescSet
     pb_set = PbDescSet(options.pb, tags=options.tags, msg_prefix=options.msg_prefix, 
-        proto_v3=options.proto_v3, pb_include_prefix=options.pb_include_prefix)
+        proto_v3=options.proto_v3, pb_include_prefix=options.pb_include_prefix, 
+        exclude_tags=options.exclude_tags)
 
     for cg in options.custom_group:
         name_idx = cg.find(":")

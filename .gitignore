@@ -112,3 +112,4 @@ venv.bak/
 *.pyc
 .mako_modules
 __pycache__
+*.mako_modules*

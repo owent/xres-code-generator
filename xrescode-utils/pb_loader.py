@@ -8,6 +8,8 @@ import re
 from google.protobuf import descriptor_pb2 as pb2
 import xrescode_extensions_v3_pb2 as ext
 
+from mako.runtime import supports_caller
+
 pb_msg_cpp_type_map = {
     pb2.FieldDescriptorProto.TYPE_BOOL: "bool",
     pb2.FieldDescriptorProto.TYPE_BYTES: "std::string",
@@ -156,6 +158,13 @@ def PbMsgPbFieldFmtValue(field, input):
         return pb_msg_cpp_fmt_val_map[field.type].format(input)
     return "\"UNKNOWN TYPE: {0}\"".format(input)
 
+@supports_caller
+def MakoPbMsgGetPbFieldCsType(context, arg):
+    return PbMsgGetPbFieldCsType(arg)
+
+@supports_caller
+def MakoFirstCharUpper(context, arg):
+    return FirstCharUpper(arg)
 
 class PbMsgIndexType:
     KV = ext.EN_INDEX_KV
@@ -280,6 +289,42 @@ class PbMsgIndex:
         code_lines.extend(self.get_file_expression)
         code_lines.append("    {0} = {1}_generated_file_path.str();".format(var_name, self.name))
         code_lines.append("} while (false);")
+        return code_lines
+
+    def get_cs_load_file_code(self, var_name):
+        code_lines = []
+        code_lines.append("\tstring {0};".format(var_name))
+
+        if not self.get_file_expression:
+            fileds_mapping = dict()
+            for fd in self.fields:
+                fileds_mapping[fd.name.lower()] = fd.name
+            self.get_file_expression = []
+            self.get_file_expression.append("    StringBuilder {0}_generated_file_path = new StringBuilder();".format(self.name))
+            if self.file_mapping:
+                next_index = 0
+                for mo in re.finditer('\{\s*([\w_]+)s*\}', self.file_mapping):
+                    key_var_name = mo.group(1).lower()
+                    if key_var_name not in fileds_mapping:
+                        print("[ERROR] {0} in file_mapping is not exists in key fields of index {1}", mo.group(1), self.name)
+                    else:
+                        if next_index < mo.start():
+                            self.get_file_expression.append(
+                                "    {0}_generated_file_path.Append(\"{1}\");".format(self.name, self.file_mapping[next_index:mo.start()])
+                            )
+                        self.get_file_expression.append(
+                            "    {0}_generated_file_path.Append({1});".format(self.name, fileds_mapping[key_var_name])
+                        )
+
+                    next_index = mo.end()
+                if next_index < len(self.file_mapping):
+                    self.get_file_expression.append(
+                        "    {0}_generated_file_path.Append(\"{1}\");".format(self.name, self.file_mapping[next_index:])
+                    )
+            else:
+                self.get_file_expression.append("    {0}_generated_file_path.Append(\"{0}\");".format(self.name))
+        code_lines.extend(self.get_file_expression)
+        code_lines.append("    {0} = {1}_generated_file_path.ToString();".format(var_name, self.name))
         return code_lines
 
     def get_key_params_fmt_value_list(self):

@@ -424,6 +424,9 @@ class PbMsg:
         self.cs_pb_outer_class_name = None
 
     def setup_code(self, fds):
+        if self.pb_file.package == 'google.protobuf':
+            return
+
         fallback_items_field = []
         using_fallback_items = True
         for fd in self.pb_msg.field:

@@ -23,7 +23,7 @@ class MakoModuleTempDir:
             shutil.rmtree(self.directory_path, ignore_errors=True)
             self.directory_path = None
 
-if __name__ == '__main__':
+def main():
     from optparse import OptionParser
     usage = '%(prog)s -p <pb file> -o <output dir> [-i <additional template dirs>...] [-g <global templates>...] [-m <message templates>...] [other options...] [custom rules or field rules]'
     parser = OptionParser(usage)
@@ -256,4 +256,8 @@ if __name__ == '__main__':
         if "g:" == rule[0:2].lower():
             gen_source([rule[2:]], None)
 
+    del temp_dir_holder
     exit(pb_set.failed_count)
+
+if __name__ == '__main__':
+    main()

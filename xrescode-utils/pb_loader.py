@@ -609,7 +609,7 @@ class PbDescSet:
         self.failed_count = 0
         for pb_file in self.pb_fds.file:
             for pb_msg in pb_file.message_type:
-                self.setup_pb_msg(pb_msg)
+                self.setup_pb_msg(pb_msg, msg_prefix)
         # print(self.pb_fds.file)
         for k in self.pb_msgs:
             v = self.pb_msgs[k]

@@ -15,6 +15,8 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 class MakoModuleTempDir:
     def __init__(self, prefix_path):
         import tempfile
+        if not os.path.exists(prefix_path):
+            os.makedirs(prefix_path)
         self.directory_path = tempfile.mkdtemp(suffix='', prefix='', dir=prefix_path)
     def __del__(self):
         if self.directory_path is not None and os.path.exists(self.directory_path) and os.path.isdir(self.directory_path):

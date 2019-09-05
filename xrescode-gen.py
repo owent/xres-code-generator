@@ -126,6 +126,12 @@ def main():
         help="do not show the detail of generated files.",
         dest="quiet",
         default=False)
+    parser.add_option(
+        "--encoding",
+        action="store",
+        help="set encoding of output file(default: utf-8-sig).",
+        dest="encoding",
+        default='utf-8-sig')
 
     (options, left_args) = parser.parse_args()
 
@@ -234,7 +240,7 @@ def main():
                 else:
                     if not options.quiet:
                         print("[XRESCODE] Genarate template from {0} to {1}".format(source_template, output_name))
-                    codecs.open(output_name, mode='w', encoding='utf-8-sig').write(
+                    codecs.open(output_name, mode='w', encoding=options.encoding).write(
                         source_tmpl.render(
                             pb_set=pb_set,
                             pb_msg=pb_msg,

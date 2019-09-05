@@ -195,15 +195,15 @@ class PbMsgIndex:
                     pb_fd = test_pb_fd
                     break
             if pb_fd is None:
-                sys.stderr.write('[ERROR] index {0} invalid, because field {1} is not found in {2}\n'.format(self.name, fd, pb_msg.name))
+                sys.stderr.write('[XRESCODE ERROR] index {0} invalid, because field {1} is not found in {2}\n'.format(self.name, fd, pb_msg.name))
                 self.fields.clear()
                 break
             if pb_fd.label == pb_fd.LABEL_REPEATED:
-                sys.stderr.write('[ERROR] index {0} invalid, field {1} in {2} must not be repeated\n'.format(self.name, fd, pb_msg.name))
+                sys.stderr.write('[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n'.format(self.name, fd, pb_msg.name))
                 self.fields.clear()
                 break
             if pb_fd.type == pb_fd.TYPE_MESSAGE:
-                sys.stderr.write('[ERROR] index {0} invalid, field {1} in {2} must not be message\n'.format(self.name, fd, pb_msg.name))
+                sys.stderr.write('[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be message\n'.format(self.name, fd, pb_msg.name))
                 self.fields.clear()
                 break
             self.fields.append(pb_fd)
@@ -218,7 +218,7 @@ class PbMsgIndex:
             return False
         if self.index_type == PbMsgIndexType.IV or self.index_type == PbMsgIndexType.IL:
             if len(self.fields) != 1:
-                sys.stderr.write('[ERROR] index {0} invalid, vector index only can has only 1 integer key field\n'.format(self.name))
+                sys.stderr.write('[XRESCODE ERROR] index {0} invalid, vector index only can has only 1 integer key field\n'.format(self.name))
                 return False
         return True
 
@@ -247,6 +247,12 @@ class PbMsgIndex:
             decls.append(fd.name)
         return ", ".join(decls)
 
+    def get_key_names(self, quote = '"'):
+        decls = []
+        for fd in self.fields:
+            decls.append(fd.name)
+        return quote + (quote + ", " + quote).join(decls) + quote
+
     def get_cs_key_params(self):
         decls = []
         for fd in self.fields:
@@ -269,7 +275,7 @@ class PbMsgIndex:
                 for mo in re.finditer('\{\s*([\w_]+)s*\}', self.file_mapping):
                     key_var_name = mo.group(1).lower()
                     if key_var_name not in fileds_mapping:
-                        sys.stderr.write("[ERROR] {0} in file_mapping is not exists in key fields of index {1}\n", mo.group(1), self.name)
+                        sys.stderr.write("[XRESCODE ERROR] {0} in file_mapping is not exists in key fields of index {1}\n", mo.group(1), self.name)
                     else:
                         if next_index < mo.start():
                             self.get_file_expression.append(
@@ -306,7 +312,7 @@ class PbMsgIndex:
                 for mo in re.finditer('\{\s*([\w_]+)s*\}', self.file_mapping):
                     key_var_name = mo.group(1).lower()
                     if key_var_name not in fileds_mapping:
-                        print("[ERROR] {0} in file_mapping is not exists in key fields of index {1}", mo.group(1), self.name)
+                        sys.stderr.write("[XRESCODE ERROR] {0} in file_mapping is not exists in key fields of index {1}\n", mo.group(1), self.name)
                     else:
                         if next_index < mo.start():
                             self.get_file_expression.append(
@@ -432,7 +438,7 @@ class PbMsg:
                         break
                 else:
                     fds.add_failed_count()
-                    sys.stderr.write('[ERROR] excel_row message {0} not found for {1}\n'.format(fd.type_name, self.full_name))
+                    sys.stderr.write('[XRESCODE ERROR] excel_row message {0} not found for {1}\n'.format(fd.type_name, self.full_name))
             elif fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
                 fallback_items_field.append(fd)
 
@@ -446,24 +452,24 @@ class PbMsg:
                     self.code_field = fd
             else:
                 fds.add_failed_count()
-                sys.stderr.write('[ERROR] fallback item message {0} not found for {1}\n'.format(fd.type_name, self.full_name))
+                sys.stderr.write('[XRESCODE ERROR] fallback item message {0} not found for {1}\n'.format(fd.type_name, self.full_name))
 
         if self.code is None:
             if self.pb_msg.options.HasExtension(ext.file_list):
                 fds.add_failed_count()
-                print('[WARNING] message {0} has file_list but without valid excel_row or item field, ignored'.format(self.full_name))
+                print('[XRESCODE WARNING] message {0} has file_list but without valid excel_row or item field, ignored'.format(self.full_name))
             if self.pb_msg.options.HasExtension(ext.file_path):
                 fds.add_failed_count()
-                print('[WARNING] message {0} has file_path but without valid excel_row or item field, ignored'.format(self.full_name))
+                print('[XRESCODE WARNING] message {0} has file_path but without valid excel_row or item field, ignored'.format(self.full_name))
         else:
             if self.code.invalid_index_count > 0:
                 fds.add_failed_count()
             if self.pb_msg.options.HasExtension(ext.file_list) and self.pb_msg.options.HasExtension(ext.file_path):
                 fds.add_failed_count()
-                print('[WARNING] message {0} has both file_list and file_path, should only has one'.format(self.full_name))
+                print('[XRESCODE WARNING] message {0} has both file_list and file_path, should only has one'.format(self.full_name))
             if using_fallback_items and len(fallback_items_field) > 1:
                 fds.add_failed_count()
-                print('[WARNING] message {0} has no field with excel_row and more than 1 fields is repeated message, we will only use the first one'.format(self.full_name))
+                print('[XRESCODE WARNING] message {0} has no field with excel_row and more than 1 fields is repeated message, we will only use the first one'.format(self.full_name))
 
     def has_code(self):
         return self.code is not None
@@ -603,8 +609,7 @@ class PbDescSet:
         self.failed_count = 0
         for pb_file in self.pb_fds.file:
             for pb_msg in pb_file.message_type:
-                msg_obj = PbMsg(pb_file, pb_msg, msg_prefix)
-                self.pb_msgs[msg_obj.full_name] = msg_obj
+                self.setup_pb_msg(pb_msg)
         # print(self.pb_fds.file)
         for k in self.pb_msgs:
             v = self.pb_msgs[k]
@@ -626,6 +631,12 @@ class PbDescSet:
                         break
             else:
                 self.generate_message.append(v)
+
+    def setup_pb_msg(self, pb_msg, msg_prefix):
+        msg_obj = PbMsg(pb_file, pb_msg, msg_prefix)
+        self.pb_msgs[msg_obj.full_name] = msg_obj
+        for nested_type in pb_msg.nested_type:
+            self.setup_pb_msg(nested_type, msg_prefix)
 
     def get_msg_by_type(self, type_name):
         if type_name and type_name[0:1] == ".":

@@ -12,10 +12,18 @@ import xml.etree.ElementTree as ET
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
+class MakoModuleTempDir:
+    def __init__(self, prefix_path):
+        import tempfile
+        self.directory_path = tempfile.mkdtemp(suffix='', prefix='', dir=prefix_path)
+    def __del__(self):
+        if self.directory_path is not None and os.path.exists(self.directory_path) and os.path.isdir(self.directory_path):
+            shutil.rmtree(self.directory_path, ignore_errors=True)
+            self.directory_path = None
 
 if __name__ == '__main__':
     from optparse import OptionParser
-    usage = '%(prog)s -p <pb file> -o <output dir> [-i <additional template dirs>...] [-g <global templates>...] [-m <message templates>...] [other options...]'
+    usage = '%(prog)s -p <pb file> -o <output dir> [-i <additional template dirs>...] [-g <global templates>...] [-m <message templates>...] [other options...] [custom rules or field rules]'
     parser = OptionParser(usage)
     parser.add_option(
         "-v",
@@ -104,6 +112,18 @@ if __name__ == '__main__':
         help="print output file list but generate it",
         dest="print_output_file",
         default=False)
+    parser.add_option(
+        "--no-overwrite",
+        action="store_true",
+        help="do not overwrite output file if it's already exists.",
+        dest="no_overwrite",
+        default=False)
+    parser.add_option(
+        "--quiet",
+        action="store_true",
+        help="do not show the detail of generated files.",
+        dest="quiet",
+        default=False)
 
     (options, left_args) = parser.parse_args()
 
@@ -143,7 +163,8 @@ if __name__ == '__main__':
     from mako.lookup import TemplateLookup
     from mako.runtime import supports_caller
 
-    make_module_cache_dir = os.path.join(script_dir, '.mako_modules-{0}.{1}.{2}'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
+    temp_dir_holder = MakoModuleTempDir(os.path.join(script_dir, '.mako_modules-{0}.{1}.{2}'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2])))
+    make_module_cache_dir = temp_dir_holder.directory_path
     def gen_source(list_container, pb_msg=None):
         for input_file in list_container:
             is_message_header = False
@@ -205,20 +226,32 @@ if __name__ == '__main__':
             if options.print_output_file:
                 print(output_name)
             else:
-                print("Genarate template from {0} to {1}".format(source_template, output_name))
-                codecs.open(output_name, mode='w', encoding='utf-8-sig').write(
-                    source_tmpl.render(
-                        pb_set=pb_set,
-                        pb_msg=pb_msg,
-                        output_dir=output_dir,
-                        output_file=output_name,
-                        input_file=source_template,
-                        msg_prefix=options.msg_prefix
+                if options.no_overwrite and os.path.exists(output_name):
+                    if not options.quiet:
+                        print("[XRESCODE] Ignore genarate template from {0} to {1}, already exists.".format(source_template, output_name))
+                else:
+                    if not options.quiet:
+                        print("[XRESCODE] Genarate template from {0} to {1}".format(source_template, output_name))
+                    codecs.open(output_name, mode='w', encoding='utf-8-sig').write(
+                        source_tmpl.render(
+                            pb_set=pb_set,
+                            pb_msg=pb_msg,
+                            output_dir=output_dir,
+                            output_file=output_name,
+                            input_file=source_template,
+                            msg_prefix=options.msg_prefix
+                        )
                     )
-                )
 
     gen_source(options.global_template, None)
     for pb_msg in pb_set.generate_message:
         gen_source(options.message_template, pb_msg=pb_msg)
+
+    for rule in left_args:
+        if len(rule) < 2:
+            sys.stderr.write('[XRESCODE ERROR] Invalid custom rule {0}\n'.format(rule))
+            continue
+        if "g:" == rule[0:2].lower():
+            gen_source([rule[2:]], None)
 
     exit(pb_set.failed_count)

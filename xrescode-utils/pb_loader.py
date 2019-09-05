@@ -609,7 +609,7 @@ class PbDescSet:
         self.failed_count = 0
         for pb_file in self.pb_fds.file:
             for pb_msg in pb_file.message_type:
-                self.setup_pb_msg(pb_msg, msg_prefix)
+                self.setup_pb_msg(pb_file, pb_msg, msg_prefix)
         # print(self.pb_fds.file)
         for k in self.pb_msgs:
             v = self.pb_msgs[k]
@@ -632,11 +632,11 @@ class PbDescSet:
             else:
                 self.generate_message.append(v)
 
-    def setup_pb_msg(self, pb_msg, msg_prefix):
+    def setup_pb_msg(self, pb_file, pb_msg, msg_prefix):
         msg_obj = PbMsg(pb_file, pb_msg, msg_prefix)
         self.pb_msgs[msg_obj.full_name] = msg_obj
         for nested_type in pb_msg.nested_type:
-            self.setup_pb_msg(nested_type, msg_prefix)
+            self.setup_pb_msg(pb_file, nested_type, msg_prefix)
 
     def get_msg_by_type(self, type_name):
         if type_name and type_name[0:1] == ".":

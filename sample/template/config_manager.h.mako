@@ -26,6 +26,10 @@ import time
 #if defined(_MSC_VER) && ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
 #pragma warning(push)
 #pragma warning(disable : 4996)
+#pragma warning(disable : 4309)
+#if _MSC_VER >= 1922 && ((defined(__cplusplus) && __cplusplus >= 201704L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201704L))
+#pragma warning(disable : 5054)
+#endif
 #endif
 
 #ifdef max

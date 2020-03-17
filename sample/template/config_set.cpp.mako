@@ -31,6 +31,14 @@ pb_msg_class_name = pb_msg.get_cpp_class_name()
 #endif
 
 #ifdef _MSC_VER
+#if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#pragma warning(disable : 4309)
+#if _MSC_VER >= 1922 && ((defined(__cplusplus) && __cplusplus >= 201704L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201704L))
+#pragma warning(disable : 5054)
+#endif
+#endif
 #include <Windows.h>
 #endif
 
@@ -57,6 +65,12 @@ pb_msg_class_name = pb_msg.get_cpp_class_name()
 #pragma GCC diagnostic pop
 #elif defined(__clang__) || defined(__apple_build_version__)
 #pragma clang diagnostic pop
+#endif
+
+#ifdef _MSC_VER
+#if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#pragma warning(pop)
+#endif
 #endif
 
 #include <log/log_wrapper.h>

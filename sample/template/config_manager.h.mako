@@ -23,13 +23,22 @@ import time
 
 #include <lock/spin_rw_lock.h>
 
-#if defined(_MSC_VER) && ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+#if defined(_MSC_VER)
 #pragma warning(push)
+#if ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4309)
+#endif
 #if _MSC_VER >= 1922 && ((defined(__cplusplus) && __cplusplus >= 201704L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201704L))
 #pragma warning(disable : 5054)
 #endif
+#if _MSC_VER < 1910
+#pragma warning(disable : 4800)
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <Windows.h>
 #endif
 
 #ifdef max
@@ -40,8 +49,10 @@ import time
 #undef min
 #endif
 
-#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)  // && (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
+#if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
 #pragma GCC diagnostic push
+#endif
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #elif defined(__clang__) || defined(__apple_build_version__)
 #pragma clang diagnostic push
@@ -52,13 +63,15 @@ import time
 #include "${pb_msg.get_cpp_header_path()}"
 % endfor
 
-#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)  // && (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
+#if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
 #pragma GCC diagnostic pop
+#endif
 #elif defined(__clang__) || defined(__apple_build_version__)
 #pragma clang diagnostic pop
 #endif
 
-#if defined(_MSC_VER) && ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+#if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
 

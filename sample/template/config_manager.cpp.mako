@@ -83,17 +83,19 @@ namespace excel {
         int ret = 0;
         int res = 0;
 % for pb_msg in pb_set.generate_message:
-        res = cfg_group->${pb_msg.get_cpp_public_var_name()}.on_inited();
+%   for loader in pb_msg.loaders:
+        res = cfg_group->${loader.get_cpp_public_var_name()}.on_inited();
         if (res < 0) {
-            WLOGERROR("[EXCEL] ${pb_msg.get_cpp_public_var_name()}.on_inited() failed, res: %d", res);
+            WLOGERROR("[EXCEL] ${loader.get_cpp_public_var_name()}.on_inited() failed, res: %d", res);
             ret = res;
         } else {
             if (ret >= 0) {
                 ret += res;
             }
 
-            WLOGINFO("[EXCEL] initialize %s for new config_group success", "${pb_msg.get_cpp_public_var_name()}");
+            WLOGINFO("[EXCEL] initialize %s for new config_group success", "${loader.get_cpp_public_var_name()}");
         }
+%   endfor
 % endfor
 
         if (ret >= 0) {
@@ -167,13 +169,15 @@ namespace excel {
         // 触发加载所有表
         int res = 0;
 % for pb_msg in pb_set.generate_message:
-        res = cfg_group->${pb_msg.get_cpp_public_var_name()}.load_all();
+%   for loader in pb_msg.loaders:
+        res = cfg_group->${loader.get_cpp_public_var_name()}.load_all();
         if (res < 0) {
-            WLOGERROR("[EXCEL] ${pb_msg.get_cpp_public_var_name()}.load_all() failed, res: %d", res);
+            WLOGERROR("[EXCEL] ${loader.get_cpp_public_var_name()}.load_all() failed, res: %d", res);
             ret = res;
         } else if (ret >= 0) {
             ret += res;
         }
+%   endfor
 % endfor
 
         if (del_when_failed && ret < 0) {

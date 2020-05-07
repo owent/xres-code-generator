@@ -1,3 +1,7 @@
+*.sh eol=lf
+*.py eol=lf
+*.md eol=crlf
+*.txt eol=crlf
 *.exe filter=lfs diff=lfs merge=lfs -text
 tools/macos_x86_64/protoc filter=lfs diff=lfs merge=lfs -text
 tools/linux_x86_64/protoc filter=lfs diff=lfs merge=lfs -text

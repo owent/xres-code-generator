@@ -60,7 +60,9 @@ import time
 #endif
 
 % for pb_msg in pb_set.generate_message:
-#include "${pb_msg.get_cpp_header_path()}"
+%   for loader in pb_msg.loaders:
+#include "${loader.get_cpp_header_path()}"
+%   endfor
 % endfor
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
@@ -80,7 +82,9 @@ namespace excel {
         std::string version;
 
 % for pb_msg in pb_set.generate_message:
-        ${pb_msg.get_cpp_class_full_name()} ${pb_msg.get_cpp_public_var_name()} ;
+%   for loader in pb_msg.loaders:
+        ${loader.get_cpp_class_full_name()} ${loader.get_cpp_public_var_name()} ;
+%   endfor
 % endfor
 
 % for block_file in pb_set.get_custom_blocks("custom_config_group"):

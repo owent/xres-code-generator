@@ -12,6 +12,7 @@ chmod +x "$PROTOC_BIN";
 
 ../xrescode-gen.py -i template -p sample.pb -o pbcpp                      \
     -g template/config_manager.h.mako -g template/config_manager.cpp.mako \
-    -m H:template/config_set.h.mako -m S:template/config_set.cpp.mako     \
+    -l H:template/config_set.h.mako -l S:template/config_set.cpp.mako     \
+    -g template/DataTableCustomIndex.lua.mako                             \
     --pb-include-prefix "pbdesc/"                                         \
     "$@"

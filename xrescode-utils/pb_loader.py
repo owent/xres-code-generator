@@ -371,108 +371,119 @@ class PbMsgIndex:
 
 
 class PbMsgCodeExt:
-    def __init__(self, outer_msg, inner_msg):
+    def __init__(self, outer_file, outer_msg, inner_file, inner_msg, loader, package):
+        self.outer_file = outer_file
         self.outer_msg = outer_msg
+        self.inner_file = inner_file
         self.inner_msg = inner_msg
         self.invalid_index_count = 0
-        if outer_msg.options.HasExtension(ext.file_list):
-            self.file_list = outer_msg.options.Extensions[ext.file_list]
-        else:
-            self.file_list = None
-
-        if outer_msg.options.HasExtension(ext.file_path):
-            self.file_path = outer_msg.options.Extensions[ext.file_path]
-        else:
-            self.file_path = None
-
+        self.file_list = None
+        self.file_path = None
         self.indexes = []
-        for idx in outer_msg.options.Extensions[ext.indexes]:
-            index = PbMsgIndex(inner_msg, idx)
-            if index.is_valid():
-                self.indexes.append(index)
-            else:
-                self.invalid_index_count = self.invalid_index_count + 1
-
         self.tags = set()
-        for tag in outer_msg.options.Extensions[ext.tags]:
-            self.tags.add(tag)
+        self.class_name = inner_msg.name
+        self.loader = loader
+        self.package = package
 
-        if outer_msg.options.HasExtension(ext.class_name):
-            self.class_name = outer_msg.options.Extensions[ext.class_name]
-        else:
-            self.class_name = inner_msg.name
+        if not self.loader:
+            return
+
+        if self.loader.file_list:
+            self.file_list = self.loader.file_list
+
+        if self.loader.file_path:
+            self.file_path = self.loader.file_path
+
+        if self.loader.indexes:
+            for idx in self.loader.indexes:
+                index = PbMsgIndex(inner_msg, idx)
+                if index.is_valid():
+                    self.indexes.append(index)
+                else:
+                    self.invalid_index_count = self.invalid_index_count + 1
+
+        if self.loader.tags:
+            for tag in self.loader.tags:
+                self.tags.add(tag)
+
+        if self.loader.class_name:
+            self.class_name = self.loader.class_name
 
     def is_valid(self):
+        if self.outer_msg is None or self.inner_msg is None:
+            return False
         return self.file_list is not None or self.file_path is not None
 
 
-class PbMsg:
-    def __init__(self, pb_file, pb_msg, msg_prefix):
+class PbMsgLoader:
+    def __init__(self, pb_file, pb_msg, msg_prefix, nested_from_prefix, pb_loader):
         self.pb_file = pb_file
         self.pb_msg = pb_msg
         self.msg_prefix = msg_prefix
-        self.full_name = '{0}.{1}'.format(pb_file.package, pb_msg.name)
-        self.cpp_package_prefix = self.pb_file.package.replace(".", "::")
+        self.nested_from_prefix = nested_from_prefix
+        self.full_name = pb_msg.name
+        if nested_from_prefix:
+            self.full_name = nested_from_prefix + self.full_name
+        if pb_file.package:
+            self.full_name = '{0}.{1}'.format(pb_file.package, pb_msg.name)
         self.code = None
         self.code_field = None
         self.pb_outer_class_name = None
         self.pb_inner_class_name = None
         self.cpp_class_name = None
+        self.cpp_class_full_name = None
         self.cpp_if_guard_name = None
         self.cs_class_name = None
         self.cs_pb_inner_class_name = None
         self.cs_pb_outer_class_name = None
+        self.pb_loader = pb_loader
 
     def setup_code(self, fds):
+        if not self.pb_loader:
+            return
+
         if self.pb_file.package == 'google.protobuf':
             return
 
-        fallback_items_field = []
-        using_fallback_items = True
-        for fd in self.pb_msg.field:
-            if fd.options.HasExtension(ext.excel_row) and fd.options.Extensions[ext.excel_row]:
-                inner_msg = fds.get_msg_by_type(fd.type_name)
-                if inner_msg is not None:
-                    code_ext = PbMsgCodeExt(self.pb_msg, inner_msg.pb_msg)
-                    if code_ext.is_valid():
-                        self.code = code_ext
-                        self.code_field = fd
-                        using_fallback_items = False
+        if self.pb_loader.code_field:
+            code_ext = None
+            for fd in self.pb_msg.field:
+                if fd.name == self.pb_loader.code_field:
+                    if not fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE or not fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
+                        fds.add_failed_count()
+                        sys.stderr.write('[XRESCODE ERROR] code field {0} of {1} must be repeated message\n'.format(fd.name, self.full_name))
                         break
-                else:
-                    fds.add_failed_count()
-                    sys.stderr.write('[XRESCODE ERROR] excel_row message {0} not found for {1}\n'.format(fd.type_name, self.full_name))
-            elif fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
-                fallback_items_field.append(fd)
-
-        if self.code is None and fallback_items_field:
-            fd = fallback_items_field[0]
-            inner_msg = fds.get_msg_by_type(fd.type_name)
-            if inner_msg is not None:
-                code_ext = PbMsgCodeExt(self.pb_msg, inner_msg.pb_msg)
-                if code_ext.is_valid():
-                    self.code = code_ext
-                    self.code_field = fd
-            else:
+                    inner_msg = fds.get_msg_by_type(fd.type_name)
+                    if inner_msg is None:
+                        fds.add_failed_count()
+                        sys.stderr.write('[XRESCODE ERROR] can not find message {0} for code field {1} of {2}\n'.format(fd.type_name, fd.name, self.full_name))
+                        break
+                    code_ext = PbMsgCodeExt(self.pb_file, self.pb_msg, inner_msg.pb_file, inner_msg.pb_msg, self.pb_loader, self.pb_file.package)
+                    break
+            if code_ext is None:
                 fds.add_failed_count()
-                sys.stderr.write('[XRESCODE ERROR] fallback item message {0} not found for {1}\n'.format(fd.type_name, self.full_name))
+                sys.stderr.write('[XRESCODE ERROR] code field {0} can not be found in {1}\n'.format(self.pb_loader.code_field, self.full_name))
+        else:
+            code_ext = PbMsgCodeExt(fds.shared_outer_msg.pb_file, fds.shared_outer_msg.pb_msg, self.pb_file, self.pb_msg, self.pb_loader, self.pb_file.package)
+
+        if code_ext and code_ext.is_valid():
+            self.code = code_ext
+            if not self.code_field:
+                self.code_field = fds.shared_code_field
 
         if self.code is None:
-            if self.pb_msg.options.HasExtension(ext.file_list):
+            if self.pb_loader.file_list:
                 fds.add_failed_count()
-                print('[XRESCODE WARNING] message {0} has file_list but without valid excel_row or item field, ignored'.format(self.full_name))
-            if self.pb_msg.options.HasExtension(ext.file_path):
+                print('[XRESCODE WARNING] message {0} has file_list but without valid field, ignored'.format(self.full_name))
+            if self.pb_loader.file_path:
                 fds.add_failed_count()
-                print('[XRESCODE WARNING] message {0} has file_path but without valid excel_row or item field, ignored'.format(self.full_name))
+                print('[XRESCODE WARNING] message {0} has file_path but without valid field, ignored'.format(self.full_name))
         else:
             if self.code.invalid_index_count > 0:
                 fds.add_failed_count()
-            if self.pb_msg.options.HasExtension(ext.file_list) and self.pb_msg.options.HasExtension(ext.file_path):
+            if self.code.file_list and self.code.file_path:
                 fds.add_failed_count()
                 print('[XRESCODE WARNING] message {0} has both file_list and file_path, should only has one'.format(self.full_name))
-            if using_fallback_items and len(fallback_items_field) > 1:
-                fds.add_failed_count()
-                print('[XRESCODE WARNING] message {0} has no field with excel_row and more than 1 fields is repeated message, we will only use the first one'.format(self.full_name))
 
     def has_code(self):
         return self.code is not None
@@ -488,7 +499,11 @@ class PbMsg:
     def get_pb_outer_class_name(self):
         if self.pb_outer_class_name is not None:
             return self.pb_outer_class_name
-        self.pb_outer_class_name = "::" + self.cpp_package_prefix + "::" + self.pb_msg.name
+        cpp_package_prefix = self.code.outer_file.package.replace(".", "::")
+        if cpp_package_prefix:
+            self.pb_outer_class_name =  "::" + cpp_package_prefix + "::" + self.code.outer_msg.name
+        else:
+            self.pb_outer_class_name =  "::" + self.code.outer_msg.name
         return self.pb_outer_class_name
 
     def get_pb_inner_class_name(self):
@@ -497,7 +512,11 @@ class PbMsg:
 
         if self.code is None:
             return ""
-        self.pb_inner_class_name =  "::" + self.cpp_package_prefix + "::" + self.code.inner_msg.name
+        cpp_package_prefix = self.code.inner_file.package.replace(".", "::")
+        if cpp_package_prefix:
+            self.pb_inner_class_name =  "::" + cpp_package_prefix + "::" + self.code.inner_msg.name
+        else:
+            self.pb_inner_class_name =  "::" + self.code.inner_msg.name
         return self.pb_inner_class_name
 
     def get_cpp_class_name(self):
@@ -530,7 +549,15 @@ class PbMsg:
     def get_cs_pb_outer_class_name(self):
         if self.cs_pb_outer_class_name is not None:
             return self.pb_outer_class_name
-        self.cs_pb_outer_class_name = self.cpp_package_prefix + "." + self.pb_msg.name
+
+        if self.code is None:
+            return ""
+
+        cs_package_prefix = self.code.outer_file.package
+        if cs_package_prefix:
+            self.cs_pb_outer_class_name =  cs_package_prefix + "." + self.code.outer_msg.name
+        else:
+            self.cs_pb_outer_class_name =  self.code.outer_msg.name
         return self.cs_pb_outer_class_name
 
     def get_cs_pb_inner_class_name(self):
@@ -539,18 +566,37 @@ class PbMsg:
 
         if self.code is None:
             return ""
-        self.cs_pb_inner_class_name = self.cpp_package_prefix + \
-            "." + self.code.inner_msg.name
+
+        cs_package_prefix = self.code.inner_file.package
+        if cs_package_prefix:
+            self.cs_pb_inner_class_name =  cs_package_prefix + "." + self.code.inner_msg.name
+        else:
+            self.cs_pb_inner_class_name =  self.code.inner_msg.name
         return self.cs_pb_inner_class_name
 
     def get_cpp_class_full_name(self):
-        return self.cpp_package_prefix + "::" + self.get_cpp_class_name()
+        if self.cpp_class_full_name is not None:
+            return self.cpp_class_full_name
 
-    def get_cpp_namespace_decl_begin(self):
-        if not self.cpp_package_prefix:
+        if self.code is None:
             return ""
 
-        package_names = self.cpp_package_prefix.strip().split("::")
+        cpp_package_prefix = self.code.package.replace(".", "::")
+        if cpp_package_prefix:
+            self.cpp_class_full_name = "::" + cpp_package_prefix + "::" + self.get_cpp_class_name()
+        else:
+            self.cpp_class_full_name = "::" + self.get_cpp_class_name()
+
+        return self.cpp_class_full_name
+
+    def get_cpp_namespace_decl_begin(self):
+        if self.code is None:
+            return ""
+
+        if not self.code.package:
+            return ""
+
+        package_names = self.code.package.strip().split(".")
         if not package_names:
             return ""
 
@@ -560,10 +606,13 @@ class PbMsg:
         return " ".join(ns_ls)
 
     def get_cpp_namespace_decl_end(self):
-        if not self.cpp_package_prefix:
+        if self.code is None:
             return ""
 
-        package_names = self.cpp_package_prefix.strip().split("::")
+        if not self.code.package:
+            return ""
+
+        package_names = self.code.package.strip().split(".")
         if not package_names:
             return ""
 
@@ -600,8 +649,64 @@ class PbMsg:
         return ToCamelName(self.code_field.name)
 
 
+class PbMsg:
+    def __init__(self, pb_file, pb_msg, msg_prefix, nested_from_prefix):
+        self.pb_file = pb_file
+        self.pb_msg = pb_msg
+        self.msg_prefix = msg_prefix
+        self.nested_from_prefix = nested_from_prefix
+        self.full_name = pb_msg.name
+        if nested_from_prefix:
+            self.full_name = nested_from_prefix + self.full_name
+        if pb_file.package:
+            self.full_name = '{0}.{1}'.format(pb_file.package, pb_msg.name)
+        self.loaders = []
+
+    def setup_code(self, fds, include_tags, exclude_tags):
+        if self.pb_file.package == 'google.protobuf':
+            return
+
+        if ext.loader not in self.pb_msg.options.Extensions:
+            return
+        
+        for loader in self.pb_msg.options.Extensions[ext.loader]:
+            skip_message = False
+            if exclude_tags:
+                for tag in exclude_tags:
+                    if tag in loader.tags:
+                        skip_message = True
+                        break
+            if skip_message:
+                continue
+            if include_tags:
+                skip_message = True
+                for tag in include_tags:
+                    if tag in loader.tags:
+                        skip_message = False
+                        break
+            if skip_message:
+                continue
+
+            loader_inst = PbMsgLoader(self.pb_file, self.pb_msg, self.msg_prefix, self.nested_from_prefix, loader)
+            loader_inst.setup_code(fds)
+            if loader_inst.has_code():
+                self.loaders.append(loader_inst)
+
+    def has_loader(self):
+        return len(self.loaders) > 0
+
+    def get_pb_header_path(self):
+        base_file = os.path.basename(self.pb_file.name)
+        suffix_pos = base_file.rfind('.')
+        if suffix_pos < 0:
+            return base_file + ".pb.h"
+        else:
+            return base_file[0:suffix_pos] + ".pb.h"
+
+
 class PbDescSet:
-    def __init__(self, pb_file_path, tags=[], msg_prefix='', proto_v3 = False, pb_include_prefix="", exclude_tags=[]):
+    def __init__(self, pb_file_path, tags=[], msg_prefix='', proto_v3 = False, pb_include_prefix="", exclude_tags=[], 
+                 shared_outer_type='org.xresloader.pb.xresloader_datablocks', shared_outer_field='data_block'):
         self.pb_file = pb_file_path
         self.proto_v3 = proto_v3
         self.pb_include_prefix = pb_include_prefix
@@ -610,36 +715,29 @@ class PbDescSet:
         self.pb_msgs = dict()
         self.custom_blocks = dict()
         self.failed_count = 0
+        self.shared_outer_msg = None
+        self.shared_code_field = None
         for pb_file in self.pb_fds.file:
             for pb_msg in pb_file.message_type:
                 self.setup_pb_msg(pb_file, pb_msg, msg_prefix)
+        self.shared_outer_msg = self.get_msg_by_type(shared_outer_type)
+        if self.shared_outer_msg:
+            for fd in self.shared_outer_msg.pb_msg.field:
+                if fd.name == shared_outer_field and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
+                    self.shared_code_field = fd
+                    break
         # print(self.pb_fds.file)
         for k in self.pb_msgs:
             v = self.pb_msgs[k]
-            v.setup_code(self)
-            if not v.has_code():
-                continue
-            skip_message = False
-            if exclude_tags:
-                for tag in exclude_tags:
-                    if tag in v.tags:
-                        skip_message = True
-                        break
-            if skip_message:
-                continue
-            if tags:
-                for tag in tags:
-                    if tag in v.tags:
-                        self.generate_message.append(v)
-                        break
-            else:
+            v.setup_code(self, tags, exclude_tags)
+            if v.has_loader():
                 self.generate_message.append(v)
 
-    def setup_pb_msg(self, pb_file, pb_msg, msg_prefix):
-        msg_obj = PbMsg(pb_file, pb_msg, msg_prefix)
+    def setup_pb_msg(self, pb_file, pb_msg, msg_prefix, nested_from_prefix = ""):
+        msg_obj = PbMsg(pb_file, pb_msg, msg_prefix, nested_from_prefix)
         self.pb_msgs[msg_obj.full_name] = msg_obj
         for nested_type in pb_msg.nested_type:
-            self.setup_pb_msg(pb_file, nested_type, msg_prefix)
+            self.setup_pb_msg(pb_file, nested_type, msg_prefix, nested_from_prefix + pb_msg.name + ".")
 
     def get_msg_by_type(self, type_name):
         if type_name and type_name[0:1] == ".":

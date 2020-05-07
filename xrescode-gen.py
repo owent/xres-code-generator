@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import glob
@@ -53,6 +53,13 @@ def main():
         action="append",
         help="add message template(H:<file name> for header and S:<file name> for source)",
         dest="message_template",
+        default=[])
+    parser.add_option(
+        "-l",
+        "--loader",
+        action="append",
+        help="add loader template(H:<file name> for header and S:<file name> for source)",
+        dest="loader_template",
         default=[])
     parser.add_option(
         "-p",
@@ -132,6 +139,18 @@ def main():
         help="set encoding of output file(default: utf-8-sig).",
         dest="encoding",
         default='utf-8-sig')
+    parser.add_option(
+        "--shared-outer-type",
+        action="store",
+        help="set common outer type(default: org.xresloader.pb.xresloader_datablocks).",
+        dest="shared_outer_type",
+        default='org.xresloader.pb.xresloader_datablocks')
+    parser.add_option(
+        "--shared-outer-field",
+        action="store",
+        help="set common outer type(default: data_block).",
+        dest="shared_outer_field",
+        default='data_block')
 
     (options, left_args) = parser.parse_args()
 
@@ -160,7 +179,9 @@ def main():
     from pb_loader import PbDescSet
     pb_set = PbDescSet(options.pb, tags=options.tags, msg_prefix=options.msg_prefix, 
         proto_v3=options.proto_v3, pb_include_prefix=options.pb_include_prefix, 
-        exclude_tags=options.exclude_tags)
+        exclude_tags=options.exclude_tags, shared_outer_type=options.shared_outer_type,
+        shared_outer_field=options.shared_outer_field
+    )
 
     for cg in options.custom_group:
         name_idx = cg.find(":")
@@ -173,11 +194,11 @@ def main():
 
     temp_dir_holder = MakoModuleTempDir(os.path.join(script_dir, '.mako_modules-{0}.{1}.{2}'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2])))
     make_module_cache_dir = temp_dir_holder.directory_path
-    def gen_source(list_container, pb_msg=None):
+    def gen_source(list_container, pb_msg=None, loader=None):
         for input_file in list_container:
             is_message_header = False
             is_message_source = False
-            if pb_msg is None:
+            if loader is None:
                 source_template = input_file
             else:
                 if input_file[0:2].lower() == "h:":
@@ -198,9 +219,9 @@ def main():
             suffix_pos = source_template.rfind('.')
 
             if is_message_header:
-                output_name = pb_msg.get_cpp_header_path()
+                output_name = loader.get_cpp_header_path()
             elif is_message_source:
-                output_name = pb_msg.get_cpp_source_path()
+                output_name = loader.get_cpp_source_path()
             else:
                 if suffix_pos < 0:
                     output_name = os.path.basename(source_template)
@@ -209,14 +230,14 @@ def main():
                         output_name = os.path.basename(source_template[0:suffix_pos])
                     else:
                         output_name = os.path.basename(source_template)
-                if pb_msg is not None and pb_msg.code:
+                if loader is not None and loader.code:
                     suffix_pos = output_name.rfind('.')
                     if suffix_pos < 0:
-                        output_name = "{0}_{1}_{2}".format(output_name, pb_msg.cpp_package_prefix, 
-                            pb_msg.code.class_name).replace("::", "_").replace("__", "_")
+                        output_name = "{0}_{1}_{2}".format(output_name, loader.cpp_package_prefix, 
+                            loader.code.class_name).replace("::", "_").replace("__", "_")
                     else:
-                        output_name = "{0}_{1}_{2}{3}".format(output_name[0:suffix_pos], pb_msg.cpp_package_prefix, 
-                            pb_msg.code.class_name, output_name[suffix_pos:]).replace("::", "_").replace("__", "_")
+                        output_name = "{0}_{1}_{2}{3}".format(output_name[0:suffix_pos], loader.cpp_package_prefix, 
+                            loader.code.class_name, output_name[suffix_pos:]).replace("::", "_").replace("__", "_")
                     
             output_dir = os.getcwd()
             if options.output_dir is not None:
@@ -244,6 +265,7 @@ def main():
                         source_tmpl.render(
                             pb_set=pb_set,
                             pb_msg=pb_msg,
+                            loader=loader,
                             output_dir=output_dir,
                             output_file=output_name,
                             input_file=source_template,
@@ -251,16 +273,18 @@ def main():
                         )
                     )
 
-    gen_source(options.global_template, None)
+    gen_source(options.global_template, None, None)
     for pb_msg in pb_set.generate_message:
-        gen_source(options.message_template, pb_msg=pb_msg)
+        gen_source(options.message_template, pb_msg=pb_msg, loader=None)
+        for loader in pb_msg.loaders:
+            gen_source(options.loader_template, pb_msg=pb_msg, loader=loader)
 
     for rule in left_args:
         if len(rule) < 2:
             sys.stderr.write('[XRESCODE ERROR] Invalid custom rule {0}\n'.format(rule))
             continue
         if "g:" == rule[0:2].lower():
-            gen_source([rule[2:]], None)
+            gen_source([rule[2:]], None, None)
 
     del temp_dir_holder
     exit(pb_set.failed_count)

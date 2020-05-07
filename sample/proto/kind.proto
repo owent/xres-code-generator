@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+import "xresloader.proto";
+import "xresloader_ue.proto";
+
+import "xrescode_extensions_v3.proto";
+
+message role_upgrade_cfg {
+    option (org.xresloader.ue.helper)       = "helper";
+    option (org.xresloader.msg_description) = "Test role_upgrade_cfg with multi keys";
+
+    option (xrescode.loader) = {
+        file_path : "role_upgrade_cfg.bytes"
+        indexes : {
+            fields : "Id"
+            index_type : EN_INDEX_KL // Key - List index: (Id) => list<role_upgrade_cfg>
+        }
+        indexes : {
+            fields : "Id"
+            fields : "Level"
+            index_type : EN_INDEX_KV // Key - Value index: (Id, Level) => role_upgrade_cfg
+        }
+        tags : "client"
+        tags : "server"
+    };
+
+    uint32 Id        = 1 [ (org.xresloader.ue.key_tag) = 1000 ];
+    uint32 Level     = 2 [ (org.xresloader.ue.key_tag) = 1 ];
+    uint32 CostType  = 3 [ (org.xresloader.verifier) = "cost_type", (org.xresloader.field_description) = "Refer to cost_type" ];
+    int32  CostValue = 4;
+    int32  ScoreAdd  = 5;
+}

@@ -14,5 +14,6 @@ chmod +x "$PROTOC_BIN";
     -g template/config_manager.h.mako -g template/config_manager.cpp.mako \
     -l H:template/config_set.h.mako -l S:template/config_set.cpp.mako     \
     -g template/DataTableCustomIndex.lua.mako                             \
+    -g template/DataTableCustomIndex53.lua.mako                           \
     --pb-include-prefix "pbdesc/"                                         \
     "$@"

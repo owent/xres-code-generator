@@ -199,16 +199,19 @@ def main():
             is_message_header = False
             is_message_source = False
             if loader is None:
-                source_template = input_file
+                render_file_rules = input_file.split(':')
             else:
                 if input_file[0:2].lower() == "h:":
                     is_message_header = True
-                    source_template = input_file[2:]
+                    render_file_rules = input_file[2:].split(':')
                 elif input_file[0:2].lower() == "s:":
                     is_message_source = True
-                    source_template = input_file[2:]
+                    render_file_rules = input_file[2:].split(':')
                 else:
-                    source_template = input_file
+                    render_file_rules = input_file.split(':')
+
+            source_template = render_file_rules[0]
+            output_name = None
 
             source_template_dir = os.path.realpath(os.path.dirname(source_template))
             lookup_dirs = [source_template_dir]
@@ -218,7 +221,27 @@ def main():
                 os.path.basename(source_template))
             suffix_pos = source_template.rfind('.')
 
-            if is_message_header:
+            output_dir = os.getcwd()
+            if options.output_dir is not None:
+                output_dir = options.output_dir
+                if not os.path.exists(options.output_dir):
+                    os.makedirs(options.output_dir)
+                else:
+                    os.chmod(options.output_dir, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO)
+
+            if len(render_file_rules) > 1:
+                output_render_tmpl = Template(render_file_rules[1], lookup=project_lookup)
+                output_name = output_render_tmpl.render(
+                    pb_set=pb_set,
+                    pb_msg=pb_msg,
+                    loader=loader,
+                    output_dir=output_dir,
+                    output_file=render_file_rules[1],
+                    input_file=source_template,
+                    msg_prefix=options.msg_prefix
+                )
+
+            elif is_message_header:
                 output_name = loader.get_cpp_header_path()
             elif is_message_source:
                 output_name = loader.get_cpp_source_path()
@@ -238,17 +261,9 @@ def main():
                     else:
                         output_name = "{0}_{1}_{2}{3}".format(output_name[0:suffix_pos], loader.cpp_package_prefix, 
                             loader.code.class_name, output_name[suffix_pos:]).replace("::", "_").replace("__", "_")
-                    
-            output_dir = os.getcwd()
-            if options.output_dir is not None:
-                output_dir = options.output_dir
-                if not os.path.exists(options.output_dir):
-                    os.makedirs(options.output_dir)
-                else:
-                    os.chmod(options.output_dir, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO)
 
-                output_name = os.path.join(options.output_dir, output_name)
-
+            output_name = os.path.join(options.output_dir, output_name)
+            
             if os.path.exists(output_name):
                 os.chmod(output_name, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO)
 
@@ -285,6 +300,13 @@ def main():
             continue
         if "g:" == rule[0:2].lower():
             gen_source([rule[2:]], None, None)
+        if "m:" == rule[0:2].lower():
+            for pb_msg in pb_set.generate_message:
+                gen_source([rule[2:]], pb_msg=pb_msg, loader=None)
+        if "l:" == rule[0:2].lower():
+            for pb_msg in pb_set.generate_message:
+                for loader in pb_msg.loaders:
+                    gen_source(gen_source([rule[2:]], pb_msg=pb_msg, loader=loader))
 
     del temp_dir_holder
     exit(pb_set.failed_count)

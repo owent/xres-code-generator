@@ -5,8 +5,11 @@
 * Globale template: ```g:<template path>:<output path>```
     > Example: ```g:input.h.mako:input.generated.h```
 
-* Field template: ```f:<header template path>:<select field regex>:<output path rule>```
-    > Example: ```f:input.h.mako:CSMsg.mcs_.*_req:input.generated.${xpath_node.get_name().lower()}.h```
+* Message template(render for each message with loader): ```m:<header template path>:<output path rule>```
+    > Example: ```m:input.h.mako:input.generated.${loader.code.class_name.lower()}.h```
+
+* Loader template(render for loader): ```l:<header template path>:<output path rule>```
+    > Example: ```l:input.h.mako:input.generated.${loader.code.class_name.lower()}.h```
 
 ## Update dependencies
 

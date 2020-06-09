@@ -2,7 +2,8 @@
 local CUSTOM_INDEX_MOD_NAME = 'DataTableCustomIndex53'
 
 local DataTableService = {
-    _all_loaders = {}
+    _all_loaders = {},
+    OnError = nil -- Used for notice not found error, parameters is (message, index, indexName, keys...)
 }
 
 local DataTableIndex = {}
@@ -66,6 +67,10 @@ function DataTableIndex.GetByIndex(self, index_name, ...)
 
     local index_set = self._index_handles[index_name]
     if index_set == nil then
+        if 'function' == type(DataTableService.OnError) then
+            local msg = string.format ('Index "%s" can not be found on "%s", key(s)=(%s)', index_name, self.Name, table.concat({...}, ', '))
+            pcall(DataTableService.OnError, msg, self, index_name, ...)
+        end
         return nil
     end
 
@@ -78,11 +83,14 @@ function DataTableIndex.GetByIndex(self, index_name, ...)
             if index_set.options.isList then
                 return {}
             else
-                -- if index_set.options.allowNotFound then
-                --     return nil
-                -- else
-                --     return nil
-                -- end
+                if index_set.options.allowNotFound then
+                    return nil
+                end
+
+                if 'function' == type(DataTableService.OnError) then
+                    local msg = string.format ('Record with key(s)=(%s) can not be found on index "%s" of "%s"', table.concat({...}, ', '), index_name, self.Name)
+                    pcall(DataTableService.OnError, msg, self, index_name, ...)
+                end
                 return nil
             end
         end
@@ -92,18 +100,28 @@ function DataTableIndex.GetByIndex(self, index_name, ...)
 end
 
 -- ===================== DataTableService =====================
-function DataTableService.Get(self, loader_name)
+function DataTableService.GetByGroup(self, group, loader_name)
     if nil == loader_name then
         return nil
     end
 
-    return self._all_loaders[loader_name]
+    return group[loader_name]
+end
+
+function DataTableService.GetCurrentGroup(self)
+    return self._all_loaders
+end
+
+function DataTableService.Get(self, loader_name)
+    return self:GetByGroup(self._all_loaders, loader_name)
 end
 
 function DataTableService.LoadTables(self)
+    self._all_loaders = {}
     local index_mapping = require(CUSTOM_INDEX_MOD_NAME)
     for k, v in pairs(index_mapping) do
         local loader = {
+            Name = k,
             _indexes = v,
             _index_handles = nil
         }

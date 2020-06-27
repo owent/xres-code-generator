@@ -18,8 +18,8 @@ import time
 #include <string>
 #include <map>
 #include <unordered_map>
-
-#include <std/smart_ptr.h>
+#include <memory>
+#include <cstring>
 
 #include <lock/spin_rw_lock.h>
 

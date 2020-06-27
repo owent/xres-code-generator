@@ -30,6 +30,17 @@ namespace excel {
 
     config_manager::~config_manager() {}
 
+    const std::shared_ptr<config_manager>& me() {
+        static std::shared_ptr<config_manager> ret;
+        static std::once_flag ret_init_flag;
+
+        std::call_once(ret_init_flag, [&ret]() {
+            ret = std::make_shared<config_manager>();
+        });
+
+        return ret;
+    }
+
     int config_manager::init() {
         return 0;
     }

@@ -16,10 +16,9 @@ import time
 #include <functional>
 #include <list>
 #include <string>
-
-#include <std/smart_ptr.h>
-
-#include <design_pattern/singleton.h>
+#include <memory>
+#include <cstring>
+#include <mutex>
 
 #include <lock/spin_rw_lock.h>
 
@@ -92,18 +91,21 @@ namespace excel {
 % endfor
     } ;
 
-    class config_manager : public util::design_pattern::singleton<config_manager> {
+    class config_manager {
     public:
         typedef std::function<bool(std::string&, const char* path)> read_buffer_func_t;
         typedef std::function<bool(std::string&)> read_version_func_t;
         typedef std::shared_ptr<config_group_t> config_group_ptr_t;
         typedef std::function<void(config_group_ptr_t)> on_load_func_t;
 
-    protected:
+    private:
         config_manager();
         ~config_manager();
 
     public:
+        static const std::shared_ptr<config_manager>& me();
+        static inline const std::shared_ptr<config_manager>& instance() { return me(); };
+
         int init();
 
         int init_new_group();

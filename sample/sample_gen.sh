@@ -2,19 +2,19 @@
 
 cd "$(dirname "$0")";
 
-chmod +x ../tools/find_protoc.py ;
+REPO_DIR=".." ;
 
-PROTOC_BIN="$(../tools/find_protoc.py)";
+mkdir -p "$REPO_DIR/sample/pbcpp";
+cp -rvf "$REPO_DIR/template/common/lua/"*.lua "$REPO_DIR/sample/pbcpp";
+cp -rvf "$REPO_DIR/template/common/cpp/"* "$REPO_DIR/sample/pbcpp";
 
-chmod +x "$PROTOC_BIN";
+python "$REPO_DIR/tools/find_protoc.py" -I "$REPO_DIR/sample/proto" -I "$REPO_DIR/pb_extension" "$REPO_DIR/sample/proto/"*.proto -o "$REPO_DIR/sample/sample.pb" ;
 
-"$PROTOC_BIN" -I proto -I ../pb_extension proto/*.proto -o sample.pb ;
-
-../xrescode-gen.py -i template -p sample.pb -o pbcpp                        \
-    -g template/config_manager.h.mako -g template/config_manager.cpp.mako   \
-    -g template/config_easy_api.h.mako -g template/config_easy_api.cpp.mako \
-    -l H:template/config_set.h.mako -l S:template/config_set.cpp.mako       \
-    -g template/DataTableCustomIndex.lua.mako                               \
-    -g template/DataTableCustomIndex53.lua.mako                             \
-    --pb-include-prefix "pbdesc/"                                           \
+python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcpp"  \
+    -g "$REPO_DIR/template/config_manager.h.mako" -g "$REPO_DIR/template/config_manager.cpp.mako"                       \
+    -g "$REPO_DIR/template/config_easy_api.h.mako" -g "$REPO_DIR/template/config_easy_api.cpp.mako"                     \
+    -l "H:$REPO_DIR/template/config_set.h.mako" -l "S:$REPO_DIR/template/config_set.cpp.mako"                           \
+    -g "$REPO_DIR/template/DataTableCustomIndex.lua.mako"                                                               \
+    -g "$REPO_DIR/template/DataTableCustomIndex53.lua.mako"                                                             \
+    --pb-include-prefix "pbdesc/"                                                                                       \
     "$@"

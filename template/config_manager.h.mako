@@ -20,7 +20,7 @@ import time
 #include <cstring>
 #include <mutex>
 
-#include <lock/spin_rw_lock.h>
+#include "spin_rw_lock.h"
 
 #if defined(_MSC_VER)
 #pragma warning(push)
@@ -162,10 +162,10 @@ namespace excel {
 
         read_buffer_func_t read_file_handle_;
         read_version_func_t read_version_handle_;
-        mutable ::util::lock::spin_rw_lock handle_lock_;
+        mutable ::excel::lock::spin_rw_lock handle_lock_;
 
         std::list<config_group_ptr_t> config_group_list_;
-        mutable ::util::lock::spin_rw_lock config_group_lock_;
+        mutable ::excel::lock::spin_rw_lock config_group_lock_;
     };
 }  // namespace excel
 

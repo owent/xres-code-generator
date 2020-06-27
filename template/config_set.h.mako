@@ -21,7 +21,7 @@ import time
 #include <memory>
 #include <cstring>
 
-#include <lock/spin_rw_lock.h>
+#include "spin_rw_lock.h"
 
 #include <config/compiler_features.h>
 #include <design_pattern/singleton.h>
@@ -55,7 +55,7 @@ ${loader.get_cpp_namespace_decl_begin()}
         void merge_data(item_ptr_type);
 
     private:
-        ::util::lock::spin_rw_lock            load_file_lock_;
+        ::excel::lock::spin_rw_lock           load_file_lock_;
         std::unordered_map<std::string, bool> file_status_; // true: already loaded
 
 % for code_index in loader.code.indexes:

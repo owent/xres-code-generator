@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import glob
 import os
 import stat
 import sys
 import codecs
-import re
 import shutil
-import xml.etree.ElementTree as ET
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -34,6 +31,12 @@ def main():
         help="show version and exit",
         dest="version",
         default=False)
+    parser.add_option(
+        "--global-package",
+        action="store",
+        help="set global package name(namespace, passed as global_package into template)",
+        dest="global_package",
+        default='excel')
     parser.add_option(
         "--msg-prefix",
         action="store",
@@ -174,6 +177,7 @@ def main():
     template_paths = options.input_dir
     template_paths.append(os.path.join(script_dir, 'pb_extension'))
     template_paths.append(os.path.join(script_dir, 'xrescode-utils'))
+    template_paths.append(os.path.join(script_dir, 'template'))
 
     # parse pb file
     from pb_loader import PbDescSet
@@ -238,7 +242,8 @@ def main():
                     output_dir=output_dir,
                     output_file=render_file_rules[1],
                     input_file=source_template,
-                    msg_prefix=options.msg_prefix
+                    msg_prefix=options.msg_prefix,
+                    global_package=options.global_package
                 )
 
             elif is_message_header:
@@ -284,7 +289,8 @@ def main():
                             output_dir=output_dir,
                             output_file=output_name,
                             input_file=source_template,
-                            msg_prefix=options.msg_prefix
+                            msg_prefix=options.msg_prefix,
+                            global_package=options.global_package
                         )
                     )
 
@@ -298,12 +304,12 @@ def main():
         if len(rule) < 2:
             sys.stderr.write('[XRESCODE ERROR] Invalid custom rule {0}\n'.format(rule))
             continue
-        if "g:" == rule[0:2].lower():
+        if rule[0:2].lower() == "g:":
             gen_source([rule[2:]], None, None)
-        if "m:" == rule[0:2].lower():
+        if rule[0:2].lower() == "m:":
             for pb_msg in pb_set.generate_message:
                 gen_source([rule[2:]], pb_msg=pb_msg, loader=None)
-        if "l:" == rule[0:2].lower():
+        if rule[0:2].lower() == "l:":
             for pb_msg in pb_set.generate_message:
                 for loader in pb_msg.loaders:
                     gen_source(gen_source([rule[2:]], pb_msg=pb_msg, loader=loader))

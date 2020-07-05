@@ -166,6 +166,24 @@ def MakoPbMsgGetPbFieldCsType(context, arg):
 def MakoFirstCharUpper(context, arg):
     return FirstCharUpper(arg)
 
+@supports_caller
+def CppNamespaceBegin(context, arg):
+    return " ".join([("namespace {0}".format(x) + " {") for x in arg.split(".")])
+
+
+@supports_caller
+def CppNamespaceEnd(context, arg):
+    ret = ""
+    for _ in arg.split("."):
+        ret = ret + "} "
+    if ret:
+        return ret[0:-1]
+    return ret
+
+@supports_caller
+def CppFullPath(context, arg):
+    return "".join(["{0}::".format(x) for x in arg.split(".")])
+
 class PbMsgIndexType:
     KV = ext.EN_INDEX_KV
     KL = ext.EN_INDEX_KL
@@ -583,9 +601,9 @@ class PbMsgLoader:
 
         cpp_package_prefix = self.code.package.replace(".", "::")
         if cpp_package_prefix:
-            self.cpp_class_full_name = "::" + cpp_package_prefix + "::" + self.get_cpp_class_name()
+            self.cpp_class_full_name = cpp_package_prefix + "::" + self.get_cpp_class_name()
         else:
-            self.cpp_class_full_name = "::" + self.get_cpp_class_name()
+            self.cpp_class_full_name = self.get_cpp_class_name()
 
         return self.cpp_class_full_name
 
@@ -624,7 +642,7 @@ class PbMsgLoader:
     def get_cpp_if_guard_name(self):
         if self.cpp_if_guard_name is not None:
             return self.cpp_if_guard_name
-        self.cpp_if_guard_name = self.get_cpp_class_full_name().replace("::", "_").upper()
+        self.cpp_if_guard_name = "_" + self.get_cpp_class_full_name().replace("::", "_").upper()
         return self.cpp_if_guard_name
 
     def get_cpp_public_var_name(self):

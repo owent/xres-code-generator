@@ -124,8 +124,15 @@ class GeneratedProtocolMessageType(type):
 
     Returns:
       Newly-allocated class.
+
+    Raises:
+      RuntimeError: Generated code only work with python cpp extension.
     """
     descriptor = dictionary[GeneratedProtocolMessageType._DESCRIPTOR_KEY]
+
+    if isinstance(descriptor, str):
+      raise RuntimeError('The generated code only work with python cpp '
+                         'extension, but it is using pure python runtime.')
 
     # If a concrete class already exists for this descriptor, don't try to
     # create another.  Doing so will break any messages that already exist with
@@ -620,7 +627,7 @@ class _FieldProperty(property):
 def _AddPropertiesForRepeatedField(field, cls):
   """Adds a public property for a "repeated" protocol message field.  Clients
   can use this property to get the value of the field, which will be either a
-  _RepeatedScalarFieldContainer or _RepeatedCompositeFieldContainer (see
+  RepeatedScalarFieldContainer or RepeatedCompositeFieldContainer (see
   below).
 
   Note that when clients add values to these containers, we perform
@@ -676,7 +683,6 @@ def _AddPropertiesForNonRepeatedScalarField(field, cls):
   property_name = _PropertyName(proto_field_name)
   type_checker = type_checkers.GetTypeChecker(field)
   default_value = field.default_value
-  valid_values = set()
   is_proto3 = field.containing_type.syntax == 'proto3'
 
   def getter(self):
@@ -785,7 +791,8 @@ def _AddStaticMethods(cls):
   def RegisterExtension(extension_handle):
     extension_handle.containing_type = cls.DESCRIPTOR
     # TODO(amauryfa): Use cls.MESSAGE_FACTORY.pool when available.
-    cls.DESCRIPTOR.file.pool.AddExtensionDescriptor(extension_handle)
+    # pylint: disable=protected-access
+    cls.DESCRIPTOR.file.pool._AddExtensionDescriptor(extension_handle)
     _AttachFieldHelpers(cls, extension_handle)
   cls.RegisterExtension = staticmethod(RegisterExtension)
 
@@ -819,7 +826,8 @@ def _AddListFieldsMethod(message_descriptor, cls):
   cls.ListFields = ListFields
 
 _PROTO3_ERROR_TEMPLATE = \
-  'Protocol message %s has no non-repeated submessage field "%s"'
+  ('Protocol message %s has no non-repeated submessage field "%s" '
+   'nor marked as optional')
 _PROTO2_ERROR_TEMPLATE = 'Protocol message %s has no non-repeated field "%s"'
 
 def _AddHasFieldMethod(message_descriptor, cls):
@@ -838,10 +846,9 @@ def _AddHasFieldMethod(message_descriptor, cls):
       continue
     hassable_fields[field.name] = field
 
-  if not is_proto3:
-    # Fields inside oneofs are never repeated (enforced by the compiler).
-    for oneof in message_descriptor.oneofs:
-      hassable_fields[oneof.name] = oneof
+  # Has methods are supported for oneof descriptors.
+  for oneof in message_descriptor.oneofs:
+    hassable_fields[oneof.name] = oneof
 
   def HasField(self, field_name):
     try:
@@ -1072,7 +1079,6 @@ def _AddSerializeToStringMethod(message_descriptor, cls):
 
   def SerializeToString(self, **kwargs):
     # Check if the message has all of its required fields set.
-    errors = []
     if not self.IsInitialized():
       raise message_mod.EncodeError(
           'Message %s is missing required fields: %s' % (
@@ -1174,6 +1180,8 @@ def _AddMergeFromStringMethod(message_descriptor, cls):
         # pylint: disable=protected-access
         (tag, _) = decoder._DecodeVarint(tag_bytes, 0)
         field_number, wire_type = wire_format.UnpackTag(tag)
+        if field_number == 0:
+          raise message_mod.DecodeError('Field number 0 is illegal.')
         # TODO(jieluo): remove old_pos.
         old_pos = new_pos
         (data, new_pos) = decoder._DecodeUnknownField(
@@ -1358,12 +1366,6 @@ def _AddWhichOneofMethod(message_descriptor, cls):
   cls.WhichOneof = WhichOneof
 
 
-def _AddReduceMethod(cls):
-  def __reduce__(self):  # pylint: disable=invalid-name
-    return (type(self), (), self.__getstate__())
-  cls.__reduce__ = __reduce__
-
-
 def _Clear(self):
   # Clear fields.
   self._fields = {}
@@ -1426,7 +1428,6 @@ def _AddMessageMethods(message_descriptor, cls):
   _AddIsInitializedMethod(message_descriptor, cls)
   _AddMergeFromMethod(cls)
   _AddWhichOneofMethod(message_descriptor, cls)
-  _AddReduceMethod(cls)
   # Adds methods which do not depend on cls.
   cls.Clear = _Clear
   cls.UnknownFields = _UnknownFields

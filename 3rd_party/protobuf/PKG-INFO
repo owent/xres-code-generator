@@ -1,6 +1,6 @@
 Metadata-Version: 1.2
 Name: protobuf
-Version: 3.9.1
+Version: 3.12.2
 Summary: Protocol Buffers
 Home-page: https://developers.google.com/protocol-buffers/
 Maintainer: protobuf@googlegroups.com

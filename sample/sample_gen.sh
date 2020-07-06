@@ -5,13 +5,19 @@ cd "$(dirname "$0")";
 REPO_DIR=".." ;
 
 mkdir -p "$REPO_DIR/sample/pbcpp";
-cp -rvf "$REPO_DIR/template/common/lua/"*.lua "$REPO_DIR/sample/pbcpp";
+mkdir -p "$REPO_DIR/sample/pblua";
+cp -rvf "$REPO_DIR/template/common/lua/"*.lua "$REPO_DIR/sample/pblua";
 cp -rvf "$REPO_DIR/template/common/cpp/"* "$REPO_DIR/sample/pbcpp";
 
 PYTHON_BIN="$(which python3 2>/dev/null)";
 
 if [[ $? -ne 0 ]]; then
     PYTHON_BIN="$(which python)";
+else
+    $PYTHON_BIN --version;
+    if [[ $? -ne 0 ]]; then
+        PYTHON_BIN="$(which python)";
+    fi
 fi
 
 PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")";
@@ -23,6 +29,9 @@ PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")";
     -g "$REPO_DIR/template/config_manager.h.mako" -g "$REPO_DIR/template/config_manager.cpp.mako"                       \
     -g "$REPO_DIR/template/config_easy_api.h.mako" -g "$REPO_DIR/template/config_easy_api.cpp.mako"                     \
     -l "H:$REPO_DIR/template/config_set.h.mako" -l "S:$REPO_DIR/template/config_set.cpp.mako"                           \
+    "$@"
+
+"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pblua"  \
     -g "$REPO_DIR/template/DataTableCustomIndex.lua.mako"                                                               \
     -g "$REPO_DIR/template/DataTableCustomIndex53.lua.mako"                                                             \
     "$@"
@@ -41,13 +50,67 @@ echo -e "\t> $PROTOC_BIN --cpp_out=pbcpp -I proto -I ../pb_extension " proto/*.p
 $PROTOC_BIN --cpp_out=pbcpp -I proto -I ../pb_extension proto/*.proto ../pb_extension/*.proto ;
 
 echo '#include <cstdio>
+
 #include "config_manager.h"
+#include "config_easy_api.h"
+
 int main() {
+    // Initialize ....
     excel::config_manager::me()->init();
+
+    // excel::config_manager::me()->set_version_loader([] (std::string& out) {
+    //     // Read version from file and write it to out
+    //     return true; // return true if load version success
+    // });
+
+    // If you want to intergrate file loader to your system(such as UE or Unity), you should provide buffer loader handle
+    // excel::config_manager::me()->set_buffer_loader([] (std::string& out, const char* file_path) {
+    //     // Read binary data from file with path=file_path, and write all data into out
+    //     return true; // return true if load file success
+    // });
+
+    // Set how much data group will be keep after reload.
+    // excel::config_manager::me()->set_group_number(8);
+
+    // Call set_override_same_version(true) to force to reload datas even version(load by set_version_loader(HANDLE)) not changed.
+    // excel::config_manager::me()->set_override_same_version(true);
+
+    // Set logger, the default logger is to write log into stdout
+    // excel::config_manager::me()->set_on_log([](const log_caller_info_t& caller, const char* content) {
+    //    // ...
+    // });
+
+    // Any set any other event handles
+
+    // Call reload to generate a configure group
     excel::config_manager::me()->reload();
+
+    // Now you can load data by easy api or raw API of config_manager
+    auto cfg = excel::get_role_upgrade_cfg_by_id_level(10001, 3);
+    if (cfg) {
+        printf("%s\n", cfg->DebugString().c_str());
+    }
     return 0;
 }
 ' > pbcpp/main.cpp
+
+echo '-- We will use require(...) to load DataTableService53,DataTableCustomIndex53 and custom data files, please ensure these can be load by require(FILE_PATH)
+-- Assuming the generated lua files by xresloader is located at ../../../xresloader/sample/proto_v3
+package.path = "../../../xresloader/sample/proto_v3/?.lua;" .. package.path
+local excel_config_service = require("DataTableService53")
+
+-- Set logger
+-- excel_config_service:OnError = function (message, index, indexName, keys...) end
+
+excel_config_service:ReloadTables()
+
+local role_upgrade_cfg = excel_config_service:Get("role_upgrade_cfg")
+local data = role_upgrade_cfg:GetByIndex("id_level", 10001, 3) -- using the Key-Value index: id_level
+print("Data of role_upgrade_cfg: id=10001, level=3")
+for k,v in pairs(data) do
+    print(string.format("\t%s=%s", k, tostring(v)))
+end
+' > pblua/main.lua
 
 PROTOBUF_PREBUILT_DIR="$(dirname "$PROTOC_BIN")";
 PROTOBUF_PREBUILT_DIR="$(dirname "$PROTOBUF_PREBUILT_DIR")";

@@ -100,6 +100,7 @@ venv.bak/
 # mkdocs documentation
 /site
 /sample/pbcpp/*
+/sample/pblua/*
 
 # mypy
 .mypy_cache/

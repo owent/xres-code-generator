@@ -73,7 +73,7 @@ int main() {
 
 ### For lua
 
-1. Copy common files from [template/common/cpp](template/common/cpp)
+1. Copy common files from [template/common/lua](template/common/lua)
 2. Generate loader codes by template [template/DataTableCustomIndex.lua.mako](template/DataTableCustomIndex.lua.mako) , [template/DataTableCustomIndex53.lua.mako](template/DataTableCustomIndex53.lua.mako)
 
 ```bash

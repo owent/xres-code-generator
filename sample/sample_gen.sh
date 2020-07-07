@@ -6,6 +6,7 @@ REPO_DIR=".." ;
 
 mkdir -p "$REPO_DIR/sample/pbcpp";
 mkdir -p "$REPO_DIR/sample/pblua";
+mkdir -p "$REPO_DIR/sample/pbcs";
 cp -rvf "$REPO_DIR/template/common/lua/"*.lua "$REPO_DIR/sample/pblua";
 cp -rvf "$REPO_DIR/template/common/cpp/"* "$REPO_DIR/sample/pbcpp";
 
@@ -36,6 +37,10 @@ PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")";
     -g "$REPO_DIR/template/DataTableCustomIndex53.lua.mako"                                                             \
     "$@"
 
+python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs"  \
+    -g "$REPO_DIR/template/ConfigSetManager.cs.mako"                                                              \
+    -l "$REPO_DIR/template/ConfigSet.cs.mako"                                                            \
+    "$@"
 
 PROTOC_BIN="$(which protoc)";
 
@@ -47,7 +52,7 @@ fi
 echo "Using protoc: $PROTOC_BIN to generate cpp codes";
 echo -e "\t> $PROTOC_BIN --cpp_out=pbcpp -I proto -I ../pb_extension " proto/*.proto;
 
-$PROTOC_BIN --cpp_out=pbcpp -I proto -I ../pb_extension proto/*.proto ../pb_extension/*.proto ;
+$PROTOC_BIN --cpp_out=pbcpp --csharp_out=pbcs -I proto -I ../pb_extension proto/*.proto ../pb_extension/*.proto ;
 
 echo '#include <cstdio>
 
@@ -111,6 +116,19 @@ for k,v in pairs(data) do
     print(string.format("\t%s=%s", k, tostring(v)))
 end
 ' > pblua/main.lua
+
+echo 'using System;
+using excel;
+class Program {
+    static void Main(string[] args) {
+        ConfigSetManager.Instance.Reload();
+        var table = config_set_role_upgrade_cfg.Instance.GetByIdLevel(10001, 3);
+        if (table != null) {
+            Console.WriteLine(table.ToString());
+        }
+    }
+}
+' > pbcs/Main.cs
 
 PROTOBUF_PREBUILT_DIR="$(dirname "$PROTOC_BIN")";
 PROTOBUF_PREBUILT_DIR="$(dirname "$PROTOBUF_PREBUILT_DIR")";

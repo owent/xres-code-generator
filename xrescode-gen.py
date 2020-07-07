@@ -261,10 +261,10 @@ def main():
                 if loader is not None and loader.code:
                     suffix_pos = output_name.rfind('.')
                     if suffix_pos < 0:
-                        output_name = "{0}_{1}_{2}".format(output_name, loader.cpp_package_prefix, 
+                        output_name = "{0}_{1}_{2}".format(output_name, loader.code.package.replace(".", "::"),
                             loader.code.class_name).replace("::", "_").replace("__", "_")
                     else:
-                        output_name = "{0}_{1}_{2}{3}".format(output_name[0:suffix_pos], loader.cpp_package_prefix, 
+                        output_name = "{0}_{1}_{2}{3}".format(output_name[0:suffix_pos], loader.code.package.replace(".", "::"),
                             loader.code.class_name, output_name[suffix_pos:]).replace("::", "_").replace("__", "_")
 
             output_name = os.path.join(options.output_dir, output_name)

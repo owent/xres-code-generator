@@ -184,6 +184,15 @@ def CppNamespaceEnd(context, arg):
 def CppFullPath(context, arg):
     return "".join(["{0}::".format(x) for x in arg.split(".")])
 
+
+@supports_caller
+def CsNamespaceBegin(context, arg):
+    return CppNamespaceBegin(context, arg)
+
+@supports_caller
+def CsNamespaceEnd(context, arg):
+    return CppNamespaceEnd(context, arg)
+
 class PbMsgIndexType:
     KV = ext.EN_INDEX_KV
     KL = ext.EN_INDEX_KL

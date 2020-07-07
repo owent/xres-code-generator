@@ -101,6 +101,7 @@ venv.bak/
 /site
 /sample/pbcpp/*
 /sample/pblua/*
+/sample/pbcs/*
 
 # mypy
 .mypy_cache/

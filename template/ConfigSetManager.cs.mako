@@ -35,11 +35,16 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             }
         }
 
-        public static byte[] DefaultLoader(string name) {
-            return File.ReadAllBytes(name);
+        public byte[] DefaultLoader(string name) {
+            try {
+                return File.ReadAllBytes(name);
+            } catch (Exception e)  {
+                LogHandler?.Invoke($"ConfigSetManager DefaultLoader ReadFile Failed, Exception[{e.ToString()}] Stack:{e.StackTrace}");
+                return null;
+            }
         }
 
-        public static void DefaultLogHandler(string log) {
+        public void DefaultLogHandler(string log) {
         }
 
         protected ConfigSetManager() {
@@ -57,8 +62,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
         public T Parse<T>(byte[] bytes, MessageParser parser) where T : class, IMessage {
             try {
                 return (T)parser.ParseFrom(bytes);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 LogHandler?.Invoke($"ConfigSetManager Deserialize<{typeof(T).Name}> Failed, bytes sz[{bytes.Length}], Exception[{e.ToString()}] Stack:{e.StackTrace}");
                 return null;
             }

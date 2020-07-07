@@ -85,7 +85,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             int count = table.${loader.get_camel_code_field_name()}.Count;
             for (var i = 0; i < count; i++)
             {
-                ${code_index.camelname}ValueItemType iteminfo = ConfigSetManager.Instance.ParseByName<${code_index.camelname}ValueItemType>(table.${loader.get_camel_code_field_name()}[i].ToString(), ${code_index.camelname}ValueItemType.Parser);
+                ${code_index.camelname}ValueItemType iteminfo = ConfigSetManager.Instance.Parse<${code_index.camelname}ValueItemType>(table.${loader.get_camel_code_field_name()}[i].ToByteArray(), ${code_index.camelname}ValueItemType.Parser);
                 if (iteminfo == null) continue;
                 MergeData(iteminfo);
             }

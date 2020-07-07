@@ -2,6 +2,36 @@
 
 ## Sample Usage
 
+### Common declare loaders
+
+First ```import "xrescode_extensions_v3.proto";``` and declare loaders.
+
+```protobuf
+syntax = "proto3";
+
+import "xrescode_extensions_v3.proto";
+
+message role_upgrade_cfg {
+    option (xrescode.loader) = {
+        file_path : "role_upgrade_cfg.bytes"
+        indexes : {
+            fields : "Id"
+            index_type : EN_INDEX_KL // Key - List index: (Id) => list<role_upgrade_cfg>
+        }
+        indexes : {
+            fields : "Id"
+            fields : "Level"
+            index_type : EN_INDEX_KV // Key - Value index: (Id, Level) => role_upgrade_cfg
+        }
+        tags : "client"
+        tags : "server"
+    };
+
+    int32  CostValue = 4;
+    int32  ScoreAdd  = 5;
+}
+```
+
 ### For C++
 
 1. Copy common files from [template/common/cpp](template/common/cpp)
@@ -107,6 +137,38 @@ local data = role_upgrade_cfg:GetByIndex('id_level', 10001, 3) -- using the Key-
 for k,v in pairs(data) do
     print(string.format("%s=%s\n", k, tostring(v)))
 end
+```
+
+### For C\#/CSharp
+
+1. Generate loader codes by template [template/ConfigSet.cs.mako](template/ConfigSet.cs.mako) , [template/ConfigSetManager.cs.mako](template/ConfigSetManager.cs.mako)
+
+```bash
+mkdir -p "$REPO_DIR/sample/pbcs";
+
+python "$REPO_DIR/tools/find_protoc.py" -I "$REPO_DIR/sample/proto" -I "$REPO_DIR/pb_extension" "$REPO_DIR/sample/proto/"*.proto -o "$REPO_DIR/sample/sample.pb" ;
+
+python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs"   \
+    -g "$REPO_DIR/template/ConfigSet.cs.mako"                                                                           \
+    -g "$REPO_DIR/template/ConfigSetManager.cs.mako"                                                                    \
+    "$@"
+
+```
+
+2. Use the generated ```ConfigSetManager``` to visit datas.
+
+```cs
+using System;
+using excel;
+class Program {
+    static void Main(string[] args) {
+        ConfigSetManager.Instance.Reload();
+        var table = config_set_role_upgrade_cfg.Instance.GetByIdLevel(10001, 3);
+        if (table != null) {
+            Console.WriteLine(table.ToString());
+        }
+    }
+}
 ```
 
 ## Custom rule and templates

@@ -27,20 +27,20 @@ PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")";
 
 # --pb-include-prefix "pbdesc/"                                                                                       \
 
-"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcpp"  \
-    -g "$REPO_DIR/template/config_manager.h.mako" -g "$REPO_DIR/template/config_manager.cpp.mako"                       \
-    -g "$REPO_DIR/template/config_easy_api.h.mako" -g "$REPO_DIR/template/config_easy_api.cpp.mako"                     \
-    -l "H:$REPO_DIR/template/config_set.h.mako" -l "S:$REPO_DIR/template/config_set.cpp.mako"                           \
+"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcpp"   \
+    -g "$REPO_DIR/template/config_manager.h.mako" -g "$REPO_DIR/template/config_manager.cpp.mako"                               \
+    -g "$REPO_DIR/template/config_easy_api.h.mako" -g "$REPO_DIR/template/config_easy_api.cpp.mako"                             \
+    -l "H:$REPO_DIR/template/config_set.h.mako" -l "S:$REPO_DIR/template/config_set.cpp.mako"                                   \
     "$@"
 
-"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pblua"  \
-    -g "$REPO_DIR/template/DataTableCustomIndex.lua.mako"                                                               \
-    -g "$REPO_DIR/template/DataTableCustomIndex53.lua.mako"                                                             \
+"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pblua"   \
+    -g "$REPO_DIR/template/DataTableCustomIndex.lua.mako"                                                                       \
+    -g "$REPO_DIR/template/DataTableCustomIndex53.lua.mako"                                                                     \
     "$@"
 
-python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs"  \
-    -g "$REPO_DIR/template/ConfigSetManager.cs.mako"                                                              \
-    -l "$REPO_DIR/template/ConfigSet.cs.mako"                                                            \
+python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs"   \
+    -g "$REPO_DIR/template/ConfigSetManager.cs.mako"                                                                    \
+    -l "$REPO_DIR/template/ConfigSet.cs.mako"                                                                           \
     "$@"
 
 PROTOC_BIN="$(which protoc)";

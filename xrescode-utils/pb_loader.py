@@ -582,6 +582,10 @@ class PbMsgLoader:
 
         cs_package_prefix = self.code.outer_file.package
         if cs_package_prefix:
+            cs_arr = self.code.outer_file.package.split('.')
+            for i in range(len(cs_arr)):
+                cs_arr[i] = FirstCharUpper(cs_arr[i])
+            cs_package_prefix = '.'.join(cs_arr)
             self.cs_pb_outer_class_name =  cs_package_prefix + "." + self.code.outer_msg.name
         else:
             self.cs_pb_outer_class_name =  self.code.outer_msg.name

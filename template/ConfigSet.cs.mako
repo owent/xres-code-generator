@@ -67,7 +67,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
         }
 
         protected void LoadByList(string filelist) {
-            var bytes = FaTableConst.ReadFile(filelist);
+            var bytes = ConfigSetManager.Instance.Loader?.Invoke(filelist) ?? null;
             if (bytes == null) return;
             string str = Encoding.Default.GetString(bytes);
             var list = str.Split('\r', '\n');
@@ -79,13 +79,13 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 
 <%   outer_class_name = loader.get_cs_pb_outer_class_name() %>
         protected void Load(string name) {
-            var table = ConfigSetManager.Instance.Parse<${outer_class_name}>(name, ${outer_class_name}.Parser);
+            var table = ConfigSetManager.Instance.ParseByName<${outer_class_name}>(name, ${outer_class_name}.Parser);
             if (table == null) return;
             
             int count = table.${loader.get_camel_code_field_name()}.Count;
             for (var i = 0; i < count; i++)
             {
-                ${code_index.camelname}ValueItemType iteminfo = ConfigSetManager.Instance.Parse<${code_index.camelname}ValueItemType>(table.${loader.get_camel_code_field_name()}[i], ${code_index.camelname}ValueItemType.Parser);
+                ${code_index.camelname}ValueItemType iteminfo = ConfigSetManager.Instance.ParseByName<${code_index.camelname}ValueItemType>(table.${loader.get_camel_code_field_name()}[i].ToString(), ${code_index.camelname}ValueItemType.Parser);
                 if (iteminfo == null) continue;
                 MergeData(iteminfo);
             }

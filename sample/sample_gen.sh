@@ -9,6 +9,7 @@ mkdir -p "$REPO_DIR/sample/pblua";
 mkdir -p "$REPO_DIR/sample/pbcs";
 cp -rvf "$REPO_DIR/template/common/lua/"*.lua "$REPO_DIR/sample/pblua";
 cp -rvf "$REPO_DIR/template/common/cpp/"* "$REPO_DIR/sample/pbcpp";
+cp -rvf "$REPO_DIR/template/common/cs/"* "$REPO_DIR/sample/pbcs";
 
 PYTHON_BIN="$(which python3 2>/dev/null)";
 

@@ -64,6 +64,15 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             }
         }
 
+        public T ParseByName<T>(string name, MessageParser parser) where T : class, IMessage {
+            byte[] bytes = Loader?.Invoke(name) ?? null;
+            if (bytes == null) {
+                LogHandler?.Invoke($"ConfigSetManager Load[{name}] failed!");
+                return null;
+            }
+            return Parse<T>(bytes, parser);
+        }
+
         public void Reload() {
             Clear();
 

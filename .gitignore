@@ -115,3 +115,6 @@ venv.bak/
 .mako_modules
 __pycache__
 *.mako_modules*
+
+/template/common/cs/bin/
+/template/common/cs/obj/

@@ -116,6 +116,17 @@ print("Data of role_upgrade_cfg: id=10001, level=3")
 for k,v in pairs(data) do
     print(string.format("\t%s=%s", k, tostring(v)))
 end
+
+local current_group = excel_config_service:GetCurrentGroup()
+local role_upgrade_cfg2 = excel_config_service:GetByGroup(current_group, "role_upgrade_cfg")
+local data2 = role_upgrade_cfg:GetByIndex("id", 10001) -- using the Key-List index: id
+print("=======================")
+for _,v1 in ipairs(data2) do
+    print(string.format("\tid: %s, level: %s", tostring(v1.Id), tostring(v1.Level)))
+    for k,v2 in pairs(v1) do
+        print(string.format("\t\t%s=%s", k, tostring(v2)))
+    end
+end
 ' > pblua/main.lua
 
 echo 'using System;

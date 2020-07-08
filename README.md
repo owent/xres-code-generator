@@ -4,7 +4,7 @@
 
 ### Common declare loaders
 
-First ```import "xrescode_extensions_v3.proto";``` and declare loaders.
+First ```import "xrescode_extensions_v3.proto";``` and declare loaders. See [pb_extension/xrescode_extensions_v3.proto](pb_extension/xrescode_extensions_v3.proto) for details.
 
 ```protobuf
 syntax = "proto3";
@@ -23,6 +23,7 @@ message role_upgrade_cfg {
             fields : "Level"
             index_type : EN_INDEX_KV // Key - Value index: (Id, Level) => role_upgrade_cfg
         }
+        // It's allow to add more indexes, the default name of index is [fields].join("_"), you can change name by name field.
         tags : "client"
         tags : "server"
     };
@@ -133,10 +134,23 @@ local excel_config_service = require('DataTableService53')
 excel_config_service:ReloadTables()
 
 local role_upgrade_cfg = excel_config_service:Get("role_upgrade_cfg")
-local data = role_upgrade_cfg:GetByIndex('id_level', 10001, 3) -- using the Key-Value index: id_level
+local data = role_upgrade_cfg:GetByIndex("id_level", 10001, 3) -- using the Key-Value index: id_level
 for k,v in pairs(data) do
-    print(string.format("%s=%s\n", k, tostring(v)))
+    print(string.format("%s=%s", k, tostring(v)))
 end
+
+-- We can also use DataTableService.GetCurrentGroup(self) and DataTableService.GetByGroup(self, group, loader_name) to support multi-version loader
+local current_group = excel_config_service:GetCurrentGroup()
+local role_upgrade_cfg2 = excel_config_service:GetByGroup(current_group, "role_upgrade_cfg")
+local data2 = role_upgrade_cfg:GetByIndex("id", 10001) -- using the Key-List index: id
+print("=======================")
+for _,v1 in ipairs(data2) do
+    print(string.format("\tid: %s, level: %s", tostring(v1.Id), tostring(v1.Level)))
+    for k,v2 in pairs(v1) do
+        print(string.format("\t\t%s=%s", k, tostring(v2)))
+    end
+end
+
 ```
 
 ### For C\#/CSharp

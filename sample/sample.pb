@@ -34,14 +34,19 @@ kind.protoxresloader.protoxresloader_ue.protoxrescode_extensions_v3.proto"
 CostType (B!Ê>	cost_typeš?Refer to cost_typeRCostType
 	CostValue (R	CostValue
 ScoreAdd (RScoreAdd:vêDhelperÊ>%Test role_upgrade_cfg with multi keysºTB²role_upgrade_cfg.bytesÊIdÊIdLevelêclientêserverbproto3
-ó
-pb_header_v3.protoorg.xresloader.pb"ž
+ƒ
+pb_header_v3.protoorg.xresloader.pb"B
+xresloader_data_source
+file (	Rfile
+sheet (	Rsheet"ê
 xresloader_header
 xres_ver (	RxresVer
 data_ver (	RdataVer
 count (Rcount
 	hash_code (	RhashCode 
-description (	Rdescription" 
+description (	RdescriptionJ
+data_source (2).org.xresloader.pb.xresloader_data_sourceR
+dataSource" 
 xresloader_datablocks<
 header (2$.org.xresloader.pb.xresloader_headerRheader
 

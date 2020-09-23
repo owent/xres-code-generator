@@ -19,6 +19,7 @@ import time
 #include <string>
 #include <memory>
 #include <cstring>
+#include <type_traits>
 
 #include "spin_rw_lock.h"
 
@@ -57,6 +58,11 @@ import time
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #endif
+
+#include <google/protobuf/descriptor.h>
+#include <google/protobuf/message.h>
+
+#include <pb_header_v3.pb.h>
 
 % for pb_msg in pb_set.generate_message:
 %   for loader in pb_msg.loaders:
@@ -97,6 +103,17 @@ ${pb_loader.CppNamespaceBegin(global_package)}
         typedef std::function<bool(std::string&)> read_version_func_t;
         typedef std::shared_ptr<config_group_t> config_group_ptr_t;
         typedef std::function<void(config_group_ptr_t)> on_load_func_t;
+        typedef std::function<bool(org::xresloader::pb::xresloader_datablocks&, const ::google::protobuf::Descriptor*, const std::string&)> on_filter_func_t;
+
+        struct on_not_found_event_data_t {
+            const std::list<org::xresloader::pb::xresloader_data_source>* data_source;
+            const ::google::protobuf::Descriptor* message_descriptor;
+            const char* index_name;
+            const char* keys;
+            bool is_list;
+            size_t list_index;
+        };
+        typedef std::function<void(const on_not_found_event_data_t&)> on_not_found_func_t;
 
         struct log_level_t {
             enum type {
@@ -176,6 +193,32 @@ ${pb_loader.CppNamespaceBegin(global_package)}
         inline void set_on_group_destroyed(on_load_func_t func) { on_group_destroyed_ = func; }
         inline const on_load_func_t& get_on_group_destroyed() const { return on_group_destroyed_; }
 
+        inline void set_on_filter(on_filter_func_t func) { on_filter_ = func; }
+        inline const on_filter_func_t& get_on_filter() const { return on_filter_; }
+
+        inline void set_on_not_found(on_not_found_func_t func) { on_not_found_ = func; }
+        inline const on_not_found_func_t& get_on_not_found() const { return on_not_found_; }
+
+        template <class INNER_MSG_TYPE, 
+            typename std::enable_if<
+             std::is_base_of<::google::protobuf::Message, INNER_MSG_TYPE>::value,
+            int>::type = 0>
+        bool filter(org::xresloader::pb::xresloader_datablocks& outer_msg, const std::string& file_path) const {
+            if (!on_filter_) {
+                return true;
+            }
+
+            return on_filter_(outer_msg, INNER_MSG_TYPE::descriptor(), file_path);
+        }
+
+        template <class INNER_MSG_TYPE, 
+            typename std::enable_if<
+             !std::is_base_of<::google::protobuf::Message, INNER_MSG_TYPE>::value,
+            int>::type = 0>
+        bool filter(org::xresloader::pb::xresloader_datablocks&, const std::string&) const {
+            return true;
+        }
+
         inline void set_on_log(on_log_func_t func) { on_log_ = func; }
         inline const on_log_func_t& get_on_log() const { return on_log_; }
 
@@ -208,6 +251,8 @@ ${pb_loader.CppNamespaceBegin(global_package)}
         on_load_func_t on_group_reload_all_;
         on_load_func_t on_group_destroyed_;
         on_log_func_t on_log_;
+        on_filter_func_t on_filter_;
+        on_not_found_func_t on_not_found_;
 
         read_buffer_func_t read_file_handle_;
         read_version_func_t read_version_handle_;

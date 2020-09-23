@@ -38,7 +38,7 @@ PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")";
     -g "$REPO_DIR/template/DataTableCustomIndex53.lua.mako"                                                                     \
     "$@"
 
-python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs"   \
+"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs"   \
     -g "$REPO_DIR/template/ConfigSetManager.cs.mako"                                                                    \
     -l "$REPO_DIR/template/ConfigSet.cs.mako"                                                                           \
     "$@"

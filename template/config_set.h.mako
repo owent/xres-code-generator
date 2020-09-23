@@ -24,6 +24,7 @@ import time
 #include "spin_rw_lock.h"
 
 #include <${pb_set.pb_include_prefix}${loader.get_pb_header_path()}>
+#include <pb_header_v3.pb.h>
 
 ${pb_loader.CppNamespaceBegin(global_package)}
 ${loader.get_cpp_namespace_decl_begin()}
@@ -44,6 +45,8 @@ ${loader.get_cpp_namespace_decl_begin()}
 
         void clear();
 
+        const std::list<org::xresloader::pb::xresloader_data_source>& get_data_source() const;
+
     private:
         int load_file(const std::string& file_path);
         int load_list(const char*);
@@ -53,6 +56,7 @@ ${loader.get_cpp_namespace_decl_begin()}
     private:
         ::excel::lock::spin_rw_lock           load_file_lock_;
         std::unordered_map<std::string, bool> file_status_; // true: already loaded
+        std::list<org::xresloader::pb::xresloader_data_source> datasource_;
 
 % for code_index in loader.code.indexes:
         // ------------------------- index: ${code_index.name} -------------------------

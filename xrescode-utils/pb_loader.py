@@ -763,6 +763,7 @@ class PbDescSet:
             v.setup_code(self, tags, exclude_tags)
             if v.has_loader():
                 self.generate_message.append(v)
+        self.generate_message.sort(key=lambda x: x.full_name)
 
     def setup_pb_msg(self, pb_file, pb_msg, msg_prefix, nested_from_prefix = ""):
         msg_obj = PbMsg(pb_file, pb_msg, msg_prefix, nested_from_prefix)

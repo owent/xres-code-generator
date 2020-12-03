@@ -159,11 +159,11 @@ def main():
 
     if options.version:
         print('1.0.0')
-        exit(0)
+        sys.exit(0)
 
     def print_help_msg(err_code):
         parser.print_help()
-        exit(err_code)
+        sys.exit(err_code)
 
     if options.output_dir is None or options.pb is None:
         print_help_msg(1)
@@ -315,7 +315,7 @@ def main():
                     gen_source(gen_source([rule[2:]], pb_msg=pb_msg, loader=loader))
 
     del temp_dir_holder
-    exit(pb_set.failed_count)
+    sys.exit(pb_set.failed_count)
 
 if __name__ == '__main__':
     main()

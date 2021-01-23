@@ -20,6 +20,76 @@ class MakoModuleTempDir:
             shutil.rmtree(self.directory_path, ignore_errors=True)
             self.directory_path = None
 
+if sys.platform == 'win32':
+    def test_windows_abs_path(paths):
+        if len(paths) != 2:
+            return False
+        if len(paths[0]) != 1:
+            return False
+        return paths[1][0:1] == '/' or paths[1][0:1] == '\\'
+
+def decode_rule(pattern):
+    mode = None
+    input = None
+    output = None
+    rules = pattern.split(':')
+    if len(rules) == 1:
+        input = rules[0]
+        return mode, input, output
+    if len(rules[0]) == 0:
+        input = rules[1]
+        if len(rules) > 2:
+            output = rules[2]
+        return mode, input, output
+    elif len(rules[0]) > 1:
+        input = rules[0]
+        output = rules[1]
+        return mode, input, output
+    if sys.platform == 'win32':
+        # D: Drive Name
+        # F: File Path Without Drive
+        # M: Mode
+        if test_windows_abs_path(rules[0:2]):
+            # D:\\F
+            input = ':'.join(rules[0:2])
+            if len(rules) > 2:
+                # D:\\F:[D:\\]F
+                output = ':'.join(rules[2:])
+        elif len(rules) > 2 and test_windows_abs_path(rules[1:3]) and os.path.exists(rules[0]):
+            # F:D:\\F
+            input = rules[0]
+            output = ':'.join(rules[1:3])
+        else:
+            mode = rules[0].lower()
+            if len(rules) == 2:
+                # M:F
+                input = rules[1]
+            elif test_windows_abs_path(rules[1:3]):
+                # M:D:\\F
+                input = ':'.join(rules[1:3])
+                if len(rules) > 3:
+                    # M:D:\\F:[D:\\]F
+                    output = ':'.join(rules[3:])
+            else:
+                # M:F
+                input = rules[1]
+                if len(rules) > 2:
+                    # M:F:[D:\\]F
+                    output = ':'.join(rules[2:])
+    else:
+        if len(rules) > 2:
+            mode = rules[0].lower()
+            input = rules[1]
+            output = rules[2]
+        else:
+            if os.path.exists(rules[0]):
+                input = rules[0]
+                output = rules[1]
+            else:
+                mode = rules[0].lower()
+                input = rules[1]
+    return mode, input, output
+
 def main():
     from optparse import OptionParser
     usage = '%(prog)s -p <pb file> -o <output dir> [-i <additional template dirs>...] [-g <global templates>...] [-m <message templates>...] [other options...] [custom rules or field rules]'
@@ -199,22 +269,17 @@ def main():
     temp_dir_holder = MakoModuleTempDir(os.path.join(script_dir, '.mako_modules-{0}.{1}.{2}'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2])))
     make_module_cache_dir = temp_dir_holder.directory_path
     def gen_source(list_container, pb_msg=None, loader=None):
-        for input_file in list_container:
+        for rule in list_container:
             is_message_header = False
             is_message_source = False
-            if loader is None:
-                render_file_rules = input_file.split(':')
-            else:
-                if input_file[0:2].lower() == "h:":
+            rule_mode, rule_input, rule_output = decode_rule(rule)
+            if loader is not None:
+                if rule_mode == "h":
                     is_message_header = True
-                    render_file_rules = input_file[2:].split(':')
-                elif input_file[0:2].lower() == "s:":
+                elif rule_mode == "s":
                     is_message_source = True
-                    render_file_rules = input_file[2:].split(':')
-                else:
-                    render_file_rules = input_file.split(':')
 
-            source_template = render_file_rules[0]
+            source_template = rule_input
             output_name = None
 
             source_template_dir = os.path.realpath(os.path.dirname(source_template))
@@ -233,14 +298,14 @@ def main():
                 else:
                     os.chmod(options.output_dir, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO)
 
-            if len(render_file_rules) > 1:
-                output_render_tmpl = Template(render_file_rules[1], lookup=project_lookup)
+            if rule_output is not None:
+                output_render_tmpl = Template(rule_output, lookup=project_lookup)
                 output_name = output_render_tmpl.render(
                     pb_set=pb_set,
                     pb_msg=pb_msg,
                     loader=loader,
                     output_dir=output_dir,
-                    output_file=render_file_rules[1],
+                    output_file=rule_output,
                     input_file=source_template,
                     msg_prefix=options.msg_prefix,
                     global_package=options.global_package
@@ -304,15 +369,20 @@ def main():
         if len(rule) < 2:
             sys.stderr.write('[XRESCODE ERROR] Invalid custom rule {0}\n'.format(rule))
             continue
-        if rule[0:2].lower() == "g:":
-            gen_source([rule[2:]], None, None)
-        if rule[0:2].lower() == "m:":
+        rule_mode, rule_input, rule_output = decode_rule(rule)
+        if rule_output is None:
+            left_rule_desc = rule_input
+        else:
+            left_rule_desc = '{0}:{1}'.format(rule_input, rule_output)
+        if rule_mode == "g":
+            gen_source([left_rule_desc], None, None)
+        if rule_mode == "m":
             for pb_msg in pb_set.generate_message:
-                gen_source([rule[2:]], pb_msg=pb_msg, loader=None)
-        if rule[0:2].lower() == "l:":
+                gen_source([left_rule_desc], pb_msg=pb_msg, loader=None)
+        if rule_mode == "l":
             for pb_msg in pb_set.generate_message:
                 for loader in pb_msg.loaders:
-                    gen_source(gen_source([rule[2:]], pb_msg=pb_msg, loader=loader))
+                    gen_source(gen_source([left_rule_desc], pb_msg=pb_msg, loader=loader))
 
     del temp_dir_holder
     sys.exit(pb_set.failed_count)

@@ -44,6 +44,9 @@ PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")";
     "$@"
 
 PROTOC_BIN="$(which protoc)";
+if [[ $? -ne 0 ]] && [[ -e "../tools/find_protoc.py" ]]; then
+    PROTOC_BIN="$("$PYTHON_BIN" ../tools/find_protoc.py)";
+fi
 
 if [[ $? -ne 0 ]]; then
     PROTOC_BIN="$PREBUILT_PROTOC";

@@ -36,19 +36,33 @@ def decode_rule(pattern):
     if len(rules) == 1:
         input = rules[0]
         return mode, input, output
+    # D: Drive Name
+    # F: File Path Without Drive
+    # M: Mode
     if len(rules[0]) == 0:
-        input = rules[1]
-        if len(rules) > 2:
-            output = rules[2]
+        if sys.platform == 'win32':
+            if len(rules) > 2 and test_windows_abs_path(rules[1:3]):
+                # :D:\\F
+                input = ':'.join(rules[1:3])
+                if len(rules) > 3:
+                    # :D:\\F:D:\\F
+                    output = ':'.join(rules[3:])
+            else:
+                # :F
+                input = rules[1]
+                if len(rules) > 2:
+                    # :F:D:\\F
+                    output = ':'.join(rules[2:])
+        else:
+            input = rules[1]
+            if len(rules) > 2:
+                output = rules[2]
         return mode, input, output
     elif len(rules[0]) > 1:
         input = rules[0]
-        output = rules[1]
+        output = ':'.join(rules[1:])
         return mode, input, output
     if sys.platform == 'win32':
-        # D: Drive Name
-        # F: File Path Without Drive
-        # M: Mode
         if test_windows_abs_path(rules[0:2]):
             # D:\\F
             input = ':'.join(rules[0:2])

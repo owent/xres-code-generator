@@ -28,30 +28,25 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Author: qrczak@google.com (Marcin Kowalczyk)
+syntax = "proto3";
+
+package google.protobuf;
+
+option csharp_namespace = "Google.Protobuf.WellKnownTypes";
+option go_package = "google.golang.org/protobuf/types/known/emptypb";
+option java_package = "com.google.protobuf";
+option java_outer_classname = "EmptyProto";
+option java_multiple_files = true;
+option objc_class_prefix = "GPB";
+option cc_enable_arenas = true;
+
+// A generic empty message that you can re-use to avoid defining duplicated
+// empty messages in your APIs. A typical example is to use it as the request
+// or the response type of an API method. For instance:
 //
-// This module exposes the C proto inside the given Python proto, in
-// case the Python proto is implemented with a C proto.
-
-#ifndef GOOGLE_PROTOBUF_PYTHON_PYTHON_PROTOBUF_H__
-#define GOOGLE_PROTOBUF_PYTHON_PYTHON_PROTOBUF_H__
-
-#include <Python.h>
-
-namespace google {
-namespace protobuf {
-
-class Message;
-
-namespace python {
-
-// Return the pointer to the C proto inside the given Python proto,
-// or NULL when this is not a Python proto implemented with a C proto.
-const Message* GetCProtoInsidePyProto(PyObject* msg);
-Message* MutableCProtoInsidePyProto(PyObject* msg);
-
-}  // namespace python
-}  // namespace protobuf
-}  // namespace google
-
-#endif  // GOOGLE_PROTOBUF_PYTHON_PYTHON_PROTOBUF_H__
+//     service Foo {
+//       rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);
+//     }
+//
+// The JSON representation for `Empty` is empty JSON object `{}`.
+message Empty {}

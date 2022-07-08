@@ -17,7 +17,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
 %     for code_index in loader.code.indexes:
     const ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_container_type& get_${loader.code.class_name}_all_of_${code_index.name}() {
         static ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_container_type empty;
-        config_manager::config_group_ptr_t group = config_manager::me()->get_current_config_group();
+        const config_manager::config_group_ptr_t& group = config_manager::me()->get_current_config_group();
         if (!group) {
             return empty;
         }
@@ -27,7 +27,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
 
 %       if code_index.is_list():
     const ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_value_type* get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}) {
-        config_manager::config_group_ptr_t group = config_manager::me()->get_current_config_group();
+        const config_manager::config_group_ptr_t& group = config_manager::me()->get_current_config_group();
         if (!group) {
             return NULL;
         }
@@ -36,7 +36,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
     }
 
     ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::item_ptr_type get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}, size_t idx) {
-        config_manager::config_group_ptr_t group = config_manager::me()->get_current_config_group();
+        const config_manager::config_group_ptr_t& group = config_manager::me()->get_current_config_group();
         if (!group) {
             return NULL;
         }
@@ -46,7 +46,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
 
 %       else:
     ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_value_type get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}) {
-        config_manager::config_group_ptr_t group = config_manager::me()->get_current_config_group();
+        const config_manager::config_group_ptr_t& group = config_manager::me()->get_current_config_group();
         if (!group) {
             return NULL;
         }

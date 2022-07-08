@@ -265,7 +265,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
             return 0;
         }
 
-        config_group_ptr_t cfg_group = get_current_config_group();
+        const config_group_ptr_t& cfg_group = get_current_config_group();
         if (!cfg_group) {
             EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] mutable config group failed");
             return -2;
@@ -326,7 +326,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
         read_version_handle_ = fn; 
     }
 
-    config_manager::config_group_ptr_t config_manager::get_current_config_group() {
+    const config_manager::config_group_ptr_t& config_manager::get_current_config_group() {
         {
             ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh(config_group_lock_);
             if (!config_group_list_.empty()) {
@@ -341,7 +341,8 @@ ${pb_loader.CppNamespaceBegin(global_package)}
             }
         }
 
-        return nullptr;
+        static config_manager::config_group_ptr_t empty;
+        return empty;
     }
 
     void config_manager::log(const log_caller_info_t &caller,

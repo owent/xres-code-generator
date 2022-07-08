@@ -176,7 +176,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
         read_version_func_t get_version_loader() const;
         void set_version_loader(read_version_func_t fn);
 
-        config_group_ptr_t get_current_config_group();
+        const config_group_ptr_t& get_current_config_group();
 
         inline void set_override_same_version(bool v) { override_same_version_ = v; }
         inline bool get_override_same_version() const { return override_same_version_; }

@@ -11,6 +11,7 @@ import time
 
 #pragma once
 
+#include <atomic>
 #include <stdint.h>
 #include <cstddef>
 #include <cstdio>
@@ -245,6 +246,8 @@ ${pb_loader.CppNamespaceBegin(global_package)}
 
     private:
         static bool is_destroyed_;
+        std::atomic<int64_t> reload_version_;
+
         bool override_same_version_;
         size_t max_group_number_;
         on_load_func_t on_group_created_;
@@ -256,10 +259,10 @@ ${pb_loader.CppNamespaceBegin(global_package)}
 
         read_buffer_func_t read_file_handle_;
         read_version_func_t read_version_handle_;
-        mutable ::excel::lock::spin_rw_lock handle_lock_;
+        mutable excel::lock::spin_rw_lock handle_lock_;
 
         std::list<config_group_ptr_t> config_group_list_;
-        mutable ::excel::lock::spin_rw_lock config_group_lock_;
+        mutable excel::lock::spin_rw_lock config_group_lock_;
 
         std::string log_buffer_;
     };

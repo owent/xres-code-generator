@@ -1,62 +1,62 @@
 #!/bin/bash
 
-cd "$(dirname "$0")";
+cd "$(dirname "$0")"
 
-REPO_DIR=".." ;
+REPO_DIR=".."
 
-mkdir -p "$REPO_DIR/sample/pbcpp";
-mkdir -p "$REPO_DIR/sample/pblua";
-mkdir -p "$REPO_DIR/sample/pbcs";
-cp -rvf "$REPO_DIR/template/common/lua/"*.lua "$REPO_DIR/sample/pblua";
-cp -rvf "$REPO_DIR/template/common/cpp/"* "$REPO_DIR/sample/pbcpp";
-cp -rvf "$REPO_DIR/template/common/cs/"* "$REPO_DIR/sample/pbcs";
+mkdir -p "$REPO_DIR/sample/pbcpp"
+mkdir -p "$REPO_DIR/sample/pblua"
+mkdir -p "$REPO_DIR/sample/pbcs"
+cp -rvf "$REPO_DIR/template/common/lua/"*.lua "$REPO_DIR/sample/pblua"
+cp -rvf "$REPO_DIR/template/common/cpp/"* "$REPO_DIR/sample/pbcpp"
+cp -rvf "$REPO_DIR/template/common/cs/"* "$REPO_DIR/sample/pbcs"
 
-PYTHON_BIN="$(which python3 2>/dev/null)";
+PYTHON_BIN="$(which python3 2>/dev/null)"
 
 if [[ $? -ne 0 ]]; then
-    PYTHON_BIN="$(which python)";
+  PYTHON_BIN="$(which python)"
 else
-    $PYTHON_BIN --version;
-    if [[ $? -ne 0 ]]; then
-        PYTHON_BIN="$(which python)";
-    fi
+  $PYTHON_BIN --version
+  if [[ $? -ne 0 ]]; then
+    PYTHON_BIN="$(which python)"
+  fi
 fi
 
-PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")";
-"$PREBUILT_PROTOC" -I "$REPO_DIR/sample/proto" -I "$REPO_DIR/pb_extension" "$REPO_DIR/sample/proto/"*.proto -o "$REPO_DIR/sample/sample.pb" ;
+PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")"
+"$PREBUILT_PROTOC" -I "$REPO_DIR/sample/proto" -I "$REPO_DIR/pb_extension" "$REPO_DIR/sample/proto/"*.proto -o "$REPO_DIR/sample/sample.pb"
 
 # --pb-include-prefix "pbdesc/"                                                                                       \
 
-"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcpp"   \
-    -g "$REPO_DIR/template/config_manager.h.mako" -g "$REPO_DIR/template/config_manager.cpp.mako"                               \
-    -g "$REPO_DIR/template/config_easy_api.h.mako" -g "$REPO_DIR/template/config_easy_api.cpp.mako"                             \
-    -l "H:$REPO_DIR/template/config_set.h.mako" -l "S:$REPO_DIR/template/config_set.cpp.mako"                                   \
-    "$@"
+"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcpp" \
+  -g "$REPO_DIR/template/config_manager.h.mako" -g "$REPO_DIR/template/config_manager.cpp.mako" \
+  -g "$REPO_DIR/template/config_easy_api.h.mako" -g "$REPO_DIR/template/config_easy_api.cpp.mako" \
+  -l "H:$REPO_DIR/template/config_set.h.mako" -l "S:$REPO_DIR/template/config_set.cpp.mako" \
+  "$@"
 
-"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pblua"   \
-    -g "$REPO_DIR/template/DataTableCustomIndex.lua.mako"                                                                       \
-    -g "$REPO_DIR/template/DataTableCustomIndex53.lua.mako"                                                                     \
-    "$@"
+"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pblua" \
+  -g "$REPO_DIR/template/DataTableCustomIndex.lua.mako" \
+  -g "$REPO_DIR/template/DataTableCustomIndex53.lua.mako" \
+  "$@"
 
-"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs"   \
-    -g "$REPO_DIR/template/ConfigSetManager.cs.mako"                                                                    \
-    -l "$REPO_DIR/template/ConfigSet.cs.mako"                                                                           \
-    "$@"
+"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs" \
+  -g "$REPO_DIR/template/ConfigSetManager.cs.mako" \
+  -l "$REPO_DIR/template/ConfigSet.cs.mako" \
+  "$@"
 
-PROTOC_BIN="$(which protoc)";
+PROTOC_BIN="$(which protoc)"
 if [[ $? -ne 0 ]] && [[ -e "../tools/find_protoc.py" ]]; then
-    PROTOC_BIN="$("$PYTHON_BIN" ../tools/find_protoc.py)";
+  PROTOC_BIN="$("$PYTHON_BIN" ../tools/find_protoc.py)"
 fi
 
 if [[ $? -ne 0 ]]; then
-    PROTOC_BIN="$PREBUILT_PROTOC";
-    echo "system protoc not found, using $PROTOC_BIN generate cpp codes, version: $($PROTOC_BIN --version)";
+  PROTOC_BIN="$PREBUILT_PROTOC"
+  echo "system protoc not found, using $PROTOC_BIN generate cpp codes, version: $($PROTOC_BIN --version)"
 fi
 
-echo "Using protoc: $PROTOC_BIN to generate cpp codes";
-echo -e "\t> $PROTOC_BIN --cpp_out=pbcpp -I proto -I ../pb_extension " proto/*.proto;
+echo "Using protoc: $PROTOC_BIN to generate cpp codes"
+echo -e "\t> $PROTOC_BIN --cpp_out=pbcpp -I proto -I ../pb_extension " proto/*.proto
 
-$PROTOC_BIN --cpp_out=pbcpp --csharp_out=pbcs -I proto -I ../pb_extension proto/*.proto ../pb_extension/*.proto ;
+$PROTOC_BIN --cpp_out=pbcpp --csharp_out=pbcs -I proto -I ../pb_extension proto/*.proto ../pb_extension/*.proto
 
 echo '#include <cstdio>
 
@@ -101,7 +101,7 @@ int main() {
     }
     return 0;
 }
-' > pbcpp/main.cpp
+' >pbcpp/main.cpp
 
 echo '-- We will use require(...) to load DataTableService53,DataTableCustomIndex53 and custom data files, please ensure these can be load by require(FILE_PATH)
 -- Assuming the generated lua files by xresloader is located at ../../../xresloader/sample/proto_v3
@@ -130,7 +130,7 @@ for _,v1 in ipairs(data2) do
         print(string.format("\t\t%s=%s", k, tostring(v2)))
     end
 end
-' > pblua/main.lua
+' >pblua/main.lua
 
 echo 'using System;
 using excel;
@@ -145,13 +145,13 @@ class Program {
         }
     }
 }
-' > pbcs/Main.cs
+' >pbcs/Main.cs
 
-PROTOBUF_PREBUILT_DIR="$(dirname "$PROTOC_BIN")";
-PROTOBUF_PREBUILT_DIR="$(dirname "$PROTOBUF_PREBUILT_DIR")";
+PROTOBUF_PREBUILT_DIR="$(dirname "$PROTOC_BIN")"
+PROTOBUF_PREBUILT_DIR="$(dirname "$PROTOBUF_PREBUILT_DIR")"
 
 if [[ -e "$PROTOBUF_PREBUILT_DIR/include/google/protobuf/descriptor.h" ]]; then
-    echo "Compile Cmd: g++ -Wall -Wextra -o pbcpp/sample.exe -I$PROTOBUF_PREBUILT_DIR/include -L$PROTOBUF_PREBUILT_DIR/lib -Ipbcpp pbcpp/*.cpp pbcpp/*.cc -lprotobuf";
+  echo "Compile Cmd: g++ -Wall -Wextra -o pbcpp/sample.exe -I$PROTOBUF_PREBUILT_DIR/include -L$PROTOBUF_PREBUILT_DIR/lib -Ipbcpp pbcpp/*.cpp pbcpp/*.cc -lprotobuf -pthread"
 else
-    echo "Compile Cmd: g++ -Wall -Wextra -o pbcpp/sample.exe -I<protobuf prefix>/include -L<protobuf prefix>/lib -Ipbcpp pbcpp/*.cpp pbcpp/*.cc -lprotobuf";
+  echo "Compile Cmd: g++ -Wall -Wextra -o pbcpp/sample.exe -I<protobuf prefix>/include -L<protobuf prefix>/lib -Ipbcpp pbcpp/*.cpp pbcpp/*.cc -lprotobuf -pthread"
 fi

@@ -14,7 +14,7 @@ return {
     if loader.code.file_path:
       loader_data_source = ', filePath = "{0}"'.format(os.path.splitext(loader.code.file_path)[0])
     elif loader.code.file_list:
-      loader_data_source = ', filePath = "{0}"'.format(os.path.splitext(loader.code.file_path)[0])
+      loader_data_source = ', fileList = "{0}"'.format(loader.code.file_list)
     else:
       loader_data_source = ''
 %>

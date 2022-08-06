@@ -101,6 +101,7 @@ venv.bak/
 /site
 /sample/pbcpp/*
 /sample/pblua/*
+/sample/upblua/*
 /sample/pbcs/*
 
 # mypy

@@ -104,7 +104,8 @@ pb_msg_cpp_fmt_val_map = {
     pb2.FieldDescriptorProto.TYPE_SINT64: "static_cast<long long>({0})",
     pb2.FieldDescriptorProto.TYPE_STRING: "{0}.c_str()",
     pb2.FieldDescriptorProto.TYPE_UINT32: "static_cast<unsigned int>({0})",
-    pb2.FieldDescriptorProto.TYPE_UINT64: "static_cast<unsgined long long>({0})",
+    pb2.FieldDescriptorProto.TYPE_UINT64:
+    "static_cast<unsgined long long>({0})",
     pb2.FieldDescriptorProto.TYPE_MESSAGE: "\"MESSAGE: {0}\""
 }
 
@@ -158,17 +159,21 @@ def PbMsgPbFieldFmtValue(field, input):
         return pb_msg_cpp_fmt_val_map[field.type].format(input)
     return "\"UNKNOWN TYPE: {0}\"".format(input)
 
+
 @supports_caller
 def MakoPbMsgGetPbFieldCsType(context, arg):
     return PbMsgGetPbFieldCsType(arg)
+
 
 @supports_caller
 def MakoFirstCharUpper(context, arg):
     return FirstCharUpper(arg)
 
+
 @supports_caller
 def CppNamespaceBegin(context, arg):
-    return " ".join([("namespace {0}".format(x) + " {") for x in arg.split(".")])
+    return " ".join([("namespace {0}".format(x) + " {")
+                     for x in arg.split(".")])
 
 
 @supports_caller
@@ -180,6 +185,7 @@ def CppNamespaceEnd(context, arg):
         return ret[0:-1]
     return ret
 
+
 @supports_caller
 def CppFullPath(context, arg):
     return "".join(["{0}::".format(x) for x in arg.split(".")])
@@ -189,9 +195,11 @@ def CppFullPath(context, arg):
 def CsNamespaceBegin(context, arg):
     return CppNamespaceBegin(context, arg)
 
+
 @supports_caller
 def CsNamespaceEnd(context, arg):
     return CppNamespaceEnd(context, arg)
+
 
 class PbMsgIndexType:
     KV = ext.EN_INDEX_KV
@@ -201,6 +209,7 @@ class PbMsgIndexType:
 
 
 class PbMsgIndex:
+
     def __init__(self, pb_msg, pb_ext_index):
         self.name = None
         if pb_ext_index.name:
@@ -222,15 +231,21 @@ class PbMsgIndex:
                     pb_fd = test_pb_fd
                     break
             if pb_fd is None:
-                sys.stderr.write('[XRESCODE ERROR] index {0} invalid, because field {1} is not found in {2}\n'.format(self.name, fd, pb_msg.name))
+                sys.stderr.write(
+                    '[XRESCODE ERROR] index {0} invalid, because field {1} is not found in {2}\n'
+                    .format(self.name, fd, pb_msg.name))
                 self.fields.clear()
                 break
             if pb_fd.label == pb_fd.LABEL_REPEATED:
-                sys.stderr.write('[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n'.format(self.name, fd, pb_msg.name))
+                sys.stderr.write(
+                    '[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n'
+                    .format(self.name, fd, pb_msg.name))
                 self.fields.clear()
                 break
             if pb_fd.type == pb_fd.TYPE_MESSAGE:
-                sys.stderr.write('[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be message\n'.format(self.name, fd, pb_msg.name))
+                sys.stderr.write(
+                    '[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be message\n'
+                    .format(self.name, fd, pb_msg.name))
                 self.fields.clear()
                 break
             self.fields.append(pb_fd)
@@ -245,7 +260,9 @@ class PbMsgIndex:
             return False
         if self.index_type == PbMsgIndexType.IV or self.index_type == PbMsgIndexType.IL:
             if len(self.fields) != 1:
-                sys.stderr.write('[XRESCODE ERROR] index {0} invalid, vector index only can has only 1 integer key field\n'.format(self.name))
+                sys.stderr.write(
+                    '[XRESCODE ERROR] index {0} invalid, vector index only can has only 1 integer key field\n'
+                    .format(self.name))
                 return False
         return True
 
@@ -264,8 +281,8 @@ class PbMsgIndex:
     def get_cs_key_decl(self):
         decls = []
         for fd in self.fields:
-            decls.append("{0} {1}".format(
-                PbMsgGetPbFieldCsType(fd), ToCamelName(fd.name)))
+            decls.append("{0} {1}".format(PbMsgGetPbFieldCsType(fd),
+                                          ToCamelName(fd.name)))
         return ", ".join(decls)
 
     def get_key_params(self):
@@ -274,7 +291,7 @@ class PbMsgIndex:
             decls.append(fd.name)
         return ", ".join(decls)
 
-    def get_key_names(self, quote = '"'):
+    def get_key_names(self, quote='"'):
         decls = []
         for fd in self.fields:
             decls.append(fd.name)
@@ -296,31 +313,40 @@ class PbMsgIndex:
             for fd in self.fields:
                 fileds_mapping[fd.name.lower()] = fd.name
             self.get_file_expression = []
-            self.get_file_expression.append("    std::stringstream {0}_generated_file_path;".format(self.name))
+            self.get_file_expression.append(
+                "    std::stringstream {0}_generated_file_path;".format(
+                    self.name))
             if self.file_mapping:
                 next_index = 0
                 for mo in re.finditer('\{\s*([\w_]+)s*\}', self.file_mapping):
                     key_var_name = mo.group(1).lower()
                     if key_var_name not in fileds_mapping:
-                        sys.stderr.write("[XRESCODE ERROR] {0} in file_mapping is not exists in key fields of index {1}\n", mo.group(1), self.name)
+                        sys.stderr.write(
+                            "[XRESCODE ERROR] {0} in file_mapping is not exists in key fields of index {1}\n",
+                            mo.group(1), self.name)
                     else:
                         if next_index < mo.start():
                             self.get_file_expression.append(
-                                "    {0}_generated_file_path<< \"{1}\";".format(self.name, self.file_mapping[next_index:mo.start()])
-                            )
+                                "    {0}_generated_file_path<< \"{1}\";".
+                                format(
+                                    self.name,
+                                    self.file_mapping[next_index:mo.start()]))
                         self.get_file_expression.append(
-                            "    {0}_generated_file_path<< {1};".format(self.name, fileds_mapping[key_var_name])
-                        )
+                            "    {0}_generated_file_path<< {1};".format(
+                                self.name, fileds_mapping[key_var_name]))
 
                     next_index = mo.end()
                 if next_index < len(self.file_mapping):
                     self.get_file_expression.append(
-                        "    {0}_generated_file_path<< \"{1}\";".format(self.name, self.file_mapping[next_index:])
-                    )
+                        "    {0}_generated_file_path<< \"{1}\";".format(
+                            self.name, self.file_mapping[next_index:]))
             else:
-                self.get_file_expression.append("    {0}_generated_file_path << \"{0}\";".format(self.name))
+                self.get_file_expression.append(
+                    "    {0}_generated_file_path << \"{0}\";".format(
+                        self.name))
         code_lines.extend(self.get_file_expression)
-        code_lines.append("    {0} = {1}_generated_file_path.str();".format(var_name, self.name))
+        code_lines.append("    {0} = {1}_generated_file_path.str();".format(
+            var_name, self.name))
         code_lines.append("} while (false);")
         return code_lines
 
@@ -333,31 +359,41 @@ class PbMsgIndex:
             for fd in self.fields:
                 fileds_mapping[fd.name.lower()] = fd.name
             self.get_file_expression = []
-            self.get_file_expression.append("    StringBuilder {0}_generated_file_path = new StringBuilder();".format(self.name))
+            self.get_file_expression.append(
+                "    StringBuilder {0}_generated_file_path = new StringBuilder();"
+                .format(self.name))
             if self.file_mapping:
                 next_index = 0
                 for mo in re.finditer('\{\s*([\w_]+)s*\}', self.file_mapping):
                     key_var_name = mo.group(1).lower()
                     if key_var_name not in fileds_mapping:
-                        sys.stderr.write("[XRESCODE ERROR] {0} in file_mapping is not exists in key fields of index {1}\n", mo.group(1), self.name)
+                        sys.stderr.write(
+                            "[XRESCODE ERROR] {0} in file_mapping is not exists in key fields of index {1}\n",
+                            mo.group(1), self.name)
                     else:
                         if next_index < mo.start():
                             self.get_file_expression.append(
-                                "    {0}_generated_file_path.Append(\"{1}\");".format(self.name, self.file_mapping[next_index:mo.start()])
-                            )
+                                "    {0}_generated_file_path.Append(\"{1}\");".
+                                format(
+                                    self.name,
+                                    self.file_mapping[next_index:mo.start()]))
                         self.get_file_expression.append(
-                            "    {0}_generated_file_path.Append({1});".format(self.name, fileds_mapping[key_var_name])
-                        )
+                            "    {0}_generated_file_path.Append({1});".format(
+                                self.name, fileds_mapping[key_var_name]))
 
                     next_index = mo.end()
                 if next_index < len(self.file_mapping):
                     self.get_file_expression.append(
-                        "    {0}_generated_file_path.Append(\"{1}\");".format(self.name, self.file_mapping[next_index:])
-                    )
+                        "    {0}_generated_file_path.Append(\"{1}\");".format(
+                            self.name, self.file_mapping[next_index:]))
             else:
-                self.get_file_expression.append("    {0}_generated_file_path.Append(\"{0}\");".format(self.name))
+                self.get_file_expression.append(
+                    "    {0}_generated_file_path.Append(\"{0}\");".format(
+                        self.name))
         code_lines.extend(self.get_file_expression)
-        code_lines.append("    {0} = {1}_generated_file_path.ToString();".format(var_name, self.name))
+        code_lines.append(
+            "    {0} = {1}_generated_file_path.ToString();".format(
+                var_name, self.name))
         return code_lines
 
     def get_key_params_fmt_value_list(self):
@@ -393,12 +429,16 @@ class PbMsgIndex:
     def get_key_fmt_value_list(self, prefix=''):
         decls = []
         for fd in self.fields:
-            decls.append(PbMsgPbFieldFmtValue(fd, "{0}{1}".format(prefix, PbMsgGetPbFieldFn(fd))))
+            decls.append(
+                PbMsgPbFieldFmtValue(
+                    fd, "{0}{1}".format(prefix, PbMsgGetPbFieldFn(fd))))
         return ", ".join(decls)
 
 
 class PbMsgCodeExt:
-    def __init__(self, outer_file, outer_msg, inner_file, inner_msg, loader, package):
+
+    def __init__(self, outer_file, outer_msg, inner_file, inner_msg, loader,
+                 package):
         self.outer_file = outer_file
         self.outer_msg = outer_msg
         self.inner_file = inner_file
@@ -443,7 +483,9 @@ class PbMsgCodeExt:
 
 
 class PbMsgLoader:
-    def __init__(self, pb_file, pb_msg, msg_prefix, nested_from_prefix, pb_loader):
+
+    def __init__(self, pb_file, pb_msg, msg_prefix, nested_from_prefix,
+                 pb_loader):
         self.pb_file = pb_file
         self.pb_msg = pb_msg
         self.msg_prefix = msg_prefix
@@ -478,20 +520,32 @@ class PbMsgLoader:
                 if fd.name == self.pb_loader.code_field:
                     if not fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE or not fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
                         fds.add_failed_count()
-                        sys.stderr.write('[XRESCODE ERROR] code field {0} of {1} must be repeated message\n'.format(fd.name, self.full_name))
+                        sys.stderr.write(
+                            '[XRESCODE ERROR] code field {0} of {1} must be repeated message\n'
+                            .format(fd.name, self.full_name))
                         break
                     inner_msg = fds.get_msg_by_type(fd.type_name)
                     if inner_msg is None:
                         fds.add_failed_count()
-                        sys.stderr.write('[XRESCODE ERROR] can not find message {0} for code field {1} of {2}\n'.format(fd.type_name, fd.name, self.full_name))
+                        sys.stderr.write(
+                            '[XRESCODE ERROR] can not find message {0} for code field {1} of {2}\n'
+                            .format(fd.type_name, fd.name, self.full_name))
                         break
-                    code_ext = PbMsgCodeExt(self.pb_file, self.pb_msg, inner_msg.pb_file, inner_msg.pb_msg, self.pb_loader, self.pb_file.package)
+                    code_ext = PbMsgCodeExt(self.pb_file, self.pb_msg,
+                                            inner_msg.pb_file,
+                                            inner_msg.pb_msg, self.pb_loader,
+                                            self.pb_file.package)
                     break
             if code_ext is None:
                 fds.add_failed_count()
-                sys.stderr.write('[XRESCODE ERROR] code field {0} can not be found in {1}\n'.format(self.pb_loader.code_field, self.full_name))
+                sys.stderr.write(
+                    '[XRESCODE ERROR] code field {0} can not be found in {1}\n'
+                    .format(self.pb_loader.code_field, self.full_name))
         else:
-            code_ext = PbMsgCodeExt(fds.shared_outer_msg.pb_file, fds.shared_outer_msg.pb_msg, self.pb_file, self.pb_msg, self.pb_loader, self.pb_file.package)
+            code_ext = PbMsgCodeExt(fds.shared_outer_msg.pb_file,
+                                    fds.shared_outer_msg.pb_msg, self.pb_file,
+                                    self.pb_msg, self.pb_loader,
+                                    self.pb_file.package)
 
         if code_ext and code_ext.is_valid():
             self.code = code_ext
@@ -501,19 +555,33 @@ class PbMsgLoader:
         if self.code is None:
             if self.pb_loader.file_list:
                 fds.add_failed_count()
-                print('[XRESCODE WARNING] message {0} has file_list but without valid field, ignored'.format(self.full_name))
+                print(
+                    '[XRESCODE WARNING] message {0} has file_list but without valid field, ignored'
+                    .format(self.full_name))
             if self.pb_loader.file_path:
                 fds.add_failed_count()
-                print('[XRESCODE WARNING] message {0} has file_path but without valid field, ignored'.format(self.full_name))
+                print(
+                    '[XRESCODE WARNING] message {0} has file_path but without valid field, ignored'
+                    .format(self.full_name))
         else:
             if self.code.invalid_index_count > 0:
                 fds.add_failed_count()
             if self.code.file_list and self.code.file_path:
                 fds.add_failed_count()
-                print('[XRESCODE WARNING] message {0} has both file_list and file_path, should only has one'.format(self.full_name))
+                print(
+                    '[XRESCODE WARNING] message {0} has both file_list and file_path, should only has one'
+                    .format(self.full_name))
 
     def has_code(self):
         return self.code is not None
+
+    def get_upb_lua_path(self):
+        base_file = os.path.basename(self.pb_file.name)
+        suffix_pos = base_file.rfind('.')
+        if suffix_pos < 0:
+            return base_file + "_pb"
+        else:
+            return base_file[0:suffix_pos] + "_pb"
 
     def get_pb_header_path(self):
         base_file = os.path.basename(self.pb_file.name)
@@ -528,9 +596,9 @@ class PbMsgLoader:
             return self.pb_outer_class_name
         cpp_package_prefix = self.code.outer_file.package.replace(".", "::")
         if cpp_package_prefix:
-            self.pb_outer_class_name =  "::" + cpp_package_prefix + "::" + self.code.outer_msg.name
+            self.pb_outer_class_name = "::" + cpp_package_prefix + "::" + self.code.outer_msg.name
         else:
-            self.pb_outer_class_name =  "::" + self.code.outer_msg.name
+            self.pb_outer_class_name = "::" + self.code.outer_msg.name
         return self.pb_outer_class_name
 
     def get_pb_inner_class_name(self):
@@ -541,9 +609,9 @@ class PbMsgLoader:
             return ""
         cpp_package_prefix = self.code.inner_file.package.replace(".", "::")
         if cpp_package_prefix:
-            self.pb_inner_class_name =  "::" + cpp_package_prefix + "::" + self.code.inner_msg.name
+            self.pb_inner_class_name = "::" + cpp_package_prefix + "::" + self.code.inner_msg.name
         else:
-            self.pb_inner_class_name =  "::" + self.code.inner_msg.name
+            self.pb_inner_class_name = "::" + self.code.inner_msg.name
         return self.pb_inner_class_name
 
     def get_cpp_class_name(self):
@@ -554,7 +622,8 @@ class PbMsgLoader:
             return ""
 
         if self.msg_prefix:
-            self.cpp_class_name = "{0}{1}".format(self.msg_prefix, self.code.class_name)
+            self.cpp_class_name = "{0}{1}".format(self.msg_prefix,
+                                                  self.code.class_name)
         else:
             self.cpp_class_name = self.code.class_name
         return self.cpp_class_name
@@ -567,8 +636,8 @@ class PbMsgLoader:
             return ""
 
         if self.msg_prefix:
-            self.cs_class_name = "{0}{1}".format(
-                self.msg_prefix, self.code.class_name)
+            self.cs_class_name = "{0}{1}".format(self.msg_prefix,
+                                                 self.code.class_name)
         else:
             self.cs_class_name = self.code.class_name
         return self.cs_class_name
@@ -586,9 +655,9 @@ class PbMsgLoader:
             for i in range(len(cs_arr)):
                 cs_arr[i] = FirstCharUpper(cs_arr[i])
             cs_package_prefix = '.'.join(cs_arr)
-            self.cs_pb_outer_class_name =  cs_package_prefix + "." + self.code.outer_msg.name
+            self.cs_pb_outer_class_name = cs_package_prefix + "." + self.code.outer_msg.name
         else:
-            self.cs_pb_outer_class_name =  self.code.outer_msg.name
+            self.cs_pb_outer_class_name = self.code.outer_msg.name
         return self.cs_pb_outer_class_name
 
     def get_cs_pb_inner_class_name(self):
@@ -600,9 +669,9 @@ class PbMsgLoader:
 
         cs_package_prefix = self.code.inner_file.package
         if cs_package_prefix:
-            self.cs_pb_inner_class_name =  cs_package_prefix + "." + self.code.inner_msg.name
+            self.cs_pb_inner_class_name = cs_package_prefix + "." + self.code.inner_msg.name
         else:
-            self.cs_pb_inner_class_name =  self.code.inner_msg.name
+            self.cs_pb_inner_class_name = self.code.inner_msg.name
         return self.cs_pb_inner_class_name
 
     def get_cpp_class_full_name(self):
@@ -614,7 +683,8 @@ class PbMsgLoader:
 
         cpp_package_prefix = self.code.package.replace(".", "::")
         if cpp_package_prefix:
-            self.cpp_class_full_name = cpp_package_prefix + "::" + self.get_cpp_class_name()
+            self.cpp_class_full_name = cpp_package_prefix + "::" + self.get_cpp_class_name(
+            )
         else:
             self.cpp_class_full_name = self.get_cpp_class_name()
 
@@ -655,7 +725,8 @@ class PbMsgLoader:
     def get_cpp_if_guard_name(self):
         if self.cpp_if_guard_name is not None:
             return self.cpp_if_guard_name
-        self.cpp_if_guard_name = "_" + self.get_cpp_class_full_name().replace("::", "_").upper()
+        self.cpp_if_guard_name = "_" + self.get_cpp_class_full_name().replace(
+            "::", "_").upper()
         return self.cpp_if_guard_name
 
     def get_cpp_public_var_name(self):
@@ -681,6 +752,7 @@ class PbMsgLoader:
 
 
 class PbMsg:
+
     def __init__(self, pb_file, pb_msg, msg_prefix, nested_from_prefix):
         self.pb_file = pb_file
         self.pb_msg = pb_msg
@@ -699,7 +771,7 @@ class PbMsg:
 
         if ext.loader not in self.pb_msg.options.Extensions:
             return
-        
+
         for loader in self.pb_msg.options.Extensions[ext.loader]:
             skip_message = False
             if exclude_tags:
@@ -718,7 +790,9 @@ class PbMsg:
             if skip_message:
                 continue
 
-            loader_inst = PbMsgLoader(self.pb_file, self.pb_msg, self.msg_prefix, self.nested_from_prefix, loader)
+            loader_inst = PbMsgLoader(self.pb_file, self.pb_msg,
+                                      self.msg_prefix, self.nested_from_prefix,
+                                      loader)
             loader_inst.setup_code(fds)
             if loader_inst.has_code():
                 self.loaders.append(loader_inst)
@@ -736,12 +810,21 @@ class PbMsg:
 
 
 class PbDescSet:
-    def __init__(self, pb_file_path, tags=[], msg_prefix='', proto_v3 = False, pb_include_prefix="", exclude_tags=[], 
-                 shared_outer_type='org.xresloader.pb.xresloader_datablocks', shared_outer_field='data_block'):
+
+    def __init__(self,
+                 pb_file_path,
+                 tags=[],
+                 msg_prefix='',
+                 proto_v3=False,
+                 pb_include_prefix="",
+                 exclude_tags=[],
+                 shared_outer_type='org.xresloader.pb.xresloader_datablocks',
+                 shared_outer_field='data_block'):
         self.pb_file = pb_file_path
         self.proto_v3 = proto_v3
         self.pb_include_prefix = pb_include_prefix
-        self.pb_fds = pb2.FileDescriptorSet.FromString(open(pb_file_path, 'rb').read())
+        self.pb_fds = pb2.FileDescriptorSet.FromString(
+            open(pb_file_path, 'rb').read())
         self.generate_message = []
         self.pb_msgs = dict()
         self.custom_blocks = dict()
@@ -765,11 +848,12 @@ class PbDescSet:
                 self.generate_message.append(v)
         self.generate_message.sort(key=lambda x: x.full_name)
 
-    def setup_pb_msg(self, pb_file, pb_msg, msg_prefix, nested_from_prefix = ""):
+    def setup_pb_msg(self, pb_file, pb_msg, msg_prefix, nested_from_prefix=""):
         msg_obj = PbMsg(pb_file, pb_msg, msg_prefix, nested_from_prefix)
         self.pb_msgs[msg_obj.full_name] = msg_obj
         for nested_type in pb_msg.nested_type:
-            self.setup_pb_msg(pb_file, nested_type, msg_prefix, nested_from_prefix + pb_msg.name + ".")
+            self.setup_pb_msg(pb_file, nested_type, msg_prefix,
+                              nested_from_prefix + pb_msg.name + ".")
 
     def get_msg_by_type(self, type_name):
         if type_name and type_name[0:1] == ".":

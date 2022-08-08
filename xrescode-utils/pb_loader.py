@@ -576,12 +576,13 @@ class PbMsgLoader:
         return self.code is not None
 
     def get_upb_lua_path(self):
-        base_file = os.path.basename(self.pb_file.name)
+        base_file = self.pb_file.name
         suffix_pos = base_file.rfind('.')
         if suffix_pos < 0:
-            return base_file + "_pb"
+            return base_file.replace('/', '.').replace('\\', '.') + "_pb"
         else:
-            return base_file[0:suffix_pos] + "_pb"
+            return base_file[0:suffix_pos].replace('/', '.').replace(
+                '\\', '.') + "_pb"
 
     def get_pb_header_path(self):
         base_file = os.path.basename(self.pb_file.name)

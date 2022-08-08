@@ -32,7 +32,7 @@ kind.protoxresloader.protoxresloader_ue.protoxrescode_extensions_v3.proto"
 Id (BèDèRId
 Level (BèDRLevel=
 CostType (B!Ê>	cost_typeš?Refer to cost_typeRCostType
-	CostValue (R	CostValue
+	CostValue (R	CostValue
 ScoreAdd (RScoreAdd:vêDhelperÊ>%Test role_upgrade_cfg with multi keysºTB²role_upgrade_cfg.bytesÊIdÊIdLevelêclientêserverbproto3
 ƒ
 pb_header_v3.protoorg.xresloader.pb"B

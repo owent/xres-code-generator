@@ -1,3 +1,5 @@
+-- Copyright 2022 xresloader. All rights reserved.
+
 local CUSTOM_INDEX_MOD_NAME = 'DataTableCustomIndex53'
 local MAX_VERSIONS = 4
 

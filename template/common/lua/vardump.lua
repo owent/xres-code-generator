@@ -1,6 +1,7 @@
+-- Copyright 2022 xresloader. All rights reserved.
 --region vardump.lua
 --Author : owent
---Date   : 2014/10/22
+--Date   : 2014-10-22
 
 _G.vardump_default = {
   show_all = false, -- 显示隐藏对象（以__开头）
@@ -17,12 +18,8 @@ _G.vardump = function(var, conf)
   local rm = {}
 
   local cfg = {};
-  if table.clone then
-    cfg = table.clone(_G.vardump_default)
-  else
-    for k, v in pairs(_G.vardump_default) do
-      cfg[k] = _G.vardump_default[k]
-    end
+  for k, v in pairs(_G.vardump_default) do
+    cfg[k] = _G.vardump_default[k]
   end
 
   if "table" == type(conf) then

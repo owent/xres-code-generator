@@ -285,7 +285,7 @@ $ENV:PATH="$ENV:HOMEDRIVE$ENV:HOMEPATH\\.local\\bin;$ENV:PATH"
 python -m pip install Mako --user -f requirements.txt
 ```
 
-Or you can download and build dependencies by your self as below and use `-x <custom module install path>` to add them to search paths.
+Or you can download and build dependencies by your self as below and use `--add-path <custom module install path>/--add-package-prefix <custom module install prefix>` to add them to search paths.
 
 #### mako
 
@@ -339,5 +339,5 @@ chmod 777 -R protobuf ;
 
 ```bash
 PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")"
-"$PREBUILT_PROTOC" -I "$REPO_DIR/pb_extension" "$REPO_DIR/pb_extension/xrescode_extensions_v3.proto" "--python_out=$REPO_DIR/pb_extension"
+"$PREBUILT_PROTOC" -I "$REPO_DIR/pb_extension" "--python_out=$REPO_DIR/pb_extension" "$REPO_DIR/pb_extension/xrescode_extensions_v3.proto"
 ```

@@ -6,6 +6,7 @@ import stat
 import sys
 import codecs
 import shutil
+import sysconfig
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -113,6 +114,45 @@ def decode_rule(pattern):
                 mode = rules[0].lower()
                 input = rules[1]
     return mode, input, output
+
+
+def add_package_prefix_paths(packag_paths):
+    """See https://docs.python.org/3/install/#how-installation-works"""
+    append_paths = []
+    for path in packag_paths:
+        add_package_bin_path = os.path.join(path, "bin")
+        if os.path.exists(add_package_bin_path):
+            if sys.platform.lower() == "win32":
+                os.environ[
+                    "PATH"] = add_package_bin_path + ";" + os.environ["PATH"]
+            else:
+                os.environ[
+                    "PATH"] = add_package_bin_path + ":" + os.environ["PATH"]
+
+        add_package_lib_path = os.path.join(
+            path,
+            "lib",
+            "python{0}".format(sysconfig.get_python_version()),
+            "site-packages",
+        )
+        if os.path.exists(add_package_lib_path):
+            append_paths.append(add_package_lib_path)
+
+        add_package_lib64_path = os.path.join(
+            path,
+            "lib64",
+            "python{0}".format(sysconfig.get_python_version()),
+            "site-packages",
+        )
+        if os.path.exists(add_package_lib64_path):
+            append_paths.append(add_package_lib64_path)
+
+        add_package_lib_path_for_win = os.path.join(path, "Lib",
+                                                    "site-packages")
+        if os.path.exists(add_package_lib_path_for_win):
+            append_paths.append(add_package_lib_path_for_win)
+    append_paths.extend(sys.path)
+    sys.path = append_paths
 
 
 def main():
@@ -240,12 +280,22 @@ def main():
                       help="set common outer type(default: data_block).",
                       dest="shared_outer_field",
                       default='data_block')
-    parser.add_option("-x",
-                      "--sys-path",
-                      action="append",
-                      help="Add sys.path to find custom python modules",
-                      dest="sys_path",
-                      default=[])
+    parser.add_option(
+        "--add-path",
+        action="append",
+        help=
+        "add path to python module(where to find protobuf,six,mako,print_style and etc...)",
+        dest="add_path",
+        default=[],
+    )
+    parser.add_option(
+        "--add-package-prefix",
+        action="append",
+        help=
+        "add path to python module install prefix(where to find protobuf,six,mako,print_style and etc...)",
+        dest="add_package_prefix",
+        default=[],
+    )
 
     (options, left_args) = parser.parse_args()
 
@@ -260,8 +310,9 @@ def main():
     if options.output_dir is None or options.pb is None:
         print_help_msg(1)
 
-    for path in options.sys_path:
+    for path in options.add_path:
         sys.path.append(path)
+    add_package_prefix_paths(options.add_package_prefix)
     sys.path.append(os.path.join(script_dir, 'xrescode-utils'))
     sys.path.append(os.path.join(script_dir, 'pb_extension'))
 

@@ -43,12 +43,12 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
             end
             return
         end
-        local data_desc_msg = data_desc_file[index_cfg.fullName]
+        local data_desc_msg = data_desc_file[index_cfg.messageName]
         if data_desc_file == nil then
             if 'function' == type(index_loader.__service.OnError) then
                 local msg = string.format('Index "%s" of message "%s": can not find message descriptor %s',
                     index_loader.Name,
-                    index_cfg.messageName, index_cfg.fullName)
+                    index_cfg.messageName, index_cfg.messageName)
                 pcall(index_loader.__service.OnError, msg, index_loader, index_cfg.indexName)
             end
             return

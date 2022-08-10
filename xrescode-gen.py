@@ -156,6 +156,7 @@ def add_package_prefix_paths(packag_paths):
 
 
 def main():
+    os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
     from optparse import OptionParser
     usage = '%(prog)s -p <pb file> -o <output dir> [-i <additional template dirs>...] [-g <global templates>...] [-m <message templates>...] [other options...] [custom rules or field rules]'
     parser = OptionParser(usage)
@@ -310,11 +311,14 @@ def main():
     if options.output_dir is None or options.pb is None:
         print_help_msg(1)
 
-    for path in options.add_path:
-        sys.path.append(path)
-    add_package_prefix_paths(options.add_package_prefix)
+    prepend_paths = []
+    if options.add_path:
+        prepend_paths.extend([x for x in options.add_path])
     sys.path.append(os.path.join(script_dir, 'xrescode-utils'))
     sys.path.append(os.path.join(script_dir, 'pb_extension'))
+    prepend_paths.extend(sys.path)
+    sys.path = prepend_paths
+    add_package_prefix_paths(options.add_package_prefix)
 
     template_paths = options.input_dir
     template_paths.append(os.path.join(script_dir, 'pb_extension'))

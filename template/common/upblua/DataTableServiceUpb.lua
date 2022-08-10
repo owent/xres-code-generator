@@ -5,6 +5,7 @@ local DataTableService = {
     __current_group = {},
     __history_versions = {},
     IndexModuleName = CUSTOM_INDEX_MOD_NAME,
+    XresloaderHeader = 'pb_header_v3_pb',
     MaxGroupNumber = 4,
     OverrideSameVersion = true,
     BufferLoader = function(file_path)
@@ -65,7 +66,7 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
             return
         end
 
-        local pb_header_v3_pb = require('pb_header_v3_pb')
+        local pb_header_v3_pb = require(index_loader.__service.XresloaderHeader)
         local upb = require('upb')
         local xresloader_result, xresloader_datablocks = pcall(upb.decode, pb_header_v3_pb.xresloader_datablocks,
             data_block)
@@ -271,8 +272,8 @@ function DataTableService.ReloadTables(self)
         package.loaded[self.IndexModuleName] = nil
     end
 
-    if package.loaded["pb_header_v3_pb"] ~= nil then
-        package.loaded["pb_header_v3_pb"] = nil
+    if package.loaded[self.XresloaderHeader] ~= nil then
+        package.loaded[self.XresloaderHeader] = nil
     end
 
     if package.loaded["upb"] ~= nil then

@@ -291,24 +291,6 @@ class PbDatabase(object):
             self._extended_raw_service(file_proto.package, service)
 
     def load(self, pb_file_paths):
-        pb_file_buffer_list = [open(x, "rb").read() for x in pb_file_paths]
-        pb_fds_patched = []
-        pb_fds_list = [
-            pb2.FileDescriptorSet.FromString(x) for x in pb_file_buffer_list
-        ]
-        for pb_fds in pb_fds_list:
-            pb_fds_patched.extend([x for x in pb_fds.file])
-        self._register_by_pb_fds(self.default_factory, pb_fds_patched)
-
-        # Extend the pool with the extended factory.
-        pb_fds_list = [
-            pb2.FileDescriptorSet.FromString(x) for x in pb_file_buffer_list
-        ]
-        for pb_fds in pb_fds_list:
-            pb_fds_patched.extend([x for x in pb_fds.file])
-            for file_proto in pb_fds.file:
-                self.raw_files[file_proto.name] = file_proto
-                self._extended_raw_file(file_proto)
 
         # Add well known types for extend factory.
         from google.protobuf import (
@@ -349,6 +331,15 @@ class PbDatabase(object):
             wrappers_pb2.DESCRIPTOR.name:
             wrappers_pb2.DESCRIPTOR.serialized_pb,
         })
+
+        pb_file_buffer_list = [open(x, "rb").read() for x in pb_file_paths]
+        pb_fds_patched = []
+        pb_fds_list = [
+            pb2.FileDescriptorSet.FromString(x) for x in pb_file_buffer_list
+        ]
+        for pb_fds in pb_fds_list:
+            pb_fds_patched.extend([x for x in pb_fds.file])
+
         for x in pb_fds_patched:
             if x.name in protobuf_well_known_type_descriptors:
                 protobuf_well_known_type_descriptors[x.name] = None
@@ -359,6 +350,21 @@ class PbDatabase(object):
             if patch_inner_pb_data is not None:
                 protobuf_well_known_types.append(
                     pb2.FileDescriptorProto.FromString(patch_inner_pb_data))
+
+        pb_fds_patched.extend(protobuf_well_known_types)
+        self._register_by_pb_fds(self.default_factory, pb_fds_patched)
+
+        # Extend the pool with the extended factory.
+        pb_fds_patched = []
+        pb_fds_list = [
+            pb2.FileDescriptorSet.FromString(x) for x in pb_file_buffer_list
+        ]
+        for pb_fds in pb_fds_list:
+            pb_fds_patched.extend([x for x in pb_fds.file])
+            for file_proto in pb_fds.file:
+                self.raw_files[file_proto.name] = file_proto
+                self._extended_raw_file(file_proto)
+
         pb_fds_patched.extend(protobuf_well_known_types)
         self._register_by_pb_fds(self.extended_factory, pb_fds_patched)
 

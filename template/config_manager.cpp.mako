@@ -289,9 +289,13 @@ void config_manager::reset() {
 
     read_file_handle_ = nullptr;
     read_version_handle_ = nullptr;
+    on_log_ = nullptr;
+    on_filter_ = nullptr;
+    on_not_found_ = nullptr;
     on_group_created_ = nullptr;
     on_group_reload_all_ = nullptr;
     on_group_destroyed_ = nullptr;
+    on_group_filter_ = nullptr;
   }
 
   clear();

@@ -100,11 +100,12 @@ ${pb_loader.CppNamespaceBegin(global_package)}
 
     class config_manager {
     public:
-        typedef std::function<bool(std::string&, const char* path)> read_buffer_func_t;
-        typedef std::function<bool(std::string&)> read_version_func_t;
-        typedef std::shared_ptr<config_group_t> config_group_ptr_t;
-        typedef std::function<void(config_group_ptr_t)> on_load_func_t;
-        typedef std::function<bool(org::xresloader::pb::xresloader_datablocks&, const ::google::protobuf::Descriptor*, const std::string&)> on_filter_func_t;
+        using read_buffer_func_t = std::function<bool(std::string&, const char* path)>;
+        using read_version_func_t = std::function<bool(std::string&)>;
+        using config_group_ptr_t = std::shared_ptr<config_group_t>;
+        using on_load_func_t = std::function<void(config_group_ptr_t)>;
+        using on_filter_func_t = std::function<bool(org::xresloader::pb::xresloader_datablocks&, const ::google::protobuf::Descriptor*, const std::string&)>;
+        using on_group_filter_func_t = std::function<int(config_group_ptr_t)>;
 
         struct on_not_found_event_data_t {
             const std::list<org::xresloader::pb::xresloader_data_source>* data_source;
@@ -114,7 +115,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
             bool is_list;
             size_t list_index;
         };
-        typedef std::function<void(const on_not_found_event_data_t&)> on_not_found_func_t;
+        using on_not_found_func_t = std::function<void(const on_not_found_event_data_t&)>;
 
         struct log_level_t {
             enum type {
@@ -137,7 +138,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
             log_caller_info_t(log_level_t::type lid, const char *lname, const char *fpath, uint32_t lnum, const char *fnname);
         };
 
-        typedef std::function<void(const log_caller_info_t& caller, const char* content)> on_log_func_t;
+        using on_log_func_t = std::function<void(const log_caller_info_t& caller, const char* content)>;
 
     private:
         config_manager();
@@ -197,6 +198,9 @@ ${pb_loader.CppNamespaceBegin(global_package)}
         inline void set_on_filter(on_filter_func_t func) { on_filter_ = func; }
         inline const on_filter_func_t& get_on_filter() const { return on_filter_; }
 
+        inline void set_on_group_filter(on_group_filter_func_t func) { on_group_filter_ = func; }
+        inline const on_group_filter_func_t& get_on_group_filter() const { return on_group_filter_; }
+
         inline void set_on_not_found(on_not_found_func_t func) { on_not_found_ = func; }
         inline const on_not_found_func_t& get_on_not_found() const { return on_not_found_; }
 
@@ -255,6 +259,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
         on_load_func_t on_group_destroyed_;
         on_log_func_t on_log_;
         on_filter_func_t on_filter_;
+        on_group_filter_func_t on_group_filter_;
         on_not_found_func_t on_not_found_;
 
         read_buffer_func_t read_file_handle_;

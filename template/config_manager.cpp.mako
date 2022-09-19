@@ -343,6 +343,14 @@ int config_manager::reload_all(bool del_when_failed) {
 %   endfor
 % endfor
 
+  if (on_group_filter_) {
+    res = on_group_filter_(cfg_group);
+    if (res < 0) {
+      EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] filter config group failed, res: %d", res);
+      ret = res;
+    }
+  }
+  
   if (del_when_failed && ret < 0) {
     ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(config_group_lock_);
     config_group_list_.pop_back();

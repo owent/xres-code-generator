@@ -126,7 +126,7 @@ ${loader.get_cpp_namespace_decl_begin()}
                     ++str_end;
                 }
 
-                sz = str_end - str_begin;
+                sz = static_cast<size_t>(str_end - str_begin);
             }
 
             if (str_begin) {
@@ -294,7 +294,7 @@ ${loader.get_cpp_namespace_decl_begin()}
                 ++ line_end;
             }
 
-            std::pair<const char*, size_t> file_path_trimed = details::trim(line_start, line_end - line_start);
+            std::pair<const char*, size_t> file_path_trimed = details::trim(line_start, static_cast<size_t>(line_end - line_start));
             if (file_path_trimed.second == 0) {
                 continue;
             }

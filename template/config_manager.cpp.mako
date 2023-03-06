@@ -207,7 +207,7 @@ config_manager::log_caller_info_t::log_caller_info_t(log_level_t::type lid, cons
 config_manager::config_manager() :
   reload_version_(std::chrono::system_clock::now().time_since_epoch().count()),
   override_same_version_(false),
-  max_group_number_(8),
+  max_group_number_(5),
   on_log_(config_manager::default_log_writer),
   read_file_handle_(config_manager::default_buffer_loader), 
   read_version_handle_(default_version_loader) {}
@@ -215,7 +215,7 @@ config_manager::config_manager() :
 config_manager::config_manager(constructor_helper_t&) :
   reload_version_(std::chrono::system_clock::now().time_since_epoch().count()),
   override_same_version_(false),
-  max_group_number_(8),
+  max_group_number_(5),
   on_log_(config_manager::default_log_writer),
   read_file_handle_(config_manager::default_buffer_loader), 
   read_version_handle_(default_version_loader) {}
@@ -279,9 +279,9 @@ int config_manager::init_new_group() {
       break;
     }
 
-    // 版本未变化，不需要reload
+    // 版本未变化，不需要reload, 空版本号意味着忽略版本号检查。
     // if (0 == ::utils::string::version_compare(version.c_str(), config_group_list_.back()->version.c_str())) {
-    if (version == config_group_list_.back()->version) {
+    if (!version.empty() && version == config_group_list_.back()->version) {
       return 0;
     }
   } while (false);
@@ -514,7 +514,7 @@ bool config_manager::default_buffer_loader(std::string& out, const char* path) {
 }
 
 bool config_manager::default_version_loader(std::string& out) {
-  out = "0";
+  out.clear();
   return true;
 }
 

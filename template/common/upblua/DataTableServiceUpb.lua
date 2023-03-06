@@ -6,7 +6,7 @@ local DataTableService = {
     __history_versions = {},
     IndexModuleName = CUSTOM_INDEX_MOD_NAME,
     XresloaderHeader = 'pb_header_v3_pb',
-    MaxGroupNumber = 4,
+    MaxGroupNumber = 5,
     OverrideSameVersion = true,
     BufferLoader = function(file_path)
         local f = io.open(file_path, "rb")
@@ -19,7 +19,7 @@ local DataTableService = {
         return ret
     end,
     VersionLoader = function()
-        return "0.0.0.0"
+        return ""
     end,
     OnError = function(msg, ...) -- Used for error message, parameters is (message, data_set, indexName, keys...)
         print(string.format("[ERROR]: %s", debug.traceback(msg, 2)))
@@ -91,13 +91,13 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
                 table.insert(all_rows, data_row)
             else
                 if 'function' == type(index_loader.__service.OnError) then
-                    local msg = string.format('Index "%s" of message "%s": can not parse data row %d in file %s with message %s: %s'
+                    local msg = string.format(
+                        'Index "%s" of message "%s": can not parse data row %d in file %s with message %s: %s'
                         ,
                         index_loader.Name,
                         index_cfg.messageName, row_index, index_cfg.filePath, index_cfg.fullName, data_row)
                     pcall(index_loader.__service.OnError, msg, index_loader, index_cfg.indexName)
                 end
-
             end
         end
         data_set = { origin = xresloader_datablocks, all_rows = all_rows, message_descriptor = data_desc_msg }
@@ -239,7 +239,7 @@ function DataTableService.LoadTables(self)
     local current_version = self.VersionLoader()
     for index, v in ipairs(self.__history_versions) do
         if v.version == current_version then
-            if self.OverrideSameVersion then
+            if self.OverrideSameVersion or current_version == nil or string.len(current_version) == 0 then
                 table.remove(self.__history_versions, index)
                 break
             else

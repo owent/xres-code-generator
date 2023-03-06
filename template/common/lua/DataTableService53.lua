@@ -1,16 +1,16 @@
--- Copyright 2022 xresloader. All rights reserved.
+-- Copyright 2023 xresloader. All rights reserved.
 
 local CUSTOM_INDEX_MOD_NAME = 'DataTableCustomIndex53'
-local MAX_VERSIONS = 4
+local MAX_VERSIONS = 5
 
 local DataTableService = {
     __current_group = {},
     __history_versions = {},
     IndexModuleName = CUSTOM_INDEX_MOD_NAME,
-    MaxGroupNumber = 4,
+    MaxGroupNumber = MAX_VERSIONS,
     OverrideSameVersion = true,
     VersionLoader = function()
-        return "0.0.0.0"
+        return ""
     end,
     OnError = nil -- Used for notice not found error, parameters is (message, data_set, indexName, keys...)
 }
@@ -145,7 +145,7 @@ function DataTableService.LoadTables(self)
     local current_version = self.VersionLoader()
     for index, v in ipairs(self.__history_versions) do
         if v.version == current_version then
-            if self.OverrideSameVersion then
+            if self.OverrideSameVersion or current_version == nil or string.len(current_version) == 0 then
                 table.remove(self.__history_versions, index)
                 break
             else

@@ -68,6 +68,7 @@ int main() {
 
     // excel::config_manager::me()->set_version_loader([] (std::string& out) {
     //     // Read version from file and write it to out
+    //     out.clear(); // Set version to empty will make config_manager ingore version and always reload data files.
     //     return true; // return true if load version success
     // });
 
@@ -79,7 +80,7 @@ int main() {
     // });
 
     // Set how much data group will be keep after reload.
-    // excel::config_manager::me()->set_group_number(8);
+    // excel::config_manager::me()->set_group_number(5);
 
     // Call set_override_same_version(true) to force to reload datas even version(load by set_version_loader(HANDLE)) not changed.
     // excel::config_manager::me()->set_override_same_version(true);

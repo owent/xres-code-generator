@@ -110,7 +110,7 @@ pb_msg_cpp_fmt_val_map = {
     pb2.FieldDescriptorProto.TYPE_STRING: "{0}.c_str()",
     pb2.FieldDescriptorProto.TYPE_UINT32: "static_cast<unsigned int>({0})",
     pb2.FieldDescriptorProto.TYPE_UINT64:
-    "static_cast<unsgined long long>({0})",
+    "static_cast<unsigned long long>({0})",
     pb2.FieldDescriptorProto.TYPE_MESSAGE: "\"MESSAGE: {0}\""
 }
 
@@ -207,7 +207,6 @@ def CsNamespaceEnd(context, arg):
 
 
 class PbDatabase(object):
-
     def __init__(self):
         self.raw_files = dict()
         self.raw_symbols = dict()
@@ -437,7 +436,6 @@ class PbDatabase(object):
 
 
 class PbMsgIndexType:
-
     def __init__(self, kv, kl, iv, il):
         self.KV = kv  # XRESCODE_GENERATOR_INDEX_TYPE.values_by_name['EN_INDEX_KV']
         self.KL = kl  # XRESCODE_GENERATOR_INDEX_TYPE.values_by_name['EN_INDEX_KL']
@@ -446,7 +444,6 @@ class PbMsgIndexType:
 
 
 class PbMsgIndex:
-
     def __init__(self, pb_msg, pb_ext_index, index_set):
         self.name = None
         self.index_set = index_set
@@ -678,7 +675,6 @@ class PbMsgIndex:
 
 
 class PbMsgCodeExt:
-
     def __init__(self, outer_file, outer_msg, inner_file, inner_msg, loader,
                  package, index_set):
         self.outer_file = outer_file
@@ -726,7 +722,6 @@ class PbMsgCodeExt:
 
 
 class PbMsgLoader:
-
     def __init__(self, pb_file, pb_msg, msg_prefix, nested_from_prefix,
                  pb_loader, index_set):
         self.pb_file = pb_file
@@ -998,7 +993,6 @@ class PbMsgLoader:
 
 
 class PbMsg:
-
     def __init__(self, db, pb_file, pb_msg, msg_prefix, nested_from_prefix,
                  index_set):
         self.db = db
@@ -1060,7 +1054,6 @@ class PbMsg:
 
 
 class PbDescSet:
-
     def __init__(self,
                  pb_file_path,
                  tags=[],

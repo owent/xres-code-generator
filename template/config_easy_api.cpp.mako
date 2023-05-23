@@ -15,7 +15,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
 %   for loader in pb_msg.loaders:
     // ======================================== ${loader.code.class_name} ========================================
 %     for code_index in loader.code.indexes:
-    const ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_container_type& get_${loader.code.class_name}_all_of_${code_index.name}() {
+    EXCEL_CONFIG_API const ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_container_type& get_${loader.code.class_name}_all_of_${code_index.name}() {
         static ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_container_type empty;
         const config_manager::config_group_ptr_t& group = config_manager::me()->get_current_config_group();
         if (!group) {
@@ -26,7 +26,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
     }
 
 %       if code_index.is_list():
-    const ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_value_type* get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}) {
+    EXCEL_CONFIG_API const ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_value_type* get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}) {
         const config_manager::config_group_ptr_t& group = config_manager::me()->get_current_config_group();
         if (!group) {
             return NULL;
@@ -35,7 +35,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
         return group->${loader.get_cpp_public_var_name()}.get_list_by_${code_index.name}(${code_index.get_key_params()});
     }
 
-    ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::item_ptr_type get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}, size_t idx) {
+    EXCEL_CONFIG_API ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::item_ptr_type get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}, size_t idx) {
         const config_manager::config_group_ptr_t& group = config_manager::me()->get_current_config_group();
         if (!group) {
             return NULL;
@@ -45,7 +45,7 @@ ${pb_loader.CppNamespaceBegin(global_package)}
     }
 
 %       else:
-    ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_value_type get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}) {
+    EXCEL_CONFIG_API ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_value_type get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}) {
         const config_manager::config_group_ptr_t& group = config_manager::me()->get_current_config_group();
         if (!group) {
             return NULL;

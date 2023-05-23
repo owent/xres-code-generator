@@ -31,23 +31,32 @@ pb_msg_class_name = loader.get_cpp_class_name()
 
 #endif
 
-
 #if defined(_MSC_VER)
-#pragma warning(push)
-#if ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
-#pragma warning(disable : 4996)
-#pragma warning(disable : 4309)
-#endif
-#if _MSC_VER >= 1922 && ((defined(__cplusplus) && __cplusplus >= 201704L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201704L))
-#pragma warning(disable : 5054)
-#endif
-#if _MSC_VER < 1910
-#pragma warning(disable : 4800)
-#endif
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <Windows.h>
+#  pragma warning(push)
+
+#  if ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+#    pragma warning(disable : 4996)
+#    pragma warning(disable : 4309)
+#    if _MSC_VER >= 1922
+#      pragma warning(disable : 5054)
+#    endif
+#  endif
+
+#  if _MSC_VER < 1910
+#    pragma warning(disable : 4800)
+#  endif
+#  pragma warning(disable : 4244)
+#  pragma warning(disable : 4251)
+#  pragma warning(disable : 4267)
+#  pragma warning(disable : 4668)
+#  pragma warning(disable : 4946)
+#  pragma warning(disable : 6001)
+#  pragma warning(disable : 6244)
+#  pragma warning(disable : 6246)
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
+#  include <Windows.h>
 #endif
 
 #ifdef max
@@ -59,13 +68,40 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #endif
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
-#if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
-#pragma GCC diagnostic push
-#endif
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#  if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#    pragma GCC diagnostic push
+#  endif
+#  pragma GCC diagnostic ignored "-Wunused-parameter"
+#  pragma GCC diagnostic ignored "-Wtype-limits"
+#  pragma GCC diagnostic ignored "-Wsign-compare"
+#  pragma GCC diagnostic ignored "-Wsign-conversion"
+#  pragma GCC diagnostic ignored "-Wshadow"
+#  pragma GCC diagnostic ignored "-Wuninitialized"
+#  pragma GCC diagnostic ignored "-Wconversion"
+#  if (__GNUC__ * 100 + __GNUC_MINOR__) >= 409
+#    pragma GCC diagnostic ignored "-Wfloat-conversion"
+#  endif
+#  if (__GNUC__ * 100 + __GNUC_MINOR__) >= 501
+#    pragma GCC diagnostic ignored "-Wsuggest-override"
+#  endif
 #elif defined(__clang__) || defined(__apple_build_version__)
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
+#  pragma clang diagnostic ignored "-Wunused-parameter"
+#  pragma clang diagnostic ignored "-Wtype-limits"
+#  pragma clang diagnostic ignored "-Wsign-compare"
+#  pragma clang diagnostic ignored "-Wsign-conversion"
+#  pragma clang diagnostic ignored "-Wshadow"
+#  pragma clang diagnostic ignored "-Wuninitialized"
+#  pragma clang diagnostic ignored "-Wconversion"
+#  if ((__clang_major__ * 100) + __clang_minor__) >= 305
+#    pragma clang diagnostic ignored "-Wfloat-conversion"
+#  endif
+#  if ((__clang_major__ * 100) + __clang_minor__) >= 306
+#    pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#  endif
+#  if ((__clang_major__ * 100) + __clang_minor__) >= 1100
+#    pragma clang diagnostic ignored "-Wsuggest-override"
+#  endif
 #endif
 
 #include <google/protobuf/arena.h>
@@ -79,15 +115,15 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #include <google/protobuf/stubs/common.h>
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
-#if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
-#pragma GCC diagnostic pop
-#endif
+#  if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#    pragma GCC diagnostic pop
+#  endif
 #elif defined(__clang__) || defined(__apple_build_version__)
-#pragma clang diagnostic pop
+#  pragma clang diagnostic pop
 #endif
 
 #if defined(_MSC_VER)
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 
 #include "config_manager.h"
@@ -155,13 +191,13 @@ ${loader.get_cpp_namespace_decl_begin()}
         }
     }
 
-    ${pb_msg_class_name}::${pb_msg_class_name}() {
+    EXCEL_CONFIG_API ${pb_msg_class_name}::${pb_msg_class_name}() {
     }
 
-    ${pb_msg_class_name}::~${pb_msg_class_name}(){
+    EXCEL_CONFIG_API ${pb_msg_class_name}::~${pb_msg_class_name}(){
     }
 
-    int ${pb_msg_class_name}::on_inited() {
+    EXCEL_CONFIG_API int ${pb_msg_class_name}::on_inited() {
         ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
         
         file_status_.clear();
@@ -169,7 +205,7 @@ ${loader.get_cpp_namespace_decl_begin()}
         return reload_file_lists();
     }
 
-    int ${pb_msg_class_name}::load_all() {
+    EXCEL_CONFIG_API int ${pb_msg_class_name}::load_all() {
         int ret = 0;
         ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
         for (std::unordered_map<std::string, bool>::iterator iter = file_status_.begin(); iter != file_status_.end(); ++ iter) {
@@ -187,7 +223,7 @@ ${loader.get_cpp_namespace_decl_begin()}
         return ret;
     }
 
-    void ${pb_msg_class_name}::clear() {
+    EXCEL_CONFIG_API void ${pb_msg_class_name}::clear() {
         ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
 % for code_index in loader.code.indexes:
         ${code_index.name}_data_.clear();
@@ -197,7 +233,7 @@ ${loader.get_cpp_namespace_decl_begin()}
         reload_file_lists();
     }
 
-    const std::list<org::xresloader::pb::xresloader_data_source>& ${pb_msg_class_name}::get_data_source() const {
+    EXCEL_CONFIG_API const std::list<org::xresloader::pb::xresloader_data_source>& ${pb_msg_class_name}::get_data_source() const {
         return datasource_;
     }
 
@@ -373,12 +409,12 @@ ${loader.get_cpp_namespace_decl_begin()}
 % for code_index in loader.code.indexes:
 // ------------------- index: ${code_index.name} APIs -------------------
 % if code_index.is_list():
-    const ${pb_msg_class_name}::${code_index.name}_value_type* ${pb_msg_class_name}::get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
+    EXCEL_CONFIG_API const ${pb_msg_class_name}::${code_index.name}_value_type* ${pb_msg_class_name}::get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
         ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh(load_file_lock_);
         return _get_list_by_${code_index.name}(${code_index.get_key_params()});
     }
 
-    ${pb_msg_class_name}::item_ptr_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index) {
+    EXCEL_CONFIG_API ${pb_msg_class_name}::item_ptr_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index) {
         ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh(load_file_lock_);
         const ${pb_msg_class_name}::${code_index.name}_value_type* list_item = _get_list_by_${code_index.name}(${code_index.get_key_params()});
         if (nullptr == list_item) {
@@ -543,7 +579,7 @@ ${loader.get_cpp_namespace_decl_begin()}
     }
 
 % else:
-    ${pb_msg_class_name}::${code_index.name}_value_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}) {
+    EXCEL_CONFIG_API ${pb_msg_class_name}::${code_index.name}_value_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}) {
 % if code_index.is_vector():
         size_t idx = 0;
 %   for idx_field in code_index.fields:
@@ -646,7 +682,7 @@ ${loader.get_cpp_namespace_decl_begin()}
     }
 % endif
 
-    const ${pb_msg_class_name}::${code_index.name}_container_type& ${pb_msg_class_name}::get_all_of_${code_index.name}() const {
+    EXCEL_CONFIG_API const ${pb_msg_class_name}::${code_index.name}_container_type& ${pb_msg_class_name}::get_all_of_${code_index.name}() const {
         return ${code_index.name}_data_;
     }
 % endfor

@@ -25,21 +25,31 @@ import time
 #include "spin_rw_lock.h"
 
 #if defined(_MSC_VER)
-#pragma warning(push)
-#if ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
-#pragma warning(disable : 4996)
-#pragma warning(disable : 4309)
-#endif
-#if _MSC_VER >= 1922 && ((defined(__cplusplus) && __cplusplus >= 201704L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201704L))
-#pragma warning(disable : 5054)
-#endif
-#if _MSC_VER < 1910
-#pragma warning(disable : 4800)
-#endif
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <Windows.h>
+#  pragma warning(push)
+
+#  if ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+#    pragma warning(disable : 4996)
+#    pragma warning(disable : 4309)
+#    if _MSC_VER >= 1922
+#      pragma warning(disable : 5054)
+#    endif
+#  endif
+
+#  if _MSC_VER < 1910
+#    pragma warning(disable : 4800)
+#  endif
+#  pragma warning(disable : 4244)
+#  pragma warning(disable : 4251)
+#  pragma warning(disable : 4267)
+#  pragma warning(disable : 4668)
+#  pragma warning(disable : 4946)
+#  pragma warning(disable : 6001)
+#  pragma warning(disable : 6244)
+#  pragma warning(disable : 6246)
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
+#  include <Windows.h>
 #endif
 
 #ifdef max
@@ -51,13 +61,40 @@ import time
 #endif
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
-#if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
-#pragma GCC diagnostic push
-#endif
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#  if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#    pragma GCC diagnostic push
+#  endif
+#  pragma GCC diagnostic ignored "-Wunused-parameter"
+#  pragma GCC diagnostic ignored "-Wtype-limits"
+#  pragma GCC diagnostic ignored "-Wsign-compare"
+#  pragma GCC diagnostic ignored "-Wsign-conversion"
+#  pragma GCC diagnostic ignored "-Wshadow"
+#  pragma GCC diagnostic ignored "-Wuninitialized"
+#  pragma GCC diagnostic ignored "-Wconversion"
+#  if (__GNUC__ * 100 + __GNUC_MINOR__) >= 409
+#    pragma GCC diagnostic ignored "-Wfloat-conversion"
+#  endif
+#  if (__GNUC__ * 100 + __GNUC_MINOR__) >= 501
+#    pragma GCC diagnostic ignored "-Wsuggest-override"
+#  endif
 #elif defined(__clang__) || defined(__apple_build_version__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunused-parameter"
+#  pragma clang diagnostic ignored "-Wtype-limits"
+#  pragma clang diagnostic ignored "-Wsign-compare"
+#  pragma clang diagnostic ignored "-Wsign-conversion"
+#  pragma clang diagnostic ignored "-Wshadow"
+#  pragma clang diagnostic ignored "-Wuninitialized"
+#  pragma clang diagnostic ignored "-Wconversion"
+#  if ((__clang_major__ * 100) + __clang_minor__) >= 305
+#    pragma clang diagnostic ignored "-Wfloat-conversion"
+#  endif
+#  if ((__clang_major__ * 100) + __clang_minor__) >= 306
+#    pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#  endif
+#  if ((__clang_major__ * 100) + __clang_minor__) >= 1100
+#    pragma clang diagnostic ignored "-Wsuggest-override"
+#  endif
 #endif
 
 #include <google/protobuf/descriptor.h>
@@ -72,15 +109,22 @@ import time
 % endfor
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
-#if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
-#pragma GCC diagnostic pop
-#endif
+#  if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#    pragma GCC diagnostic pop
+#  endif
 #elif defined(__clang__) || defined(__apple_build_version__)
-#pragma clang diagnostic pop
+#  pragma clang diagnostic pop
 #endif
 
 #if defined(_MSC_VER)
-#pragma warning(pop)
+#  pragma warning(pop)
+#endif
+
+#ifndef EXCEL_CONFIG_API
+#  define EXCEL_CONFIG_API
+#endif
+#ifndef EXCEL_CONFIG_SYMBOL_VISIBLE
+#  define EXCEL_CONFIG_SYMBOL_VISIBLE
 #endif
 
 ${pb_loader.CppNamespaceBegin(global_package)}
@@ -134,8 +178,8 @@ ${pb_loader.CppNamespaceBegin(global_package)}
             uint32_t      line_number;
             const char *  func_name;
 
-            log_caller_info_t();
-            log_caller_info_t(log_level_t::type lid, const char *lname, const char *fpath, uint32_t lnum, const char *fnname);
+            EXCEL_CONFIG_API log_caller_info_t();
+            EXCEL_CONFIG_API log_caller_info_t(log_level_t::type lid, const char *lname, const char *fpath, uint32_t lnum, const char *fnname);
         };
 
         using on_log_func_t = std::function<void(const log_caller_info_t& caller, const char* content)>;
@@ -145,70 +189,70 @@ ${pb_loader.CppNamespaceBegin(global_package)}
         struct constructor_helper_t {};
 
     public:
-        config_manager(constructor_helper_t&);
-        ~config_manager();
+        EXCEL_CONFIG_API config_manager(constructor_helper_t&);
+        EXCEL_CONFIG_API ~config_manager();
 
-        static std::shared_ptr<config_manager> me();
+        static TGF_BATTLE_UTILITY_API std::shared_ptr<config_manager> me();
         static inline std::shared_ptr<config_manager> instance() { return me(); };
 
-        int init();
+        EXCEL_CONFIG_API int init();
 
-        int init_new_group();
+        EXCEL_CONFIG_API int init_new_group();
 
-        void reset();
+        EXCEL_CONFIG_API void reset();
 
-        void clear();
+        EXCEL_CONFIG_API void clear();
 
-        bool load_file_data(std::string& write_to, const std::string& file_path);
+        EXCEL_CONFIG_API bool load_file_data(std::string& write_to, const std::string& file_path);
 
         /**
          * @brief 执行reload，如果版本号变化则要重新加载文件
          */
-        int reload();
+        EXCEL_CONFIG_API int reload();
 
         /**
          * @brief 执行reload加载所有资源
          * @param del_when_failed 如果失败是否删除分组
          */
-        int reload_all(bool del_when_failed = false);
+        EXCEL_CONFIG_API int reload_all(bool del_when_failed = false);
 
-        read_buffer_func_t get_buffer_loader() const;
-        void set_buffer_loader(read_buffer_func_t fn);
+        EXCEL_CONFIG_API read_buffer_func_t get_buffer_loader() const;
+        EXCEL_CONFIG_API void set_buffer_loader(read_buffer_func_t fn);
 
-        read_version_func_t get_version_loader() const;
-        void set_version_loader(read_version_func_t fn);
+        EXCEL_CONFIG_API read_version_func_t get_version_loader() const;
+        EXCEL_CONFIG_API void set_version_loader(read_version_func_t fn);
 
-        const config_group_ptr_t& get_current_config_group();
+        EXCEL_CONFIG_API const config_group_ptr_t& get_current_config_group();
 
-        inline void set_override_same_version(bool v) { override_same_version_ = v; }
-        inline bool get_override_same_version() const { return override_same_version_; }
+        EXCEL_CONFIG_API void set_override_same_version(bool v);
+        EXCEL_CONFIG_API bool get_override_same_version() const;
 
-        inline void set_group_number(size_t sz) { max_group_number_ = sz; }
-        inline size_t get_group_number() const { return max_group_number_; }
+        EXCEL_CONFIG_API void set_group_number(size_t sz);
+        EXCEL_CONFIG_API size_t get_group_number() const;
 
-        inline void set_on_group_created(on_load_func_t func) { on_group_created_ = func; }
-        inline const on_load_func_t& get_n_group_created() const { return on_group_created_; }
+        EXCEL_CONFIG_API void set_on_group_created(on_load_func_t func);
+        EXCEL_CONFIG_API const on_load_func_t& get_n_group_created() const;
 
-        inline void set_on_group_reload_all(on_load_func_t func) { on_group_reload_all_ = func; }
-        inline const on_load_func_t& get_on_group_reload_all() const { return on_group_reload_all_; }
+        EXCEL_CONFIG_API void set_on_group_reload_all(on_load_func_t func);
+        EXCEL_CONFIG_API const on_load_func_t& get_on_group_reload_all() const;
 
-        inline void set_on_group_destroyed(on_load_func_t func) { on_group_destroyed_ = func; }
-        inline const on_load_func_t& get_on_group_destroyed() const { return on_group_destroyed_; }
+        EXCEL_CONFIG_API void set_on_group_destroyed(on_load_func_t func);
+        EXCEL_CONFIG_API const on_load_func_t& get_on_group_destroyed() const;
 
-        inline void set_on_filter(on_filter_func_t func) { on_filter_ = func; }
-        inline const on_filter_func_t& get_on_filter() const { return on_filter_; }
+        EXCEL_CONFIG_API void set_on_filter(on_filter_func_t func);
+        EXCEL_CONFIG_API const on_filter_func_t& get_on_filter() const;
 
-        inline void set_on_group_filter(on_group_filter_func_t func) { on_group_filter_ = func; }
-        inline const on_group_filter_func_t& get_on_group_filter() const { return on_group_filter_; }
+        EXCEL_CONFIG_API void set_on_group_filter(on_group_filter_func_t func);
+        EXCEL_CONFIG_API const on_group_filter_func_t& get_on_group_filter() const;
 
-        inline void set_on_not_found(on_not_found_func_t func) { on_not_found_ = func; }
-        inline const on_not_found_func_t& get_on_not_found() const { return on_not_found_; }
+        EXCEL_CONFIG_API void set_on_not_found(on_not_found_func_t func);
+        EXCEL_CONFIG_API const on_not_found_func_t& get_on_not_found() const;
 
         template <class INNER_MSG_TYPE, 
             typename std::enable_if<
              std::is_base_of<::google::protobuf::Message, INNER_MSG_TYPE>::value,
             int>::type = 0>
-        bool filter(org::xresloader::pb::xresloader_datablocks& outer_msg, const std::string& file_path) const {
+        EXCEL_CONFIG_SYMBOL_VISIBLE bool filter(org::xresloader::pb::xresloader_datablocks& outer_msg, const std::string& file_path) const {
             if (!on_filter_) {
                 return true;
             }
@@ -220,14 +264,14 @@ ${pb_loader.CppNamespaceBegin(global_package)}
             typename std::enable_if<
              !std::is_base_of<::google::protobuf::Message, INNER_MSG_TYPE>::value,
             int>::type = 0>
-        bool filter(org::xresloader::pb::xresloader_datablocks&, const std::string&) const {
+        EXCEL_CONFIG_SYMBOL_VISIBLE bool filter(org::xresloader::pb::xresloader_datablocks&, const std::string&) const {
             return true;
         }
 
-        inline void set_on_log(on_log_func_t func) { on_log_ = func; }
-        inline const on_log_func_t& get_on_log() const { return on_log_; }
+        EXCEL_CONFIG_API void set_on_log(on_log_func_t func);
+        EXCEL_CONFIG_API const;
 
-        static void log(const log_caller_info_t &caller,
+        static EXCEL_CONFIG_API void log(const log_caller_info_t &caller,
 #ifdef _MSC_VER
             _In_z_ _Printf_format_string_ const char *fmt, ...);
 #elif (defined(__clang__) && __clang_major__ >= 3)

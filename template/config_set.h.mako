@@ -23,8 +23,101 @@ import time
 
 #include "spin_rw_lock.h"
 
+#ifndef EXCEL_CONFIG_API
+#  define EXCEL_CONFIG_API
+#endif
+
+#if defined(_MSC_VER)
+#  pragma warning(push)
+
+#  if ((defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+#    pragma warning(disable : 4996)
+#    pragma warning(disable : 4309)
+#    if _MSC_VER >= 1922
+#      pragma warning(disable : 5054)
+#    endif
+#  endif
+
+#  if _MSC_VER < 1910
+#    pragma warning(disable : 4800)
+#  endif
+#  pragma warning(disable : 4244)
+#  pragma warning(disable : 4251)
+#  pragma warning(disable : 4267)
+#  pragma warning(disable : 4668)
+#  pragma warning(disable : 4946)
+#  pragma warning(disable : 6001)
+#  pragma warning(disable : 6244)
+#  pragma warning(disable : 6246)
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
+#  include <Windows.h>
+#endif
+
+#ifdef max
+#undef max
+#endif
+
+#ifdef min
+#undef min
+#endif
+
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
+#  if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#    pragma GCC diagnostic push
+#  endif
+#  pragma GCC diagnostic ignored "-Wunused-parameter"
+#  pragma GCC diagnostic ignored "-Wtype-limits"
+#  pragma GCC diagnostic ignored "-Wsign-compare"
+#  pragma GCC diagnostic ignored "-Wsign-conversion"
+#  pragma GCC diagnostic ignored "-Wshadow"
+#  pragma GCC diagnostic ignored "-Wuninitialized"
+#  pragma GCC diagnostic ignored "-Wconversion"
+#  if (__GNUC__ * 100 + __GNUC_MINOR__) >= 409
+#    pragma GCC diagnostic ignored "-Wfloat-conversion"
+#  endif
+#  if (__GNUC__ * 100 + __GNUC_MINOR__) >= 501
+#    pragma GCC diagnostic ignored "-Wsuggest-override"
+#  endif
+#elif defined(__clang__) || defined(__apple_build_version__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunused-parameter"
+#  pragma clang diagnostic ignored "-Wtype-limits"
+#  pragma clang diagnostic ignored "-Wsign-compare"
+#  pragma clang diagnostic ignored "-Wsign-conversion"
+#  pragma clang diagnostic ignored "-Wshadow"
+#  pragma clang diagnostic ignored "-Wuninitialized"
+#  pragma clang diagnostic ignored "-Wconversion"
+#  if ((__clang_major__ * 100) + __clang_minor__) >= 305
+#    pragma clang diagnostic ignored "-Wfloat-conversion"
+#  endif
+#  if ((__clang_major__ * 100) + __clang_minor__) >= 306
+#    pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#  endif
+#  if ((__clang_major__ * 100) + __clang_minor__) >= 1100
+#    pragma clang diagnostic ignored "-Wsuggest-override"
+#  endif
+#endif
+
 #include <${pb_set.pb_include_prefix}${loader.get_pb_header_path()}>
 #include <pb_header_v3.pb.h>
+
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
+#  if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
+#    pragma GCC diagnostic pop
+#  endif
+#elif defined(__clang__) || defined(__apple_build_version__)
+#  pragma clang diagnostic pop
+#endif
+
+#if defined(_MSC_VER)
+#  pragma warning(pop)
+#endif
+
+#ifndef EXCEL_CONFIG_API
+#  define EXCEL_CONFIG_API
+#endif
 
 ${pb_loader.CppNamespaceBegin(global_package)}
 ${loader.get_cpp_namespace_decl_begin()}
@@ -36,16 +129,16 @@ ${loader.get_cpp_namespace_decl_begin()}
         typedef std::shared_ptr<item_type> item_ptr_type;
 
     public:
-        ${loader.get_cpp_class_name()}();
-        ~${loader.get_cpp_class_name()}();
+        EXCEL_CONFIG_API ${loader.get_cpp_class_name()}();
+        EXCEL_CONFIG_API ~${loader.get_cpp_class_name()}();
 
-        int on_inited();
+        EXCEL_CONFIG_API int on_inited();
 
-        int load_all();
+        EXCEL_CONFIG_API int load_all();
 
-        void clear();
+        EXCEL_CONFIG_API void clear();
 
-        const std::list<org::xresloader::pb::xresloader_data_source>& get_data_source() const;
+        EXCEL_CONFIG_API const std::list<org::xresloader::pb::xresloader_data_source>& get_data_source() const;
 
     private:
         int load_file(const std::string& file_path);
@@ -63,21 +156,21 @@ ${loader.get_cpp_namespace_decl_begin()}
     public:
 % if code_index.is_list():
         typedef std::vector<item_ptr_type> ${code_index.name}_value_type;
-        const ${code_index.name}_value_type* get_list_by_${code_index.name}(${code_index.get_key_decl()});
-        item_ptr_type get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index);
+        EXCEL_CONFIG_API const ${code_index.name}_value_type* get_list_by_${code_index.name}(${code_index.get_key_decl()});
+        EXCEL_CONFIG_API item_ptr_type get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index);
     private:
         const ${code_index.name}_value_type* _get_list_by_${code_index.name}(${code_index.get_key_decl()});
     public:
 % else:
         typedef item_ptr_type ${code_index.name}_value_type;
-        ${code_index.name}_value_type get_by_${code_index.name}(${code_index.get_key_decl()});
+        EXCEL_CONFIG_API ${code_index.name}_value_type get_by_${code_index.name}(${code_index.get_key_decl()});
 % endif
 % if code_index.is_vector():
         typedef std::vector<${code_index.name}_value_type> ${code_index.name}_container_type;
 % else:
         typedef std::map<std::tuple<${code_index.get_key_type_list()}>, ${code_index.name}_value_type> ${code_index.name}_container_type;
 % endif
-        const ${code_index.name}_container_type& get_all_of_${code_index.name}() const;
+        EXCEL_CONFIG_API const ${code_index.name}_container_type& get_all_of_${code_index.name}() const;
 
     private:
 % if code_index.is_vector():

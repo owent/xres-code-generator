@@ -12,7 +12,6 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class MakoModuleTempDir:
-
     def __init__(self, prefix_path):
         import tempfile
         if not os.path.exists(prefix_path):
@@ -400,9 +399,9 @@ def main():
                     msg_prefix=options.msg_prefix,
                     global_package=options.global_package)
 
-            elif is_message_header:
+            elif is_message_header and loader is not None:
                 output_name = loader.get_cpp_header_path()
-            elif is_message_source:
+            elif is_message_source and loader is not None:
                 output_name = loader.get_cpp_source_path()
             else:
                 if suffix_pos < 0:
@@ -448,18 +447,28 @@ def main():
                     if not options.quiet:
                         print("[XRESCODE] Genarate template from {0} to {1}".
                               format(source_template, output_name))
-                    codecs.open(output_name,
+                    render_output = source_tmpl.render(
+                        pb_set=pb_set,
+                        pb_msg=pb_msg,
+                        loader=loader,
+                        output_dir=output_dir,
+                        output_file=output_name,
+                        input_file=source_template,
+                        msg_prefix=options.msg_prefix,
+                        global_package=options.global_package)
+                    if os.path.exists(output_name):
+                        f = codecs.open(str(output_name),
+                                        mode='r',
+                                        encoding=options.encoding)
+                        if f.read() == render_output:
+                            f.close()
+                            continue
+                        f.close()
+
+                    codecs.open(str(output_name),
                                 mode='w',
                                 encoding=options.encoding).write(
-                                    source_tmpl.render(
-                                        pb_set=pb_set,
-                                        pb_msg=pb_msg,
-                                        loader=loader,
-                                        output_dir=output_dir,
-                                        output_file=output_name,
-                                        input_file=source_template,
-                                        msg_prefix=options.msg_prefix,
-                                        global_package=options.global_package))
+                                    str(render_output))
 
     gen_source(options.global_template, None, None)
     for pb_msg in pb_set.generate_message:

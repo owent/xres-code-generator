@@ -120,201 +120,201 @@ import time
 #  pragma warning(pop)
 #endif
 
-#ifndef EXCEL_CONFIG_API
-#  define EXCEL_CONFIG_API
+#ifndef EXCEL_CONFIG_LOADER_API
+#  define EXCEL_CONFIG_LOADER_API
 #endif
 #ifndef EXCEL_CONFIG_SYMBOL_VISIBLE
 #  define EXCEL_CONFIG_SYMBOL_VISIBLE
 #endif
 
 ${pb_loader.CppNamespaceBegin(global_package)}
-    struct config_group_t {
-        std::string version;
+struct config_group_t {
+  std::string version;
 
 % for pb_msg in pb_set.generate_message:
 %   for loader in pb_msg.loaders:
-        ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()} ${loader.get_cpp_public_var_name()} ;
+  ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()} ${loader.get_cpp_public_var_name()} ;
 %   endfor
 % endfor
 
 % for block_file in pb_set.get_custom_blocks("custom_config_group"):
 <%include file="${block_file}" />
 % endfor
-    } ;
+} ;
 
-    class config_manager {
-    public:
-        using read_buffer_func_t = std::function<bool(std::string&, const char* path)>;
-        using read_version_func_t = std::function<bool(std::string&)>;
-        using config_group_ptr_t = std::shared_ptr<config_group_t>;
-        using on_load_func_t = std::function<void(config_group_ptr_t)>;
-        using on_filter_func_t = std::function<bool(org::xresloader::pb::xresloader_datablocks&, const ::google::protobuf::Descriptor*, const std::string&)>;
-        using on_group_filter_func_t = std::function<int(config_group_ptr_t)>;
+class config_manager {
+public:
+  using read_buffer_func_t = std::function<bool(std::string&, const char* path)>;
+  using read_version_func_t = std::function<bool(std::string&)>;
+  using config_group_ptr_t = std::shared_ptr<config_group_t>;
+  using on_load_func_t = std::function<void(config_group_ptr_t)>;
+  using on_filter_func_t = std::function<bool(org::xresloader::pb::xresloader_datablocks&, const ::google::protobuf::Descriptor*, const std::string&)>;
+  using on_group_filter_func_t = std::function<int(config_group_ptr_t)>;
 
-        struct on_not_found_event_data_t {
-            const std::list<org::xresloader::pb::xresloader_data_source>* data_source;
-            const ::google::protobuf::Descriptor* message_descriptor;
-            const char* index_name;
-            const char* keys;
-            bool is_list;
-            size_t list_index;
-        };
-        using on_not_found_func_t = std::function<void(const on_not_found_event_data_t&)>;
+  struct on_not_found_event_data_t {
+    const std::list<org::xresloader::pb::xresloader_data_source>* data_source;
+    const ::google::protobuf::Descriptor* message_descriptor;
+    const char* index_name;
+    const char* keys;
+    bool is_list;
+    size_t list_index;
+  };
+  using on_not_found_func_t = std::function<void(const on_not_found_event_data_t&)>;
 
-        struct log_level_t {
-            enum type {
-                LOG_LW_DISABLED = 0, // 关闭日志
-                LOG_LW_ERROR,        // 错误
-                LOG_LW_WARNING,
-                LOG_LW_INFO,
-                LOG_LW_DEBUG,
-            };
-        };
+  struct log_level_t {
+    enum type {
+      LOG_LW_DISABLED = 0, // 关闭日志
+      LOG_LW_ERROR,        // 错误
+      LOG_LW_WARNING,
+      LOG_LW_INFO,
+      LOG_LW_DEBUG,
+    };
+  };
 
-        struct log_caller_info_t {
-            log_level_t::type level_id;
-            const char *  level_name;
-            const char *  file_path;
-            uint32_t      line_number;
-            const char *  func_name;
+  struct log_caller_info_t {
+    log_level_t::type level_id;
+    const char *  level_name;
+    const char *  file_path;
+    uint32_t      line_number;
+    const char *  func_name;
 
-            EXCEL_CONFIG_API log_caller_info_t();
-            EXCEL_CONFIG_API log_caller_info_t(log_level_t::type lid, const char *lname, const char *fpath, uint32_t lnum, const char *fnname);
-        };
+    EXCEL_CONFIG_LOADER_API log_caller_info_t();
+    EXCEL_CONFIG_LOADER_API log_caller_info_t(log_level_t::type lid, const char *lname, const char *fpath, uint32_t lnum, const char *fnname);
+  };
 
-        using on_log_func_t = std::function<void(const log_caller_info_t& caller, const char* content)>;
+  using on_log_func_t = std::function<void(const log_caller_info_t& caller, const char* content)>;
 
-    private:
-        config_manager();
-        struct constructor_helper_t {};
+private:
+  config_manager();
+  struct constructor_helper_t {};
 
-    public:
-        EXCEL_CONFIG_API config_manager(constructor_helper_t&);
-        EXCEL_CONFIG_API ~config_manager();
+public:
+  EXCEL_CONFIG_LOADER_API config_manager(constructor_helper_t&);
+  EXCEL_CONFIG_LOADER_API ~config_manager();
 
-        static TGF_BATTLE_UTILITY_API std::shared_ptr<config_manager> me();
-        static inline std::shared_ptr<config_manager> instance() { return me(); };
+  static TGF_BATTLE_UTILITY_API std::shared_ptr<config_manager> me();
+  static inline std::shared_ptr<config_manager> instance() { return me(); };
 
-        EXCEL_CONFIG_API int init();
+  EXCEL_CONFIG_LOADER_API int init();
 
-        EXCEL_CONFIG_API int init_new_group();
+  EXCEL_CONFIG_LOADER_API int init_new_group();
 
-        EXCEL_CONFIG_API void reset();
+  EXCEL_CONFIG_LOADER_API void reset();
 
-        EXCEL_CONFIG_API void clear();
+  EXCEL_CONFIG_LOADER_API void clear();
 
-        EXCEL_CONFIG_API bool load_file_data(std::string& write_to, const std::string& file_path);
+  EXCEL_CONFIG_LOADER_API bool load_file_data(std::string& write_to, const std::string& file_path);
 
-        /**
-         * @brief 执行reload，如果版本号变化则要重新加载文件
-         */
-        EXCEL_CONFIG_API int reload();
+  /**
+   * @brief 执行reload，如果版本号变化则要重新加载文件
+   */
+  EXCEL_CONFIG_LOADER_API int reload();
 
-        /**
-         * @brief 执行reload加载所有资源
-         * @param del_when_failed 如果失败是否删除分组
-         */
-        EXCEL_CONFIG_API int reload_all(bool del_when_failed = false);
+  /**
+   * @brief 执行reload加载所有资源
+   * @param del_when_failed 如果失败是否删除分组
+   */
+  EXCEL_CONFIG_LOADER_API int reload_all(bool del_when_failed = false);
 
-        EXCEL_CONFIG_API read_buffer_func_t get_buffer_loader() const;
-        EXCEL_CONFIG_API void set_buffer_loader(read_buffer_func_t fn);
+  EXCEL_CONFIG_LOADER_API read_buffer_func_t get_buffer_loader() const;
+  EXCEL_CONFIG_LOADER_API void set_buffer_loader(read_buffer_func_t fn);
 
-        EXCEL_CONFIG_API read_version_func_t get_version_loader() const;
-        EXCEL_CONFIG_API void set_version_loader(read_version_func_t fn);
+  EXCEL_CONFIG_LOADER_API read_version_func_t get_version_loader() const;
+  EXCEL_CONFIG_LOADER_API void set_version_loader(read_version_func_t fn);
 
-        EXCEL_CONFIG_API const config_group_ptr_t& get_current_config_group();
+  EXCEL_CONFIG_LOADER_API const config_group_ptr_t& get_current_config_group();
 
-        EXCEL_CONFIG_API void set_override_same_version(bool v);
-        EXCEL_CONFIG_API bool get_override_same_version() const;
+  EXCEL_CONFIG_LOADER_API void set_override_same_version(bool v);
+  EXCEL_CONFIG_LOADER_API bool get_override_same_version() const;
 
-        EXCEL_CONFIG_API void set_group_number(size_t sz);
-        EXCEL_CONFIG_API size_t get_group_number() const;
+  EXCEL_CONFIG_LOADER_API void set_group_number(size_t sz);
+  EXCEL_CONFIG_LOADER_API size_t get_group_number() const;
 
-        EXCEL_CONFIG_API void set_on_group_created(on_load_func_t func);
-        EXCEL_CONFIG_API const on_load_func_t& get_n_group_created() const;
+  EXCEL_CONFIG_LOADER_API void set_on_group_created(on_load_func_t func);
+  EXCEL_CONFIG_LOADER_API const on_load_func_t& get_n_group_created() const;
 
-        EXCEL_CONFIG_API void set_on_group_reload_all(on_load_func_t func);
-        EXCEL_CONFIG_API const on_load_func_t& get_on_group_reload_all() const;
+  EXCEL_CONFIG_LOADER_API void set_on_group_reload_all(on_load_func_t func);
+  EXCEL_CONFIG_LOADER_API const on_load_func_t& get_on_group_reload_all() const;
 
-        EXCEL_CONFIG_API void set_on_group_destroyed(on_load_func_t func);
-        EXCEL_CONFIG_API const on_load_func_t& get_on_group_destroyed() const;
+  EXCEL_CONFIG_LOADER_API void set_on_group_destroyed(on_load_func_t func);
+  EXCEL_CONFIG_LOADER_API const on_load_func_t& get_on_group_destroyed() const;
 
-        EXCEL_CONFIG_API void set_on_filter(on_filter_func_t func);
-        EXCEL_CONFIG_API const on_filter_func_t& get_on_filter() const;
+  EXCEL_CONFIG_LOADER_API void set_on_filter(on_filter_func_t func);
+  EXCEL_CONFIG_LOADER_API const on_filter_func_t& get_on_filter() const;
 
-        EXCEL_CONFIG_API void set_on_group_filter(on_group_filter_func_t func);
-        EXCEL_CONFIG_API const on_group_filter_func_t& get_on_group_filter() const;
+  EXCEL_CONFIG_LOADER_API void set_on_group_filter(on_group_filter_func_t func);
+  EXCEL_CONFIG_LOADER_API const on_group_filter_func_t& get_on_group_filter() const;
 
-        EXCEL_CONFIG_API void set_on_not_found(on_not_found_func_t func);
-        EXCEL_CONFIG_API const on_not_found_func_t& get_on_not_found() const;
+  EXCEL_CONFIG_LOADER_API void set_on_not_found(on_not_found_func_t func);
+  EXCEL_CONFIG_LOADER_API const on_not_found_func_t& get_on_not_found() const;
 
-        template <class INNER_MSG_TYPE, 
-            typename std::enable_if<
-             std::is_base_of<::google::protobuf::Message, INNER_MSG_TYPE>::value,
-            int>::type = 0>
-        EXCEL_CONFIG_SYMBOL_VISIBLE bool filter(org::xresloader::pb::xresloader_datablocks& outer_msg, const std::string& file_path) const {
-            if (!on_filter_) {
-                return true;
-            }
+  template <class INNER_MSG_TYPE, 
+    typename std::enable_if<
+     std::is_base_of<::google::protobuf::Message, INNER_MSG_TYPE>::value,
+    int>::type = 0>
+  EXCEL_CONFIG_SYMBOL_VISIBLE bool filter(org::xresloader::pb::xresloader_datablocks& outer_msg, const std::string& file_path) const {
+    if (!on_filter_) {
+      return true;
+    }
 
-            return on_filter_(outer_msg, INNER_MSG_TYPE::descriptor(), file_path);
-        }
+    return on_filter_(outer_msg, INNER_MSG_TYPE::descriptor(), file_path);
+  }
 
-        template <class INNER_MSG_TYPE, 
-            typename std::enable_if<
-             !std::is_base_of<::google::protobuf::Message, INNER_MSG_TYPE>::value,
-            int>::type = 0>
-        EXCEL_CONFIG_SYMBOL_VISIBLE bool filter(org::xresloader::pb::xresloader_datablocks&, const std::string&) const {
-            return true;
-        }
+  template <class INNER_MSG_TYPE, 
+    typename std::enable_if<
+     !std::is_base_of<::google::protobuf::Message, INNER_MSG_TYPE>::value,
+    int>::type = 0>
+  EXCEL_CONFIG_SYMBOL_VISIBLE bool filter(org::xresloader::pb::xresloader_datablocks&, const std::string&) const {
+    return true;
+  }
 
-        EXCEL_CONFIG_API void set_on_log(on_log_func_t func);
-        EXCEL_CONFIG_API const;
+  EXCEL_CONFIG_LOADER_API void set_on_log(on_log_func_t func);
+  EXCEL_CONFIG_LOADER_API const;
 
-        static EXCEL_CONFIG_API void log(const log_caller_info_t &caller,
+  static EXCEL_CONFIG_LOADER_API void log(const log_caller_info_t &caller,
 #ifdef _MSC_VER
-            _In_z_ _Printf_format_string_ const char *fmt, ...);
+    _In_z_ _Printf_format_string_ const char *fmt, ...);
 #elif (defined(__clang__) && __clang_major__ >= 3)
-            const char *fmt, ...) __attribute__((__format__(__printf__, 2, 3)));
+    const char *fmt, ...) __attribute__((__format__(__printf__, 2, 3)));
 #elif (defined(__GNUC__) && __GNUC__ >= 4)
 // 格式检查(成员函数有个隐含的this参数)
 #if defined(__MINGW32__) || defined(__MINGW64__)
-            const char *fmt, ...) __attribute__((format(__MINGW_PRINTF_FORMAT, 2, 3)));
+    const char *fmt, ...) __attribute__((format(__MINGW_PRINTF_FORMAT, 2, 3)));
 #else
-            const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+    const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 #endif
 #else
-            const char *fmt, ...);
+    const char *fmt, ...);
 #endif
 
-    private:
-        static bool default_buffer_loader(std::string&, const char* path);
-        static bool default_version_loader(std::string&);
-        static void default_log_writer(const log_caller_info_t& caller, const char* content);
+private:
+  static bool default_buffer_loader(std::string&, const char* path);
+  static bool default_version_loader(std::string&);
+  static void default_log_writer(const log_caller_info_t& caller, const char* content);
 
-    private:
-        static bool is_destroyed_;
-        std::atomic<int64_t> reload_version_;
+private:
+  static bool is_destroyed_;
+  std::atomic<int64_t> reload_version_;
 
-        bool override_same_version_;
-        size_t max_group_number_;
-        on_load_func_t on_group_created_;
-        on_load_func_t on_group_reload_all_;
-        on_load_func_t on_group_destroyed_;
-        on_log_func_t on_log_;
-        on_filter_func_t on_filter_;
-        on_group_filter_func_t on_group_filter_;
-        on_not_found_func_t on_not_found_;
+  bool override_same_version_;
+  size_t max_group_number_;
+  on_load_func_t on_group_created_;
+  on_load_func_t on_group_reload_all_;
+  on_load_func_t on_group_destroyed_;
+  on_log_func_t on_log_;
+  on_filter_func_t on_filter_;
+  on_group_filter_func_t on_group_filter_;
+  on_not_found_func_t on_not_found_;
 
-        read_buffer_func_t read_file_handle_;
-        read_version_func_t read_version_handle_;
-        mutable excel::lock::spin_rw_lock handle_lock_;
+  read_buffer_func_t read_file_handle_;
+  read_version_func_t read_version_handle_;
+  mutable excel::lock::spin_rw_lock handle_lock_;
 
-        std::list<config_group_ptr_t> config_group_list_;
-        mutable excel::lock::spin_rw_lock config_group_lock_;
+  std::list<config_group_ptr_t> config_group_list_;
+  mutable excel::lock::spin_rw_lock config_group_lock_;
 
-        std::string log_buffer_;
-    };
+  std::string log_buffer_;
+};
 ${pb_loader.CppNamespaceEnd(global_package)} // ${global_package}
 
 

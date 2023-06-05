@@ -10,23 +10,57 @@ import time
 
 #pragma once
 
-#include "config_manager.h"
+#include <map>
+#include <memory>
+#include <vector>
 
-#ifndef EXCEL_CONFIG_API
-#  define EXCEL_CONFIG_API
+#ifndef EXCEL_CONFIG_LOADER_API
+#  define EXCEL_CONFIG_LOADER_API
 #endif
+
+<%
+class_decls_by_package = dict()
+for pb_msg in pb_set.generate_message:
+  if pb_msg.pb_file.package in class_decls_by_package:
+    class_decls_by_package[pb_msg.pb_file.package].append(pb_msg)
+  else:
+    class_decls_by_package[pb_msg.pb_file.package] = [pb_msg]
+%>
+
+% for class_decls in class_decls_by_package:
+${pb_loader.CppNamespaceBegin(class_decls)}
+%   for class_decl in class_decls_by_package[class_decls]:
+class ${class_decl.loaders[0].code.inner_msg.name};
+%   endfor
+${pb_loader.CppNamespaceEnd(class_decls)}
+% endfor
 
 ${pb_loader.CppNamespaceBegin(global_package)}
 % for pb_msg in pb_set.generate_message:
 %   for loader in pb_msg.loaders:
-    // ======================================== ${loader.code.class_name} ========================================
+// ======================================== ${loader.code.class_name} ========================================
 %     for code_index in loader.code.indexes:
-    EXCEL_CONFIG_API const ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_container_type& get_${loader.code.class_name}_all_of_${code_index.name}();
-%       if code_index.is_list():
-    EXCEL_CONFIG_API const ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_value_type* get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()});
-    EXCEL_CONFIG_API ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::item_ptr_type get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}, size_t idx);
+<%
+current_code_proto_ptr_type = 'std::shared_ptr<const ' + loader.get_pb_inner_class_name() + '>'
+if code_index.is_list():
+  current_code_item_value_type = 'std::vector<' + current_code_proto_ptr_type + ' >'
+else:
+  current_code_item_value_type = current_code_proto_ptr_type
+%>
+%       if code_index.is_vector():
+EXCEL_CONFIG_LOADER_API const std::vector<${current_code_item_value_type}>&
 %       else:
-    EXCEL_CONFIG_API ${pb_loader.CppFullPath(global_package)}${loader.get_cpp_class_full_name()}::${code_index.name}_value_type get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()});
+EXCEL_CONFIG_LOADER_API const std::map<std::tuple<${code_index.get_key_type_list()}>, ${current_code_item_value_type}>&
+%       endif
+  get_${loader.code.class_name}_all_of_${code_index.name}();
+%       if code_index.is_list():
+EXCEL_CONFIG_LOADER_API const ${current_code_item_value_type}*
+  get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()});
+EXCEL_CONFIG_LOADER_API ${current_code_proto_ptr_type}
+  get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}, size_t idx);
+%       else:
+EXCEL_CONFIG_LOADER_API ${current_code_item_value_type}
+  get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()});
 %       endif
 %     endfor
 %   endfor

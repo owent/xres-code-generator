@@ -23,8 +23,8 @@ import time
 
 #include "spin_rw_lock.h"
 
-#ifndef EXCEL_CONFIG_API
-#  define EXCEL_CONFIG_API
+#ifndef EXCEL_CONFIG_LOADER_API
+#  define EXCEL_CONFIG_LOADER_API
 #endif
 
 #if defined(_MSC_VER)
@@ -115,72 +115,72 @@ import time
 #  pragma warning(pop)
 #endif
 
-#ifndef EXCEL_CONFIG_API
-#  define EXCEL_CONFIG_API
+#ifndef EXCEL_CONFIG_LOADER_API
+#  define EXCEL_CONFIG_LOADER_API
 #endif
 
 ${pb_loader.CppNamespaceBegin(global_package)}
 ${loader.get_cpp_namespace_decl_begin()}
 
-    class ${loader.get_cpp_class_name()} {
-    public:
-        typedef const ${loader.get_pb_inner_class_name()} item_type;
-        typedef ${loader.get_pb_inner_class_name()} proto_type;
-        typedef std::shared_ptr<item_type> item_ptr_type;
+class ${loader.get_cpp_class_name()} {
+public:
+  typedef const ${loader.get_pb_inner_class_name()} item_type;
+  typedef ${loader.get_pb_inner_class_name()} proto_type;
+  typedef std::shared_ptr<item_type> item_ptr_type;
 
-    public:
-        EXCEL_CONFIG_API ${loader.get_cpp_class_name()}();
-        EXCEL_CONFIG_API ~${loader.get_cpp_class_name()}();
+public:
+  EXCEL_CONFIG_LOADER_API ${loader.get_cpp_class_name()}();
+  EXCEL_CONFIG_LOADER_API ~${loader.get_cpp_class_name()}();
 
-        EXCEL_CONFIG_API int on_inited();
+  EXCEL_CONFIG_LOADER_API int on_inited();
 
-        EXCEL_CONFIG_API int load_all();
+  EXCEL_CONFIG_LOADER_API int load_all();
 
-        EXCEL_CONFIG_API void clear();
+  EXCEL_CONFIG_LOADER_API void clear();
 
-        EXCEL_CONFIG_API const std::list<org::xresloader::pb::xresloader_data_source>& get_data_source() const;
+  EXCEL_CONFIG_LOADER_API const std::list<org::xresloader::pb::xresloader_data_source>& get_data_source() const;
 
-    private:
-        int load_file(const std::string& file_path);
-        int load_list(const char*);
-        int reload_file_lists();
-        void merge_data(item_ptr_type);
+private:
+  int load_file(const std::string& file_path);
+  int load_list(const char*);
+  int reload_file_lists();
+  void merge_data(item_ptr_type);
 
-    private:
-        ::excel::lock::spin_rw_lock           load_file_lock_;
-        std::unordered_map<std::string, bool> file_status_; // true: already loaded
-        std::list<org::xresloader::pb::xresloader_data_source> datasource_;
+private:
+  ::excel::lock::spin_rw_lock           load_file_lock_;
+  std::unordered_map<std::string, bool> file_status_; // true: already loaded
+  std::list<org::xresloader::pb::xresloader_data_source> datasource_;
 
 % for code_index in loader.code.indexes:
-        // ------------------------- index: ${code_index.name} -------------------------
-    public:
+  // ------------------------- index: ${code_index.name} -------------------------
+public:
 % if code_index.is_list():
-        typedef std::vector<item_ptr_type> ${code_index.name}_value_type;
-        EXCEL_CONFIG_API const ${code_index.name}_value_type* get_list_by_${code_index.name}(${code_index.get_key_decl()});
-        EXCEL_CONFIG_API item_ptr_type get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index);
-    private:
-        const ${code_index.name}_value_type* _get_list_by_${code_index.name}(${code_index.get_key_decl()});
-    public:
+  typedef std::vector<item_ptr_type> ${code_index.name}_value_type;
+  EXCEL_CONFIG_LOADER_API const ${code_index.name}_value_type* get_list_by_${code_index.name}(${code_index.get_key_decl()});
+  EXCEL_CONFIG_LOADER_API item_ptr_type get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index);
+private:
+  const ${code_index.name}_value_type* _get_list_by_${code_index.name}(${code_index.get_key_decl()});
+public:
 % else:
-        typedef item_ptr_type ${code_index.name}_value_type;
-        EXCEL_CONFIG_API ${code_index.name}_value_type get_by_${code_index.name}(${code_index.get_key_decl()});
+  typedef item_ptr_type ${code_index.name}_value_type;
+  EXCEL_CONFIG_LOADER_API ${code_index.name}_value_type get_by_${code_index.name}(${code_index.get_key_decl()});
 % endif
 % if code_index.is_vector():
-        typedef std::vector<${code_index.name}_value_type> ${code_index.name}_container_type;
+  typedef std::vector<${code_index.name}_value_type> ${code_index.name}_container_type;
 % else:
-        typedef std::map<std::tuple<${code_index.get_key_type_list()}>, ${code_index.name}_value_type> ${code_index.name}_container_type;
+  typedef std::map<std::tuple<${code_index.get_key_type_list()}>, ${code_index.name}_value_type> ${code_index.name}_container_type;
 % endif
-        EXCEL_CONFIG_API const ${code_index.name}_container_type& get_all_of_${code_index.name}() const;
+  EXCEL_CONFIG_LOADER_API const ${code_index.name}_container_type& get_all_of_${code_index.name}() const;
 
-    private:
+private:
 % if code_index.is_vector():
-        ${code_index.name}_container_type ${code_index.name}_data_;
+  ${code_index.name}_container_type ${code_index.name}_data_;
 % else:
-        ${code_index.name}_container_type ${code_index.name}_data_;
+  ${code_index.name}_container_type ${code_index.name}_data_;
 % endif
 
 % endfor
-    };
+};
 
 ${loader.get_cpp_namespace_decl_end()}
 ${pb_loader.CppNamespaceEnd(global_package)} // ${global_package}

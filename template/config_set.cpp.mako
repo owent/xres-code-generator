@@ -148,543 +148,543 @@ pb_msg_class_name = loader.get_cpp_class_name()
 ${pb_loader.CppNamespaceBegin(global_package)}
 ${loader.get_cpp_namespace_decl_begin()}
 
-    namespace details {
-        template <typename TCH>
-        static inline bool is_space(const TCH &c) {
-            return ' ' == c || '\t' == c || '\r' == c || '\n' == c;
+namespace details {
+  template <typename TCH>
+  static inline bool is_space(const TCH &c) {
+    return ' ' == c || '\t' == c || '\r' == c || '\n' == c;
+  }
+
+  template <typename TCH>
+  static std::pair<const TCH *, size_t> trim(const TCH *str_begin, size_t sz) {
+    if (0 == sz) {
+      const TCH *str_end = str_begin;
+      while (str_end && *str_end) {
+        ++str_end;
+      }
+
+      sz = static_cast<size_t>(str_end - str_begin);
+    }
+
+    if (str_begin) {
+      while (*str_begin && sz > 0) {
+        if (!is_space(*str_begin)) {
+          break;
         }
 
-        template <typename TCH>
-        static std::pair<const TCH *, size_t> trim(const TCH *str_begin, size_t sz) {
-            if (0 == sz) {
-                const TCH *str_end = str_begin;
-                while (str_end && *str_end) {
-                    ++str_end;
-                }
+        --sz;
+        ++str_begin;
+      }
+    }
 
-                sz = static_cast<size_t>(str_end - str_begin);
-            }
-
-            if (str_begin) {
-                while (*str_begin && sz > 0) {
-                    if (!is_space(*str_begin)) {
-                        break;
-                    }
-
-                    --sz;
-                    ++str_begin;
-                }
-            }
-
-            size_t sub_str_sz = sz;
-            if (str_begin) {
-                while (sub_str_sz > 0) {
-                    if (is_space(str_begin[sub_str_sz - 1])) {
-                        --sub_str_sz;
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            return std::make_pair(str_begin, sub_str_sz);
+    size_t sub_str_sz = sz;
+    if (str_begin) {
+      while (sub_str_sz > 0) {
+        if (is_space(str_begin[sub_str_sz - 1])) {
+          --sub_str_sz;
+        } else {
+          break;
         }
+      }
     }
 
-    EXCEL_CONFIG_API ${pb_msg_class_name}::${pb_msg_class_name}() {
+    return std::make_pair(str_begin, sub_str_sz);
+  }
+}
+
+EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::${pb_msg_class_name}() {
+}
+
+EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::~${pb_msg_class_name}(){
+}
+
+EXCEL_CONFIG_LOADER_API int ${pb_msg_class_name}::on_inited() {
+  ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
+  
+  file_status_.clear();
+  datasource_.clear();
+  return reload_file_lists();
+}
+
+EXCEL_CONFIG_LOADER_API int ${pb_msg_class_name}::load_all() {
+  int ret = 0;
+  ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
+  for (std::unordered_map<std::string, bool>::iterator iter = file_status_.begin(); iter != file_status_.end(); ++ iter) {
+    if (!iter->second) {
+      int res = load_file(iter->first);
+      if (res < 0) {
+        EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load config file %s for %s failed", iter->first.c_str(), "${pb_msg_class_name}");
+        ret = res;
+      } else if (ret >= 0) {
+        ret += res;
+      }
     }
+  }
 
-    EXCEL_CONFIG_API ${pb_msg_class_name}::~${pb_msg_class_name}(){
-    }
+  return ret;
+}
 
-    EXCEL_CONFIG_API int ${pb_msg_class_name}::on_inited() {
-        ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
-        
-        file_status_.clear();
-        datasource_.clear();
-        return reload_file_lists();
-    }
-
-    EXCEL_CONFIG_API int ${pb_msg_class_name}::load_all() {
-        int ret = 0;
-        ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
-        for (std::unordered_map<std::string, bool>::iterator iter = file_status_.begin(); iter != file_status_.end(); ++ iter) {
-            if (!iter->second) {
-                int res = load_file(iter->first);
-                if (res < 0) {
-                    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load config file %s for %s failed", iter->first.c_str(), "${pb_msg_class_name}");
-                    ret = res;
-                } else if (ret >= 0) {
-                    ret += res;
-                }
-            }
-        }
-
-        return ret;
-    }
-
-    EXCEL_CONFIG_API void ${pb_msg_class_name}::clear() {
-        ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
+EXCEL_CONFIG_LOADER_API void ${pb_msg_class_name}::clear() {
+  ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
 % for code_index in loader.code.indexes:
-        ${code_index.name}_data_.clear();
+  ${code_index.name}_data_.clear();
 % endfor
-        file_status_.clear();
-        datasource_.clear();
-        reload_file_lists();
-    }
+  file_status_.clear();
+  datasource_.clear();
+  reload_file_lists();
+}
 
-    EXCEL_CONFIG_API const std::list<org::xresloader::pb::xresloader_data_source>& ${pb_msg_class_name}::get_data_source() const {
-        return datasource_;
-    }
+EXCEL_CONFIG_LOADER_API const std::list<org::xresloader::pb::xresloader_data_source>& ${pb_msg_class_name}::get_data_source() const {
+  return datasource_;
+}
 
-    int ${pb_msg_class_name}::load_file(const std::string& file_path) {
-        std::unordered_map<std::string, bool>::iterator iter = file_status_.find(file_path);
-        if (iter == file_status_.end()) {
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load config file %s for %s failed, not exist in any file_list/file_path", file_path.c_str(), "${pb_msg_class_name}");
-            return -2;
-        }
+int ${pb_msg_class_name}::load_file(const std::string& file_path) {
+  std::unordered_map<std::string, bool>::iterator iter = file_status_.find(file_path);
+  if (iter == file_status_.end()) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load config file %s for %s failed, not exist in any file_list/file_path", file_path.c_str(), "${pb_msg_class_name}");
+    return -2;
+  }
 
-        if (iter->second) {
-            return 0;
-        }
-        iter->second = true;
+  if (iter->second) {
+    return 0;
+  }
+  iter->second = true;
 
-        std::string content;
-        if (!config_manager::me()->load_file_data(content, file_path)) {
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load file %s for %s failed", file_path.c_str(), "${pb_msg_class_name}");
-            return -3;
-        }
+  std::string content;
+  if (!config_manager::me()->load_file_data(content, file_path)) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load file %s for %s failed", file_path.c_str(), "${pb_msg_class_name}");
+    return -3;
+  }
 
-        ${loader.get_pb_outer_class_name()} outer_data;
-        if (!outer_data.ParseFromString(content)) {
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] parse file %s for %s(message type: %s) failed: %s",
-                file_path.c_str(), "${pb_msg_class_name}", "${loader.get_pb_outer_class_name()}",
-                outer_data.InitializationErrorString().c_str()
-            );
-            return -4;
-        }
+  ${loader.get_pb_outer_class_name()} outer_data;
+  if (!outer_data.ParseFromString(content)) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] parse file %s for %s(message type: %s) failed: %s",
+      file_path.c_str(), "${pb_msg_class_name}", "${loader.get_pb_outer_class_name()}",
+      outer_data.InitializationErrorString().c_str()
+    );
+    return -4;
+  }
 
-        if (!config_manager::me()->filter<item_type>(outer_data, file_path)) {
-            return -5;
-        }
+  if (!config_manager::me()->filter<item_type>(outer_data, file_path)) {
+    return -5;
+  }
 
-        datasource_.clear();
-        for (int i = 0; i < outer_data.header().data_source_size(); ++ i) {
-            datasource_.push_back(outer_data.header().data_source(i));
-        }
+  datasource_.clear();
+  for (int i = 0; i < outer_data.header().data_source_size(); ++ i) {
+    datasource_.push_back(outer_data.header().data_source(i));
+  }
 
 % for code_index in loader.code.indexes:
 % if code_index.is_vector():
-        // vector index: ${code_index.name}
-        if(${code_index.name}_data_.capacity() < static_cast<size_t>(outer_data.${loader.code_field.name.lower()}_size())) {
-            ${code_index.name}_data_.reserve(static_cast<size_t>(outer_data.${loader.code_field.name.lower()}_size()));
-        }
+  // vector index: ${code_index.name}
+  if(${code_index.name}_data_.capacity() < static_cast<size_t>(outer_data.${loader.code_field.name.lower()}_size())) {
+    ${code_index.name}_data_.reserve(static_cast<size_t>(outer_data.${loader.code_field.name.lower()}_size()));
+  }
 % endif
 % endfor
 
-        for (int i = 0; i < outer_data.${loader.code_field.name.lower()}_size(); ++ i) {
-            std::shared_ptr<item_type> new_item = std::make_shared<item_type>();
-            if (!new_item) {
-                EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] parse file %s for %s(message type: %s) and create item object %d failed",
-                    file_path.c_str(), "${pb_msg_class_name}", "${loader.get_pb_outer_class_name()}", i
-                );
-                return -5;
-            }
-
-            if (!std::const_pointer_cast<proto_type>(new_item)->ParseFromString(outer_data.${loader.code_field.name.lower()}(i))) {
-                EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] parse message %d in %s for %s(message type: %s) failed: %s",
-                    i, file_path.c_str(), "${pb_msg_class_name}", "${loader.get_pb_outer_class_name()}",
-                    new_item->InitializationErrorString().c_str()
-                );
-                return -6;
-            }
-            merge_data(new_item);
-        }
-
-        EXCEL_CONFIG_MANAGER_LOGINFO("[EXCEL] load file %s for %s(message type: %s) with %d item(s) success",
-            file_path.c_str(), "${pb_msg_class_name}", "${loader.get_pb_outer_class_name()}",
-            outer_data.${loader.code_field.name.lower()}_size()
-        );
-
-        return 1;
+  for (int i = 0; i < outer_data.${loader.code_field.name.lower()}_size(); ++ i) {
+    std::shared_ptr<item_type> new_item = std::make_shared<item_type>();
+    if (!new_item) {
+      EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] parse file %s for %s(message type: %s) and create item object %d failed",
+        file_path.c_str(), "${pb_msg_class_name}", "${loader.get_pb_outer_class_name()}", i
+      );
+      return -5;
     }
 
-    int ${pb_msg_class_name}::load_list(const char* file_list_path) {
-        std::string content;
-        if (!config_manager::me()->load_file_data(content, file_list_path)) {
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load file %s for %s failed", file_list_path, "${pb_msg_class_name}");
-            return -1;
-        }
+    if (!std::const_pointer_cast<proto_type>(new_item)->ParseFromString(outer_data.${loader.code_field.name.lower()}(i))) {
+      EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] parse message %d in %s for %s(message type: %s) failed: %s",
+        i, file_path.c_str(), "${pb_msg_class_name}", "${loader.get_pb_outer_class_name()}",
+        new_item->InitializationErrorString().c_str()
+      );
+      return -6;
+    }
+    merge_data(new_item);
+  }
 
-        const char* line_start = content.c_str();
-        const char* line_end;
-        int ret = 0;
-        for (; line_start < content.c_str() + content.size() && *line_start; line_start = line_end + 1) {
-            line_end = line_start;
-            
-            if ('\r' == *line_end || '\n' == *line_end || !*line_end) {
-              continue;
-            }
+  EXCEL_CONFIG_MANAGER_LOGINFO("[EXCEL] load file %s for %s(message type: %s) with %d item(s) success",
+    file_path.c_str(), "${pb_msg_class_name}", "${loader.get_pb_outer_class_name()}",
+    outer_data.${loader.code_field.name.lower()}_size()
+  );
 
-            while (*line_end && '\r' != *line_end && '\n' != *line_end) {
-                ++ line_end;
-            }
+  return 1;
+}
 
-            std::pair<const char*, size_t> file_path_trimed = details::trim(line_start, static_cast<size_t>(line_end - line_start));
-            if (file_path_trimed.second == 0) {
-                continue;
-            }
+int ${pb_msg_class_name}::load_list(const char* file_list_path) {
+  std::string content;
+  if (!config_manager::me()->load_file_data(content, file_list_path)) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load file %s for %s failed", file_list_path, "${pb_msg_class_name}");
+    return -1;
+  }
 
-            std::string file_path;
-            file_path.assign(file_path_trimed.first, file_path_trimed.second);
-            if (file_status_.end() == file_status_.find(file_path)) {
-                file_status_[file_path] = false;
-            }
-        }
-
-        return ret;
+  const char* line_start = content.c_str();
+  const char* line_end;
+  int ret = 0;
+  for (; line_start < content.c_str() + content.size() && *line_start; line_start = line_end + 1) {
+    line_end = line_start;
+    
+    if ('\r' == *line_end || '\n' == *line_end || !*line_end) {
+      continue;
     }
 
-    int ${pb_msg_class_name}::reload_file_lists() {
+    while (*line_end && '\r' != *line_end && '\n' != *line_end) {
+      ++ line_end;
+    }
+
+    std::pair<const char*, size_t> file_path_trimed = details::trim(line_start, static_cast<size_t>(line_end - line_start));
+    if (file_path_trimed.second == 0) {
+      continue;
+    }
+
+    std::string file_path;
+    file_path.assign(file_path_trimed.first, file_path_trimed.second);
+    if (file_status_.end() == file_status_.find(file_path)) {
+      file_status_[file_path] = false;
+    }
+  }
+
+  return ret;
+}
+
+int ${pb_msg_class_name}::reload_file_lists() {
 % if loader.code.file_list:
-        return load_list("${loader.code.file_list}");
+  return load_list("${loader.code.file_list}");
 % else:
-        file_status_["${loader.code.file_path}"] = false;
-        return 0;
+  file_status_["${loader.code.file_path}"] = false;
+  return 0;
 % endif
-    }
+}
 
-    void ${pb_msg_class_name}::merge_data(item_ptr_type item) {
-        if (!item) {
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] merge_data(nullptr) is not allowed for %s", "${pb_msg_class_name}");
-            return;
-        }
+void ${pb_msg_class_name}::merge_data(item_ptr_type item) {
+  if (!item) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] merge_data(nullptr) is not allowed for %s", "${pb_msg_class_name}");
+    return;
+  }
 
 % for code_index in loader.code.indexes:
-        // index: ${code_index.name}
-        do {
+  // index: ${code_index.name}
+  do {
 % if code_index.is_vector():
-            size_t idx = 0;
+    size_t idx = 0;
 %   for idx_field in code_index.fields:
 %       if PbMsgPbFieldisSigned(idx_field):
-            if (item->${PbMsgGetPbFieldFn(idx_field)} < 0) {
-                EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] merge_data with vector index %lld for %s is not allowed",
-                    static_cast<long long>(item->${PbMsgGetPbFieldFn(idx_field)}), "${pb_msg_class_name}"
-                );
-                break;
-            }
+    if (item->${PbMsgGetPbFieldFn(idx_field)} < 0) {
+      EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] merge_data with vector index %lld for %s is not allowed",
+        static_cast<long long>(item->${PbMsgGetPbFieldFn(idx_field)}), "${pb_msg_class_name}"
+      );
+      break;
+    }
 %       endif
-            idx = static_cast<size_t>(item->${PbMsgGetPbFieldFn(idx_field)});
+    idx = static_cast<size_t>(item->${PbMsgGetPbFieldFn(idx_field)});
 %   endfor
-            if (${code_index.name}_data_.capacity() <= idx) {
-                ${code_index.name}_data_.reserve(idx * 2 + 1);
-            }
+    if (${code_index.name}_data_.capacity() <= idx) {
+      ${code_index.name}_data_.reserve(idx * 2 + 1);
+    }
 
-            if (${code_index.name}_data_.size() <= idx) {
-                ${code_index.name}_data_.resize(idx + 1);
-            }
+    if (${code_index.name}_data_.size() <= idx) {
+      ${code_index.name}_data_.resize(idx + 1);
+    }
 
 %   if code_index.is_list():
-            ${code_index.name}_data_[idx].push_back(item);
+    ${code_index.name}_data_[idx].push_back(item);
 %   else:
-            ${code_index.name}_data_[idx] = item;
+    ${code_index.name}_data_[idx] = item;
 %   endif
 % else:
 %   if code_index.is_list():
-            ${code_index.name}_data_[std::make_tuple(${code_index.get_key_value_list("item->")})].push_back(item);
+    ${code_index.name}_data_[std::make_tuple(${code_index.get_key_value_list("item->")})].push_back(item);
 %   else:
-            std::tuple<${code_index.get_key_type_list()}> key = std::make_tuple(${code_index.get_key_value_list("item->")});
-            if (${code_index.name}_data_.end() != ${code_index.name}_data_.find(key)) {
-                EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] merge_data() with key=<${code_index.get_key_fmt_list()}> for %s is already exists, we will cover it with the newer value", 
-                    ${code_index.get_key_fmt_value_list("item->")}, "${pb_msg_class_name}");
-            }
-            ${code_index.name}_data_[key] = item;
+    std::tuple<${code_index.get_key_type_list()}> key = std::make_tuple(${code_index.get_key_value_list("item->")});
+    if (${code_index.name}_data_.end() != ${code_index.name}_data_.find(key)) {
+      EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] merge_data() with key=<${code_index.get_key_fmt_list()}> for %s is already exists, we will cover it with the newer value", 
+        ${code_index.get_key_fmt_value_list("item->")}, "${pb_msg_class_name}");
+    }
+    ${code_index.name}_data_[key] = item;
 %   endif
 % endif
-        } while(false);
+  } while(false);
 
 % endfor
-    }
+}
 
 % for code_index in loader.code.indexes:
 // ------------------- index: ${code_index.name} APIs -------------------
 % if code_index.is_list():
-    EXCEL_CONFIG_API const ${pb_msg_class_name}::${code_index.name}_value_type* ${pb_msg_class_name}::get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
-        ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh(load_file_lock_);
-        return _get_list_by_${code_index.name}(${code_index.get_key_params()});
-    }
+EXCEL_CONFIG_LOADER_API const ${pb_msg_class_name}::${code_index.name}_value_type* ${pb_msg_class_name}::get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
+  ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh(load_file_lock_);
+  return _get_list_by_${code_index.name}(${code_index.get_key_params()});
+}
 
-    EXCEL_CONFIG_API ${pb_msg_class_name}::item_ptr_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index) {
-        ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh(load_file_lock_);
-        const ${pb_msg_class_name}::${code_index.name}_value_type* list_item = _get_list_by_${code_index.name}(${code_index.get_key_params()});
-        if (nullptr == list_item) {
+EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::item_ptr_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index) {
+  ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh(load_file_lock_);
+  const ${pb_msg_class_name}::${code_index.name}_value_type* list_item = _get_list_by_${code_index.name}(${code_index.get_key_params()});
+  if (nullptr == list_item) {
 %   if not code_index.allow_not_found:
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}>, index=%llu for %s failed, list not found",
-                "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, 
-                static_cast<unsigned long long>(index), "${pb_msg_class_name}"
-            );
-            if (config_manager::me()->get_on_not_found()) {
-                config_manager::on_not_found_event_data_t evt_data;
-                evt_data.data_source = &datasource_;
-                evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}>, index=%llu for %s failed, list not found",
+      "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, 
+      static_cast<unsigned long long>(index), "${pb_msg_class_name}"
+    );
+    if (config_manager::me()->get_on_not_found()) {
+      config_manager::on_not_found_event_data_t evt_data;
+      evt_data.data_source = &datasource_;
+      evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
 
-                char keys_buffer[4096];
-                int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
-                evt_data.index_name = "${code_index.name}";
-                if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
-                    keys_buffer[n] = 0;
-                } else {
-                    keys_buffer[sizeof(keys_buffer) - 1] = 0;
-                }
-                evt_data.keys = keys_buffer;
-                evt_data.is_list = true;
-                evt_data.list_index = index;
-                config_manager::me()->get_on_not_found()(evt_data);
-            }
-%   endif
-            return nullptr;
-        }
-
-        if (list_item->size() <= index) {
-%   if not code_index.allow_not_found:
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}>, index=%llu for %s failed, index entend %llu",
-                "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, 
-                static_cast<unsigned long long>(index), "${pb_msg_class_name}", static_cast<unsigned long long>(list_item->size())
-            );
-            if (config_manager::me()->get_on_not_found()) {
-                config_manager::on_not_found_event_data_t evt_data;
-                evt_data.data_source = &datasource_;
-                evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
-
-                char keys_buffer[4096];
-                int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
-                evt_data.index_name = "${code_index.name}";
-                if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
-                    keys_buffer[n] = 0;
-                } else {
-                    keys_buffer[sizeof(keys_buffer) - 1] = 0;
-                }
-                evt_data.keys = keys_buffer;
-                evt_data.is_list = true;
-                evt_data.list_index = index;
-                config_manager::me()->get_on_not_found()(evt_data);
-            }
-%   endif
-            return nullptr;
-        }
-
-        return (*list_item)[index];
+      char keys_buffer[4096];
+      int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
+      evt_data.index_name = "${code_index.name}";
+      if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
+        keys_buffer[n] = 0;
+      } else {
+        keys_buffer[sizeof(keys_buffer) - 1] = 0;
+      }
+      evt_data.keys = keys_buffer;
+      evt_data.is_list = true;
+      evt_data.list_index = index;
+      config_manager::me()->get_on_not_found()(evt_data);
     }
+%   endif
+    return nullptr;
+  }
 
-    const ${pb_msg_class_name}::${code_index.name}_value_type* ${pb_msg_class_name}::_get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
+  if (list_item->size() <= index) {
+%   if not code_index.allow_not_found:
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}>, index=%llu for %s failed, index entend %llu",
+      "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, 
+      static_cast<unsigned long long>(index), "${pb_msg_class_name}", static_cast<unsigned long long>(list_item->size())
+    );
+    if (config_manager::me()->get_on_not_found()) {
+      config_manager::on_not_found_event_data_t evt_data;
+      evt_data.data_source = &datasource_;
+      evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
+
+      char keys_buffer[4096];
+      int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
+      evt_data.index_name = "${code_index.name}";
+      if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
+        keys_buffer[n] = 0;
+      } else {
+        keys_buffer[sizeof(keys_buffer) - 1] = 0;
+      }
+      evt_data.keys = keys_buffer;
+      evt_data.is_list = true;
+      evt_data.list_index = index;
+      config_manager::me()->get_on_not_found()(evt_data);
+    }
+%   endif
+    return nullptr;
+  }
+
+  return (*list_item)[index];
+}
+
+const ${pb_msg_class_name}::${code_index.name}_value_type* ${pb_msg_class_name}::_get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
 % if code_index.is_vector():
-        size_t idx = 0;
+  size_t idx = 0;
 %   for idx_field in code_index.fields:
 %       if PbMsgPbFieldisSigned(idx_field):
-        if (${idx_field.name} < 0) {
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] vector index %lld for %s is not allowed",
-                static_cast<long long>(${idx_field.name}), "${pb_msg_class_name}"
-            );
-            return nullptr;
-        }
+  if (${idx_field.name} < 0) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] vector index %lld for %s is not allowed",
+      static_cast<long long>(${idx_field.name}), "${pb_msg_class_name}"
+    );
+    return nullptr;
+  }
 %       endif
-        idx = static_cast<size_t>(${idx_field.name});
+  idx = static_cast<size_t>(${idx_field.name});
 %   endfor
-        if (${code_index.name}_data_.size() > idx && ${code_index.name}_data_[idx]) {
-            return &${code_index.name}_data_[idx];
-        }
+  if (${code_index.name}_data_.size() > idx && ${code_index.name}_data_[idx]) {
+    return &${code_index.name}_data_[idx];
+  }
 % else:
-        ${code_index.name}_container_type::iterator iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
-        if (iter != ${code_index.name}_data_.end()) {
-            return &iter->second;
-        }
+  ${code_index.name}_container_type::iterator iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
+  if (iter != ${code_index.name}_data_.end()) {
+    return &iter->second;
+  }
 % endif
 
 %   if loader.code.file_list and code_index.file_mapping:
 %       for code_line in code_index.get_load_file_code("file_path"):
-        ${code_line}
+  ${code_line}
 %       endfor
 %   else:
-        std::string file_path = "${loader.code.file_path}";
+  std::string file_path = "${loader.code.file_path}";
 %   endif
 
-        int res = load_file(file_path);
-        if (res < 0) {
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load file %s for %s failed, res: %d", file_path.c_str(), "${pb_msg_class_name}", res);
-            return nullptr;
-        }
+  int res = load_file(file_path);
+  if (res < 0) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load file %s for %s failed, res: %d", file_path.c_str(), "${pb_msg_class_name}", res);
+    return nullptr;
+  }
 
 % if code_index.is_vector():
-        if (${code_index.name}_data_.size() > idx && ${code_index.name}_data_[idx]) {
-            return &${code_index.name}_data_[idx];
-        }
+  if (${code_index.name}_data_.size() > idx && ${code_index.name}_data_[idx]) {
+    return &${code_index.name}_data_[idx];
+  }
 
 %   if not code_index.allow_not_found:
-        EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
-            "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
-        );
-        if (config_manager::me()->get_on_not_found()) {
-            config_manager::on_not_found_event_data_t evt_data;
-            evt_data.data_source = &datasource_;
-            evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
+  EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+    "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
+  );
+  if (config_manager::me()->get_on_not_found()) {
+    config_manager::on_not_found_event_data_t evt_data;
+    evt_data.data_source = &datasource_;
+    evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
 
-            char keys_buffer[4096];
-            int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
-            evt_data.index_name = "${code_index.name}";
-            if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
-                keys_buffer[n] = 0;
-            } else {
-                keys_buffer[sizeof(keys_buffer) - 1] = 0;
-            }
-            evt_data.keys = keys_buffer;
-            evt_data.is_list = true;
-            evt_data.list_index = 0;
-            config_manager::me()->get_on_not_found()(evt_data);
-        }
+    char keys_buffer[4096];
+    int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
+    evt_data.index_name = "${code_index.name}";
+    if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
+      keys_buffer[n] = 0;
+    } else {
+      keys_buffer[sizeof(keys_buffer) - 1] = 0;
+    }
+    evt_data.keys = keys_buffer;
+    evt_data.is_list = true;
+    evt_data.list_index = 0;
+    config_manager::me()->get_on_not_found()(evt_data);
+  }
 %   endif
-        return nullptr;
+  return nullptr;
 
 % else:
-        iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
-        if (iter == ${code_index.name}_data_.end()) {
+  iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
+  if (iter == ${code_index.name}_data_.end()) {
 %   if not code_index.allow_not_found:
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
-                "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
-            );
-            if (config_manager::me()->get_on_not_found()) {
-                config_manager::on_not_found_event_data_t evt_data;
-                evt_data.data_source = &datasource_;
-                evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+      "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
+    );
+    if (config_manager::me()->get_on_not_found()) {
+      config_manager::on_not_found_event_data_t evt_data;
+      evt_data.data_source = &datasource_;
+      evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
 
-                char keys_buffer[4096];
-                int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
-                evt_data.index_name = "${code_index.name}";
-                if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
-                    keys_buffer[n] = 0;
-                } else {
-                    keys_buffer[sizeof(keys_buffer) - 1] = 0;
-                }
-                evt_data.keys = keys_buffer;
-                evt_data.is_list = true;
-                evt_data.list_index = 0;
-                config_manager::me()->get_on_not_found()(evt_data);
-            }
+      char keys_buffer[4096];
+      int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
+      evt_data.index_name = "${code_index.name}";
+      if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
+        keys_buffer[n] = 0;
+      } else {
+        keys_buffer[sizeof(keys_buffer) - 1] = 0;
+      }
+      evt_data.keys = keys_buffer;
+      evt_data.is_list = true;
+      evt_data.list_index = 0;
+      config_manager::me()->get_on_not_found()(evt_data);
+    }
 %   endif
-            return nullptr;
-        }
+    return nullptr;
+  }
 
-        return &iter->second;
+  return &iter->second;
 
 % endif
-    }
+}
 
 % else:
-    EXCEL_CONFIG_API ${pb_msg_class_name}::${code_index.name}_value_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}) {
+EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::${code_index.name}_value_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}) {
 % if code_index.is_vector():
-        size_t idx = 0;
+  size_t idx = 0;
 %   for idx_field in code_index.fields:
 %       if PbMsgPbFieldisSigned(idx_field):
-        if (${idx_field.name} < 0) {
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] vector index %lld for %s is not allowed",
-                static_cast<long long>(${idx_field.name}), "${pb_msg_class_name}"
-            );
-            return nullptr;
-        }
+  if (${idx_field.name} < 0) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] vector index %lld for %s is not allowed",
+      static_cast<long long>(${idx_field.name}), "${pb_msg_class_name}"
+    );
+    return nullptr;
+  }
 %       endif
-        idx = static_cast<size_t>(${idx_field.name});
+  idx = static_cast<size_t>(${idx_field.name});
 %   endfor
-        if (${code_index.name}_data_.size() > idx && ${code_index.name}_data_[idx]) {
-            return ${code_index.name}_data_[idx];
-        }
+  if (${code_index.name}_data_.size() > idx && ${code_index.name}_data_[idx]) {
+    return ${code_index.name}_data_[idx];
+  }
 % else:
-        ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh(load_file_lock_);
-        ${code_index.name}_container_type::iterator iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
-        if (iter != ${code_index.name}_data_.end()) {
-            return iter->second;
-        }
+  ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh(load_file_lock_);
+  ${code_index.name}_container_type::iterator iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
+  if (iter != ${code_index.name}_data_.end()) {
+    return iter->second;
+  }
 % endif
 
 %   if loader.code.file_list and code_index.file_mapping:
 %       for code_line in code_index.get_load_file_code("file_path"):
-        ${code_line}
+  ${code_line}
 %       endfor
 %   else:
-        std::string file_path = "${loader.code.file_path}";
+  std::string file_path = "${loader.code.file_path}";
 %   endif
 
-        int res = load_file(file_path);
-        if (res < 0) {
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load file %s for %s failed, res: %d", file_path.c_str(), "${pb_msg_class_name}", res);
-            return nullptr;
-        }
+  int res = load_file(file_path);
+  if (res < 0) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load file %s for %s failed, res: %d", file_path.c_str(), "${pb_msg_class_name}", res);
+    return nullptr;
+  }
 
 % if code_index.is_vector():
-        if (${code_index.name}_data_.size() > idx && ${code_index.name}_data_[idx]) {
-            return ${code_index.name}_data_[idx];
-        }
+  if (${code_index.name}_data_.size() > idx && ${code_index.name}_data_[idx]) {
+    return ${code_index.name}_data_[idx];
+  }
 
 %   if not code_index.allow_not_found:
-        EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
-            "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
-        );
-        if (config_manager::me()->get_on_not_found()) {
-            config_manager::on_not_found_event_data_t evt_data;
-            evt_data.data_source = &datasource_;
-            evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
+  EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+    "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
+  );
+  if (config_manager::me()->get_on_not_found()) {
+    config_manager::on_not_found_event_data_t evt_data;
+    evt_data.data_source = &datasource_;
+    evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
 
-            char keys_buffer[4096];
-            int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
-            evt_data.index_name = "${code_index.name}";
-            if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
-                keys_buffer[n] = 0;
-            } else {
-                keys_buffer[sizeof(keys_buffer) - 1] = 0;
-            }
-            evt_data.keys = keys_buffer;
-            evt_data.is_list = false;
-            evt_data.list_index = 0;
-            config_manager::me()->get_on_not_found()(evt_data);
-        }
+    char keys_buffer[4096];
+    int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
+    evt_data.index_name = "${code_index.name}";
+    if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
+      keys_buffer[n] = 0;
+    } else {
+      keys_buffer[sizeof(keys_buffer) - 1] = 0;
+    }
+    evt_data.keys = keys_buffer;
+    evt_data.is_list = false;
+    evt_data.list_index = 0;
+    config_manager::me()->get_on_not_found()(evt_data);
+  }
 %   endif
-        return nullptr;
+  return nullptr;
 
 % else:
-        iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
-        if (iter == ${code_index.name}_data_.end()) {
+  iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
+  if (iter == ${code_index.name}_data_.end()) {
 %   if not code_index.allow_not_found:
-            EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
-                "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
-            );
-            if (config_manager::me()->get_on_not_found()) {
-                config_manager::on_not_found_event_data_t evt_data;
-                evt_data.data_source = &datasource_;
-                evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+      "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
+    );
+    if (config_manager::me()->get_on_not_found()) {
+      config_manager::on_not_found_event_data_t evt_data;
+      evt_data.data_source = &datasource_;
+      evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
 
-                char keys_buffer[4096];
-                int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
-                evt_data.index_name = "${code_index.name}";
-                if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
-                    keys_buffer[n] = 0;
-                } else {
-                    keys_buffer[sizeof(keys_buffer) - 1] = 0;
-                }
-                evt_data.keys = keys_buffer;
-                evt_data.is_list = false;
-                evt_data.list_index = 0;
-                config_manager::me()->get_on_not_found()(evt_data);
-            }
+      char keys_buffer[4096];
+      int n = UTIL_STRFUNC_SNPRINTF(keys_buffer, sizeof(keys_buffer) - 1, "${code_index.get_key_fmt_list()}", ${code_index.get_key_params_fmt_value_list()});
+      evt_data.index_name = "${code_index.name}";
+      if (n < static_cast<int>(sizeof(keys_buffer)) && n >= 0) {
+        keys_buffer[n] = 0;
+      } else {
+        keys_buffer[sizeof(keys_buffer) - 1] = 0;
+      }
+      evt_data.keys = keys_buffer;
+      evt_data.is_list = false;
+      evt_data.list_index = 0;
+      config_manager::me()->get_on_not_found()(evt_data);
+    }
 %   endif
-            return nullptr;
-        }
+    return nullptr;
+  }
 
-        return iter->second;
+  return iter->second;
 % endif
-    }
+}
 % endif
 
-    EXCEL_CONFIG_API const ${pb_msg_class_name}::${code_index.name}_container_type& ${pb_msg_class_name}::get_all_of_${code_index.name}() const {
-        return ${code_index.name}_data_;
-    }
+EXCEL_CONFIG_LOADER_API const ${pb_msg_class_name}::${code_index.name}_container_type& ${pb_msg_class_name}::get_all_of_${code_index.name}() const {
+  return ${code_index.name}_data_;
+}
 % endfor
 
 ${loader.get_cpp_namespace_decl_end()}

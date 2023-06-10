@@ -192,7 +192,7 @@ public:
   EXCEL_CONFIG_LOADER_API config_manager(constructor_helper_t&);
   EXCEL_CONFIG_LOADER_API ~config_manager();
 
-  static TGF_BATTLE_UTILITY_API std::shared_ptr<config_manager> me();
+  static EXCEL_CONFIG_LOADER_API std::shared_ptr<config_manager> me();
   static inline std::shared_ptr<config_manager> instance() { return me(); };
 
   EXCEL_CONFIG_LOADER_API int init();
@@ -269,7 +269,7 @@ public:
   }
 
   EXCEL_CONFIG_LOADER_API void set_on_log(on_log_func_t func);
-  EXCEL_CONFIG_LOADER_API const;
+  EXCEL_CONFIG_LOADER_API const on_log_func_t& get_on_log() const;
 
   static EXCEL_CONFIG_LOADER_API void log(const log_caller_info_t &caller,
 #ifdef _MSC_VER

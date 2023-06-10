@@ -12,6 +12,7 @@ import time
 
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 #ifndef EXCEL_CONFIG_LOADER_API
@@ -36,6 +37,10 @@ ${pb_loader.CppNamespaceEnd(class_decls)}
 % endfor
 
 ${pb_loader.CppNamespaceBegin(global_package)}
+struct config_group_t;
+
+const std::shared_ptr<config_group_t>& get_current_config_group() noexcept;
+
 % for pb_msg in pb_set.generate_message:
 %   for loader in pb_msg.loaders:
 // ======================================== ${loader.code.class_name} ========================================
@@ -46,19 +51,28 @@ if code_index.is_list():
   current_code_item_value_type = 'std::vector<' + current_code_proto_ptr_type + ' >'
 else:
   current_code_item_value_type = current_code_proto_ptr_type
+
+if code_index.is_vector():
+  get_all_of_result = 'const std::vector<' + current_code_item_value_type + '>&'
+else:
+  get_all_of_result = 'const std::map<std::tuple<' + code_index.get_key_type_list() + '>, ' + current_code_item_value_type + '>&'
 %>
-%       if code_index.is_vector():
-EXCEL_CONFIG_LOADER_API const std::vector<${current_code_item_value_type}>&
-%       else:
-EXCEL_CONFIG_LOADER_API const std::map<std::tuple<${code_index.get_key_type_list()}>, ${current_code_item_value_type}>&
-%       endif
+EXCEL_CONFIG_LOADER_API ${get_all_of_result}
+  get_${loader.code.class_name}_all_of_${code_index.name}(const std::shared_ptr<config_group_t>&);
+EXCEL_CONFIG_LOADER_API ${get_all_of_result}
   get_${loader.code.class_name}_all_of_${code_index.name}();
 %       if code_index.is_list():
 EXCEL_CONFIG_LOADER_API const ${current_code_item_value_type}*
+  get_${loader.code.class_name}_by_${code_index.name}(const std::shared_ptr<config_group_t>&, ${code_index.get_key_decl()});
+EXCEL_CONFIG_LOADER_API const ${current_code_item_value_type}*
   get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()});
+EXCEL_CONFIG_LOADER_API ${current_code_proto_ptr_type}
+  get_${loader.code.class_name}_by_${code_index.name}(const std::shared_ptr<config_group_t>&, ${code_index.get_key_decl()}, size_t idx);
 EXCEL_CONFIG_LOADER_API ${current_code_proto_ptr_type}
   get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}, size_t idx);
 %       else:
+EXCEL_CONFIG_LOADER_API ${current_code_item_value_type}
+  get_${loader.code.class_name}_by_${code_index.name}(const std::shared_ptr<config_group_t>&, ${code_index.get_key_decl()});
 EXCEL_CONFIG_LOADER_API ${current_code_item_value_type}
   get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()});
 %       endif

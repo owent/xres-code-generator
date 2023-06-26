@@ -8,6 +8,7 @@ mkdir -p "$REPO_DIR/sample/pbcpp"
 mkdir -p "$REPO_DIR/sample/pblua"
 mkdir -p "$REPO_DIR/sample/upblua"
 mkdir -p "$REPO_DIR/sample/pbcs"
+mkdir -p "$REPO_DIR/sample/uepbcpp"
 cp -rvf "$REPO_DIR/template/common/lua/"*.lua "$REPO_DIR/sample/pblua"
 cp -rvf "$REPO_DIR/template/common/cpp/"* "$REPO_DIR/sample/pbcpp"
 cp -rvf "$REPO_DIR/template/common/cs/"* "$REPO_DIR/sample/pbcs"
@@ -28,7 +29,14 @@ fi
 PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")"
 "$PREBUILT_PROTOC" -I "$REPO_DIR/sample/proto" -I "$REPO_DIR/pb_extension" "$REPO_DIR/sample/proto/"*.proto -o "$REPO_DIR/sample/sample.pb"
 
-# --pb-include-prefix "pbdesc/"                                                                                       \
+"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/uepbcpp" \
+  --set ue_include_prefix=ExcelLoader --set ue_type_prefix=ExcelLoader --file-include-well-known-types \
+  --set ue_api_definition=EXCELLOADER_API --add-path "$REPO_DIR/template" \
+  -f "H:$REPO_DIR/template/UEExcelLoader.h.mako:ExcelLoader/\${pb_file.get_file_path_without_ext()}.h" \
+  -f "S:$REPO_DIR/template/UEExcelLoader.cpp.mako:ExcelLoader/\${pb_file.get_file_path_without_ext()}.cpp" \
+  "$@"
+
+# exit $?
 
 "$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcpp" \
   -g "$REPO_DIR/template/config_manager.h.mako" -g "$REPO_DIR/template/config_manager.cpp.mako" \

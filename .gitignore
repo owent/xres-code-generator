@@ -103,6 +103,7 @@ venv.bak/
 /sample/pblua/*
 /sample/upblua/*
 /sample/pbcs/*
+/sample/uepbcpp/*
 
 # mypy
 .mypy_cache/

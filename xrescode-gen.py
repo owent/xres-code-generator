@@ -7,6 +7,7 @@ import sys
 import codecs
 import shutil
 import sysconfig
+import re
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -199,6 +200,45 @@ def main():
         "add loader template(H:<file name> for header and S:<file name> for source)",
         dest="loader_template",
         default=[])
+    parser.add_option(
+        "-f",
+        "--file",
+        action="append",
+        help=
+        "add file template(H:<file name> for header and S:<file name> for source)",
+        dest="file_template",
+        default=[])
+    parser.add_option(
+        "--file-ignore-package",
+        action="append",
+        help="ignore file in of packages",
+        dest="file_ignore_package",
+        default=[])
+    parser.add_option(
+        "--file-include",
+        action="append",
+        help="select only file name match the include rule(by regex)",
+        dest="file_include_rule",
+        default=[])
+    parser.add_option(
+        "--file-exclude",
+        action="append",
+        help="skip file name match the exclude rule(by regex)",
+        dest="file_exclude_rule",
+        default=[])
+    parser.add_option(
+        "--file-include-well-known-types",
+        action="store_true",
+        help="generate file templates for well known types",
+        dest="file_include_well_known_types",
+        default=False)
+    parser.add_option(
+        "--set",
+        action="append",
+        help="set custom variables for rendering templates.",
+        dest="set_vars",
+        default=[],
+    )
     parser.add_option("-p",
                       "--pb",
                       action="store",
@@ -300,7 +340,7 @@ def main():
     (options, left_args) = parser.parse_args()
 
     if options.version:
-        print('1.0.0')
+        print('1.1.0')
         sys.exit(0)
 
     def print_help_msg(err_code):
@@ -325,15 +365,23 @@ def main():
     template_paths.append(os.path.join(script_dir, 'template'))
 
     # parse pb file
-    from pb_loader import PbDescSet
-    pb_set = PbDescSet(options.pb,
+    import pb_loader
+    pb_set = pb_loader.PbDescSet(options.pb,
                        tags=options.tags,
                        msg_prefix=options.msg_prefix,
                        proto_v3=options.proto_v3,
                        pb_include_prefix=options.pb_include_prefix,
                        exclude_tags=options.exclude_tags,
                        shared_outer_type=options.shared_outer_type,
-                       shared_outer_field=options.shared_outer_field)
+                       shared_outer_field=options.shared_outer_field,
+                       index_extended_well_known_type=options.file_include_well_known_types)
+    
+    for custom_var in options.set_vars:
+        key_value_pair = custom_var.split("=")
+        if len(key_value_pair) > 1:
+            pb_set.set_custom_variable(key_value_pair[0].strip(), key_value_pair[1].strip())
+        elif key_value_pair:
+            pb_set.set_custom_variable(key_value_pair[0].strip(), "")
 
     for cg in options.custom_group:
         name_idx = cg.find(":")
@@ -352,7 +400,7 @@ def main():
                                                sys.version_info[2])))
     make_module_cache_dir = temp_dir_holder.directory_path
 
-    def gen_source(list_container, pb_msg=None, loader=None):
+    def gen_source(list_container, pb_file=None, pb_msg=None, loader=None):
         for rule in list_container:
             is_message_header = False
             is_message_source = False
@@ -391,6 +439,7 @@ def main():
                                               lookup=project_lookup)
                 output_name = output_render_tmpl.render(
                     pb_set=pb_set,
+                    pb_file=pb_file,
                     pb_msg=pb_msg,
                     loader=loader,
                     output_dir=output_dir,
@@ -450,6 +499,7 @@ def main():
                     render_output = source_tmpl.render(
                         pb_set=pb_set,
                         pb_msg=pb_msg,
+                        pb_file=pb_file,
                         loader=loader,
                         output_dir=output_dir,
                         output_file=output_name,
@@ -464,17 +514,54 @@ def main():
                             f.close()
                             continue
                         f.close()
+                    elif not os.path.exists(os.path.dirname(output_name)):
+                        os.makedirs(os.path.dirname(output_name))
 
                     codecs.open(str(output_name),
                                 mode='w',
                                 encoding=options.encoding).write(
                                     str(render_output))
 
-    gen_source(options.global_template, None, None)
+    file_ignore_packages = set(options.file_ignore_package)
+    file_include_rules = None
+    file_exclude_rules = None
+    if options.file_include_rule:
+        for rule in options.file_include_rule:
+            if file_include_rules is None:
+                file_include_rules = []
+            file_include_rules.append(re.compile(rule))
+    if options.file_exclude_rule:
+        for rule in options.file_exclude_rule:
+            if file_exclude_rules is None:
+                file_exclude_rules = []
+            file_exclude_rules.append(re.compile(rule))
+
+    gen_source(options.global_template, None, None, None)
     for pb_msg in pb_set.generate_message:
-        gen_source(options.message_template, pb_msg=pb_msg, loader=None)
+        gen_source(options.message_template, pb_file=pb_msg.pb_file, pb_msg=pb_msg, loader=None)
         for loader in pb_msg.loaders:
-            gen_source(options.loader_template, pb_msg=pb_msg, loader=loader)
+            gen_source(options.loader_template, pb_file=pb_msg.pb_file, pb_msg=pb_msg, loader=loader)
+    if options.file_template:
+        for file_path in pb_set.pb_files:
+            if file_ignore_packages and file_path in file_ignore_packages:
+                continue
+            if file_include_rules:
+                selected = False
+                for rule in file_include_rules:
+                    if rule.match(file_path):
+                        selected = True
+                        break
+                if not selected:
+                    continue
+            if file_exclude_rules:
+                selected = True
+                for rule in file_exclude_rules:
+                    if rule.match(file_path):
+                        selected = False
+                        break
+                if not selected:
+                    continue
+            gen_source(options.file_template, pb_file=pb_set.pb_files[file_path], pb_msg=None, loader=None)
 
     for rule in left_args:
         if len(rule) < 2:
@@ -487,17 +574,38 @@ def main():
         else:
             left_rule_desc = '{0}:{1}'.format(rule_input, rule_output)
         if rule_mode == "g":
-            gen_source([left_rule_desc], None, None)
+            gen_source([left_rule_desc], None, None, None)
         if rule_mode == "m":
             for pb_msg in pb_set.generate_message:
-                gen_source([left_rule_desc], pb_msg=pb_msg, loader=None)
+                gen_source([left_rule_desc], pb_file=pb_msg.pb_file, pb_msg=pb_msg, loader=None)
         if rule_mode == "l":
             for pb_msg in pb_set.generate_message:
                 for loader in pb_msg.loaders:
-                    gen_source(
-                        gen_source([left_rule_desc],
-                                   pb_msg=pb_msg,
-                                   loader=loader))
+                    gen_source([left_rule_desc],
+                                pb_file=pb_msg.pb_file,
+                                pb_msg=pb_msg,
+                                loader=loader)
+        if rule_mode == "f":
+            for file_path in pb_set.pb_files:
+                if file_ignore_packages and file_path in file_ignore_packages:
+                    continue
+                if file_include_rules:
+                    selected = False
+                    for rule in file_include_rules:
+                        if rule.match(file_path):
+                            selected = True
+                            break
+                    if not selected:
+                        continue
+                if file_exclude_rules:
+                    selected = True
+                    for rule in file_exclude_rules:
+                        if rule.match(file_path):
+                            selected = False
+                            break
+                    if not selected:
+                        continue
+                gen_source([left_rule_desc], pb_file=pb_set.pb_files[file_path], pb_msg=None, loader=None)
 
     del temp_dir_holder
     sys.exit(pb_set.failed_count)

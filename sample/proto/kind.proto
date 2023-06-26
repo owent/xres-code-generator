@@ -5,6 +5,11 @@ import "xresloader_ue.proto";
 
 import "xrescode_extensions_v3.proto";
 
+enum EnTestEnumType {
+    EN_TET_NONE = 0;
+    EN_TET_ONE  = 1;
+}
+
 message role_upgrade_cfg {
     option (org.xresloader.ue.helper)       = "helper";
     option (org.xresloader.msg_description) = "Test role_upgrade_cfg with multi keys";

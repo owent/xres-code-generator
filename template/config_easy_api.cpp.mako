@@ -24,7 +24,8 @@ const std::shared_ptr<config_group_t>& get_current_config_group() noexcept {
 
 % for pb_msg in pb_set.generate_message:
 %   for loader in pb_msg.loaders:
-    // ======================================== ${loader.code.class_name} ========================================
+// ======================================== ${loader.code.class_name} ========================================
+%     for code_index in loader.code.indexes:
 <%
 current_code_proto_ptr_type = 'std::shared_ptr<const ' + loader.get_pb_inner_class_name() + '>'
 if code_index.is_list():

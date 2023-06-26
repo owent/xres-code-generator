@@ -4,7 +4,7 @@
 
 ### Common declare loaders
 
-First ```import "xrescode_extensions_v3.proto";``` and declare loaders. See [pb_extension/xrescode_extensions_v3.proto](pb_extension/xrescode_extensions_v3.proto) for details.
+First `import "xrescode_extensions_v3.proto";` and declare loaders. See [pb_extension/xrescode_extensions_v3.proto](pb_extension/xrescode_extensions_v3.proto) for details.
 
 ```protobuf
 syntax = "proto3";
@@ -123,7 +123,7 @@ python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/
 
 ```
 
-3. At last, just use the generated ```DataTableService53``` to visit datas.
+3. At last, just use the generated `DataTableService53` to visit datas.
 
 ```lua
 -- We will use require(...) to load DataTableService53,DataTableCustomIndex53 and custom data files, please ensure these can be load by require(FILE_PATH)
@@ -177,7 +177,7 @@ python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/
 
 ```
 
-3. At last, just use the generated ```DataTableCustomIndexUpb``` to visit datas.
+3. At last, just use the generated `DataTableCustomIndexUpb` to visit datas.
 
 ```lua
 -- We will use require(...) to load
@@ -235,7 +235,7 @@ python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/
 
 ```
 
-2. Use the generated ```ConfigSetManager``` to visit datas.
+2. Use the generated `ConfigSetManager` to visit datas.
 
 ```cs
 using System;
@@ -255,16 +255,19 @@ class Program {
 
 ## Custom rule and templates
 
-You can custom your loader codes by providing code template files which just like files in ```$REPO_DIR/template``` .
+You can custom your loader codes by providing code template files which just like files in `$REPO_DIR/template` .
 
-* Globale template: ```g:<template path>:<output path>```
-    > Example: ```g:input.h.mako:input.generated.h```
+* Globale template: `g:<template path>:<output path>`
+    > Example: `g:input.h.mako:input.generated.h`
 
-* Message template(render for each message with loader): ```m:<header template path>:<output path rule>```
-    > Example: ```m:input.h.mako:input.generated.${loader.code.class_name.lower()}.h```
+* Message template(render for each message with loader): `m:<header template path>:<output path rule>`
+    > Example: `m:input.h.mako:input.generated.${loader.code.class_name.lower()}.h`
 
-* Loader template(render for loader): ```l:<header template path>:<output path rule>```
-    > Example: ```l:input.h.mako:input.generated.${loader.code.class_name.lower()}.h```
+* Loader template(render for loader): `l:<header template path>:<output path rule>`
+    > Example: `l:input.h.mako:input.generated.${loader.code.class_name.lower()}.h`
+
+* File template(render for loader): `f:<header template path>:<output path rule>`
+    > Example: `f:input.h.mako:input.generated.h`
 
 ## For developers
 

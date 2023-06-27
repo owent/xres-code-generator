@@ -14,10 +14,35 @@ import pb_loader
 LOWERCASE_RULE = re.compile("[a-z]")
 
 @supports_caller
+def UECppUClassNameFromString(context, origin_class_name):
+  pb_set = context.get("pb_set", runtime.UNDEFINED)
+  ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
+  return "U" + ue_type_prefix + pb_loader.MakoToCamelName(context, origin_class_name)
+
+@supports_caller
 def UECppUClassName(context, pb_msg):
   pb_set = context.get("pb_set", runtime.UNDEFINED)
   ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
   return "U" + ue_type_prefix + pb_loader.MakoToCamelName(context, pb_msg.full_name)
+
+@supports_caller
+def UECppMessageIsMap(context, pb_msg_proto):
+  if pb_msg_proto.options:
+    return pb_msg_proto.options.map_entry
+  return False
+
+@supports_caller
+def UECppMessageGetMapKVFields(context, pb_msg_proto):
+  if not UECppMessageIsMap(context, pb_msg_proto):
+    return None
+  key_field = None
+  value_field = None
+  for field in pb_msg_proto.field:
+    if field.name == "key":
+      key_field = field
+    elif field.name == "value":
+      value_field = field
+  return (key_field, value_field)
 
 @supports_caller
 def UECppMessageFieldName(context, pb_field_proto):
@@ -42,6 +67,34 @@ def UECppMessageFieldIsMessage(context, pb_field_proto):
   return pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE
 
 @supports_caller
+def UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto):
+  if pb_field_proto.type != pb2.FieldDescriptorProto.TYPE_MESSAGE:
+    return None
+  pb_set = context.get("pb_set", runtime.UNDEFINED)
+  pb_msg_inst = pb_set.get_msg_by_type(pb_field_proto.type_name)
+  if not pb_msg_inst:
+    pb_msg_inst = pb_set.get_msg_by_type(pb_msg.full_name + '.' + pb_field_proto.type_name)
+  if not pb_msg_inst:
+    pb_msg_inst = pb_set.get_msg_by_type(pb_msg.pb_file.package + '.' + pb_field_proto.type_name)
+  return pb_msg_inst
+
+@supports_caller
+def UECppMessageFieldIsMap(context, pb_msg, pb_field_proto):
+  if pb_field_proto.type != pb2.FieldDescriptorProto.TYPE_MESSAGE:
+    return False
+  return UECppMessageIsMap(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto).descriptor_proto)
+
+@supports_caller
+def UECppMessageFieldGetMapKVFields(context, pb_msg, pb_field_proto):
+  if pb_field_proto.type != pb2.FieldDescriptorProto.TYPE_MESSAGE:
+    return None
+  pb_msg_inst = UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto)
+  res = UECppMessageGetMapKVFields(context, pb_msg_inst.descriptor_proto)
+  if res is None:
+    return None
+  return (pb_msg_inst, res[0], res[1])
+
+@supports_caller
 def UECppMessageFieldIsRepeated(context, pb_field_proto):
   return pb_field_proto.label == pb2.FieldDescriptorProto.LABEL_REPEATED
 
@@ -58,19 +111,34 @@ def UECppUEnumValueName(context, pb_enum, pb_enum_value_proto):
 
 @supports_caller
 def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto):
-  pb_set = context.get("pb_set", runtime.UNDEFINED)
+  # pb_set = context.get("pb_set", runtime.UNDEFINED)
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
-    pb_msg_inst = pb_set.get_msg_by_type(pb_field_proto.type_name)
-    if not pb_msg_inst:
-      pb_msg_inst = pb_set.get_msg_by_type(pb_msg.full_name + '.' + pb_field_proto.type_name)
-    if not pb_msg_inst:
-      pb_msg_inst = pb_set.get_msg_by_type(pb_msg.pb_file.package + '.' + pb_field_proto.type_name)
-    return UECppUClassName(context, pb_msg_inst)
+    return UECppUClassName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto))
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_ENUM:
-    pb_enum_inst = pb_set.get_enum_by_type(pb_field_proto.type_name)
-    if not pb_enum_inst:
-      pb_enum_inst = pb_set.get_enum_by_type(pb_msg.full_name + '.' + pb_field_proto.type_name)
-    if not pb_enum_inst:
-      pb_enum_inst = pb_set.get_enum_by_type(pb_msg.pb_file.package + '.' + pb_field_proto.type_name)
-    return UECppUEnumName(context, pb_enum_inst)
+    # UE blue print only support enum type base uint8, but protobuf use int32 instead
+    return 'int32'
+    # pb_enum_inst = pb_set.get_enum_by_type(pb_field_proto.type_name)
+    # if not pb_enum_inst:
+    #   pb_enum_inst = pb_set.get_enum_by_type(pb_msg.full_name + '.' + pb_field_proto.type_name)
+    # if not pb_enum_inst:
+    #   pb_enum_inst = pb_set.get_enum_by_type(pb_msg.pb_file.package + '.' + pb_field_proto.type_name)
+    # return UECppUEnumName(context, pb_enum_inst)
   return pb_loader.MakoPbMsgGetPbFieldUECppType(context, pb_field_proto)
+
+@supports_caller
+def UECppGetLoaderIndexKeyDecl(context, pb_msg, pb_msg_index):
+    decls = []
+    for fd in pb_msg_index.fields:
+        decls.append("{0} {1}".format(UECppMessageFieldTypeName(context, pb_msg, fd), pb_loader.MakoToCamelName(context, fd.name)))
+    return ", ".join(decls)
+
+@supports_caller
+def UECppGetLoaderIndexKeyParams(context, pb_msg, pb_msg_index):
+    decls = []
+    for fd in pb_msg_index.fields:
+        fd_type = UECppMessageFieldTypeName(context, pb_msg, fd)
+        if fd_type == 'FString':
+            decls.append("TCHAR_TO_ANSI(*" + pb_loader.MakoToCamelName(context, fd.name) + ")")
+        else:
+            decls.append("static_cast<" + pb_loader.MakoPbMsgGetPbFieldCppType(context, fd) + ">(" + pb_loader.MakoToCamelName(context, fd.name) + ")")
+    return ", ".join(decls)

@@ -2,19 +2,25 @@
 <%!
 import time
 import os
-%><%namespace name="ue_excel_utils" module="UEExcelUtils"/><%
-file_path_prefix = pb_file.get_file_path_without_ext()
+%><%namespace name="ue_excel_utils" module="UEExcelUtils"/><%namespace name="pb_loader" module="pb_loader"/><%
 protobuf_include_prefix = pb_set.get_custom_variable("protobuf_include_prefix")
 protobuf_include_suffix = pb_set.get_custom_variable("protobuf_include_suffix")
 ue_api_definition = pb_set.get_custom_variable("ue_api_definition")
 if ue_api_definition:
   ue_api_definition = ue_api_definition + " "
+
+file_path_prefix = os.path.relpath(output_file, output_dir).replace("\\", "/")
+if file_path_prefix.endswith(".cc"):
+  file_path_prefix = file_path_prefix[:-3]
+elif file_path_prefix.endswith(".cpp") or file_path_prefix.endswith(".cxx"):
+  file_path_prefix = file_path_prefix[:-4]
+else:
+  file_path_prefix = file_path_prefix
+
 %>// Copyright ${time.strftime("%Y", time.localtime()) } atframework
 // Created by xres-code-generator for ${pb_file.name}, please don't edit it
 
-#pragma once
-
-#include "${pb_set.get_custom_variable("ue_include_prefix", "ExcelLoader")}/${file_path_prefix}.h"
+#include "${file_path_prefix}.h"
 
 % if protobuf_include_prefix:
 // clang-format off
@@ -22,7 +28,7 @@ if ue_api_definition:
 // clang-format on
 % endif
 
-#include "${file_path_prefix}.pb.h"
+#include "${pb_file.get_file_path_without_ext()}.pb.h"
 % if include_headers:
 %   for include_header in include_headers:
 #include "${include_header}"
@@ -40,12 +46,13 @@ if ue_api_definition:
 message_inst = pb_file.pb_msgs[message_full_path]
 message_class_name = ue_excel_utils.UECppUClassName(message_inst)
 cpp_pb_message_type = message_inst.full_name.replace(".", "::")
-%>// ========================== ${message_class_name} ==========================
+%>
+// ========================== ${message_class_name} ==========================
 ${ue_api_definition}${message_class_name}::${message_class_name}() : Super(), current_message_(nullptr)
 {
 }
 
-${ue_api_definition}void ${message_class_name}::_InternalBindLifetime(std::shared_ptr<goolge::protobuf::Message> Lifetime, const goolge::protobuf::Message& CurrentMessage)
+${ue_api_definition}void ${message_class_name}::_InternalBindLifetime(std::shared_ptr<const goolge::protobuf::Message> Lifetime, const goolge::protobuf::Message& CurrentMessage)
 {
     current_message_ = &CurrentMessage;
     lifetime_ = Lifetime;
@@ -100,6 +107,47 @@ ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${messag
     ));
 %          endif
 }
+%       if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
+<%
+field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
+field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1])
+field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2])
+%>
+${ue_api_definition}${field_message_cpp_ue_value_type_name} ${message_class_name}::Find${message_field_var_name}(${field_message_cpp_ue_key_type_name} Index, bool& IsValid)
+{
+%           if field_message_cpp_ue_key_type_name == "FString":
+    auto iter = static_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}().find(TCHAR_TO_UTF8(*Index));
+%           else:
+    auto iter = static_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}().find(static_cast<${pb_loader.MakoPbMsgGetPbFieldCppType(field_message_with_map_kv_fields[1])}>(Index));
+%           endif
+    IsValid = iter != static_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}().end();
+    if (!IsValid)
+    {
+%           if field_message_cpp_ue_value_type_name == "bool":
+        return false;
+%           elif field_message_cpp_ue_value_type_name == "float":
+        return 0.0f;
+%           elif field_message_cpp_ue_value_type_name == "FString":
+        return FString();
+%           elif ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
+        return static_cast<${field_message_cpp_ue_value_type_name}>(0);
+%           elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
+        return ${field_message_cpp_ue_value_type_name}();
+%           else:
+        return static_cast<${field_message_cpp_ue_value_type_name}>(0);
+%           endif
+    }
+%           if field_message_cpp_ue_value_type_name == "FString":
+    return FString(iter->second.c_str());
+%           elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
+    ${field_message_cpp_ue_value_type_name} Value;
+    Value._InternalBindLifetime(Lifetime, iter->second);
+    return Value;
+%           else:
+    return static_cast<${field_message_cpp_ue_value_type_name}>(iter->second);
+%           endif
+}
+%         endif
 %       else:
 ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${message_field_var_name}(bool& IsValid)
 {

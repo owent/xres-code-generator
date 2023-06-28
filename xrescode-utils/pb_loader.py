@@ -1180,6 +1180,23 @@ class PbFile:
         for ns in package_names:
             ns_ls.append("{0}  // namespace {1}".format("}", ns))
         return "\n".join(ns_ls)
+    
+    def get_field_cpp_protobuf_type(self, pb_field_proto):
+        if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_ENUM:
+            enum_descriptor_proto = self.db.get_enum(pb_field_proto.type_name)
+            if enum_descriptor_proto:
+                return pb_field_proto.type_name.replace(".", "::")
+            enum_descriptor_proto = self.db.get_enum(self.package + "." + pb_field_proto.type_name)
+            if enum_descriptor_proto:
+                return (self.package + "." + pb_field_proto.type_name).replace(".", "::")
+        elif pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
+            msg_descriptor_proto = self.db.get_message(pb_field_proto.type_name)
+            if msg_descriptor_proto:
+                return pb_field_proto.type_name.replace(".", "::")
+            msg_descriptor_proto = self.db.get_message(self.package + "." + pb_field_proto.type_name)
+            if msg_descriptor_proto:
+                return (self.package + "." + pb_field_proto.type_name).replace(".", "::")
+        return PbMsgGetPbFieldCppType(pb_field_proto)
 
 class PbEnum:
     def __init__(self, db, pb_file, pb_enum, nested_from_prefix, index_set):
@@ -1263,7 +1280,29 @@ class PbMsg:
             return base_file + ".pb.h"
         else:
             return base_file[0:suffix_pos] + ".pb.h"
-
+        
+    def get_field_cpp_protobuf_type(self, pb_field_proto):
+        if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_ENUM:
+            enum_descriptor_proto = self.db.get_enum(pb_field_proto.type_name)
+            if enum_descriptor_proto:
+                return pb_field_proto.type_name.replace(".", "::")
+            enum_descriptor_proto = self.db.get_enum(self.full_name + "." + pb_field_proto.type_name)
+            if enum_descriptor_proto:
+                return (self.full_name + "." + pb_field_proto.type_name).replace(".", "::")
+            enum_descriptor_proto = self.db.get_enum(self.pb_file.package + "." + pb_field_proto.type_name)
+            if enum_descriptor_proto:
+                return (self.pb_file.package + "." + pb_field_proto.type_name).replace(".", "::")
+        elif pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
+            msg_descriptor_proto = self.db.get_message(pb_field_proto.type_name)
+            if msg_descriptor_proto:
+                return pb_field_proto.type_name.replace(".", "::")
+            msg_descriptor_proto = self.db.get_message(self.full_name + "." + pb_field_proto.type_name)
+            if msg_descriptor_proto:
+                return (self.full_name + "." + pb_field_proto.type_name).replace(".", "::")
+            msg_descriptor_proto = self.db.get_message(self.pb_file.package + "." + pb_field_proto.type_name)
+            if msg_descriptor_proto:
+                return (self.pb_file.package + "." + pb_field_proto.type_name).replace(".", "::")
+        return PbMsgGetPbFieldCppType(pb_field_proto)
 
 class PbDescSet:
     def __init__(self,

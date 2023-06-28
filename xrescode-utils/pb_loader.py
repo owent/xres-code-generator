@@ -1148,6 +1148,13 @@ class PbFile:
     def get_file_base_camelname(self):
         return ToCamelName(self.get_file_basename_without_ext())
     
+    def get_file_path_camelname(self):
+        res = os.path.dirname(self.name)
+        if res:
+            return res + "/" + self.get_file_base_camelname()
+        else:
+            return self.get_file_base_camelname()
+    
     def get_cpp_namespace_decl_begin(self):
         if not self.package:
             return ""

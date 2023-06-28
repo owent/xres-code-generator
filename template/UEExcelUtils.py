@@ -110,10 +110,10 @@ def UECppUEnumValueName(context, pb_enum, pb_enum_value_proto):
   return LOWERCASE_RULE.sub("", ret) + "_" + pb_enum_value_proto.name
 
 @supports_caller
-def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto):
+def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto, message_type_suffix=""):
   # pb_set = context.get("pb_set", runtime.UNDEFINED)
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
-    return UECppUClassName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto))
+    return UECppUClassName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto)) + message_type_suffix
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_ENUM:
     # UE blue print only support enum type base uint8, but protobuf use int32 instead
     return 'int32'

@@ -142,8 +142,7 @@ ${ue_api_definition}${field_message_cpp_ue_value_type_name} ${message_class_name
 ${ue_api_definition}TArray<${cpp_ue_field_type_name}> ${message_class_name}::GetAllOf${message_field_var_name}()
 {
     TArray<${cpp_ue_field_type_name}> Ret;
-    IsValid = nullptr != current_message_;
-    if (!IsValid)
+    if (nullptr == current_message_)
     {
         return Ret;
     }
@@ -197,35 +196,47 @@ ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${messag
 }
 %         endif
 %       else:
+%         if not ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto) or pb_field_proto.name == "key" or pb_field_proto.name == "value":
 ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${message_field_var_name}(bool& IsValid)
 {
     IsValid = nullptr != current_message_;
     if (!IsValid)
     {
-%          if cpp_ue_field_type_name == "bool":
+%            if cpp_ue_field_type_name == "bool":
         return false;
-%          elif cpp_ue_field_type_name == "float":
+%            elif cpp_ue_field_type_name == "float":
         return 0.0f;
-%          elif cpp_ue_field_type_name == "FString":
+%            elif cpp_ue_field_type_name == "FString":
         return FString();
-%          elif ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
+%            elif ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
         return static_cast<${cpp_ue_field_type_name}>(0);
-%          elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
+%            elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
         return nullptr;
-%          else:
+%            else:
         return static_cast<${cpp_ue_field_type_name}>(0);
-%          endif
+%            endif
     }
-%          if ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
+<%
+if ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto):
+  message_field_var_get_data_codes = 'reinterpret_cast<' + protobuf_namespace_prefix + "::Map<" + message_inst_map_key_field_cpp_pb_type + ", " + message_inst_map_value_field_cpp_pb_type + ">::const_pointer>(current_message_)"
+  if pb_field_proto.name == "key":
+    message_field_var_get_data_codes += "->first"
+  else:
+    message_field_var_get_data_codes += "->second"
+else:
+  message_field_var_get_data_codes = 'reinterpret_cast<const ' + cpp_pb_message_type + '*>(current_message_)->' + cpp_pb_field_var_name + '()'
+%>
+%            if ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
     ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>(this);
-    Value->_InternalBindLifetime(lifetime_, reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}());
+    Value->_InternalBindLifetime(lifetime_, ${message_field_var_get_data_codes});
     return Value;
-%          elif cpp_ue_field_type_name == "FString":
-    return FString(reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}().c_str());
-%          else:
-    return static_cast<${cpp_ue_field_type_name}>(reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}());
-%          endif
+%            elif cpp_ue_field_type_name == "FString":
+    return FString(${message_field_var_get_data_codes}.c_str());
+%            else:
+    return static_cast<${cpp_ue_field_type_name}>(${message_field_var_get_data_codes});
+%            endif
 }
+%         endif
 %       endif
 %     endif
 %   endfor

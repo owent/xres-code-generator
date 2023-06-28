@@ -144,32 +144,34 @@ message_inst_map_value_field_cpp_pb_type = message_inst.get_field_cpp_protobuf_t
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 %>
 %       if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get Size Of ${message_field_var_name}")
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
     int64 Get${message_field_var_name}Size();
 %         if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
 <%
 field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
 %>
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get ${message_field_var_name} By Key")
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
     ${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*")} Find${message_field_var_name}(${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1])} Index, bool& IsValid);
 
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get All Of ${message_field_var_name}")
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
     TArray<${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*")}> GetAllOf${message_field_var_name}();
 %         else:
 
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get ${message_field_var_name}")
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
     ${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*")} Get${message_field_var_name}(int64 Index, bool& IsValid);
 %         endif
 %       else:
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get ${message_field_var_name}")
+%         if not ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto) or pb_field_proto.name == "key" or pb_field_proto.name == "value":
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
     ${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*")} Get${message_field_var_name}(bool& IsValid);
+%         endif
 %       endif
 %     endif
 %   endfor
 
 private:
 %   if ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto):
-    // The real message type is ${protobuf_namespace_prefix}::Map<${message_inst_map_key_field_cpp_pb_type}, ${message_inst_map_value_field_cpp_pb_type}>
+    // The real message type is ${protobuf_namespace_prefix}::Map<${message_inst_map_key_field_cpp_pb_type}, ${message_inst_map_value_field_cpp_pb_type}>::const_pointer
     const void* current_message_;
 %   else:
     // The real message type is ${message_full_path}

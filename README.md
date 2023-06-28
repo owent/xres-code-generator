@@ -108,9 +108,10 @@ int main() {
 
 ```bash
 python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/uepbcpp"  \
-    --set ue_include_prefix=ExcelLoader --set ue_type_prefix=ExcelLoader --file-include-well-known-types \
+    --set ue_include_prefix=ExcelLoader --set ue_type_prefix=ExcelLoader \
     --set ue_api_definition=EXCELLOADER_API --add-path "$REPO_DIR/template" \
     --set "ue_excel_loader_include_rule=ExcelLoader/%(file_path_camelname)s.h" \
+    --set "ue_excel_group_api_include_rule=%(file_basename_without_ext)s.h" \
     -f "H:$REPO_DIR/template/UEExcelLoader.h.mako:ExcelLoader/\${pb_file.get_file_path_camelname()}.h" \
     -f "S:$REPO_DIR/template/UEExcelLoader.cpp.mako:ExcelLoader/\${pb_file.get_file_path_camelname()}.cpp" \
     -g "H:$REPO_DIR/template/UEExcelGroupApi.h.mako" -g "S:$REPO_DIR/template/UEExcelGroupApi.cpp.mako" \

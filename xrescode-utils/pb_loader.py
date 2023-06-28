@@ -1314,7 +1314,9 @@ class PbDescSet:
                  exclude_tags=[],
                  shared_outer_type='org.xresloader.pb.xresloader_datablocks',
                  shared_outer_field='data_block',
-                 index_extended_well_known_type=False):
+                 index_extended_well_known_type=False,
+                 index_include_well_known_type=set(),
+                 index_exclude_well_known_type=set()):
         self.pb_file = pb_file_path
         self.proto_v3 = proto_v3
         self.pb_include_prefix = pb_include_prefix
@@ -1370,8 +1372,12 @@ class PbDescSet:
                 self.pb_enums[pb_enum.full_name] = pb_enum
                 pb_file.pb_enums[pb_enum.full_name] = pb_enum
             self.pb_files[pb_file_proto.name] = pb_file
-        if index_extended_well_known_type:
+        if index_extended_well_known_type or len(index_include_well_known_type) > 0:
             for pb_file_proto in self.db.extended_well_known_files:
+                if len(index_include_well_known_type) > 0 and pb_file_proto.name not in index_include_well_known_type:
+                    continue
+                if pb_file_proto.name in index_exclude_well_known_type:
+                    continue
                 pb_file = PbFile(self.db, pb_file_proto, self.index_set)
                 for enum_type_proto in pb_file_proto.enum_type:
                     pb_enum = PbEnum(self.db, pb_file, enum_type_proto, None, self.index_set)

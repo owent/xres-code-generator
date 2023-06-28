@@ -80,22 +80,22 @@ message_class_name = ue_excel_utils.UECppUClassName(message_inst)
 %   for loader in message_inst.loaders:
     // ---------------------------------------- ${loader.code.class_name} ----------------------------------------
 %     for code_index in loader.code.indexes:
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get Size Of ${code_index.name} In ${loader.code.class_name}")
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
     int64 Get${pb_loader.MakoToCamelName(loader.code.class_name)}_SizeOf_${pb_loader.MakoToCamelName(code_index.name)}();
 
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get All ${loader.code.class_name} Of ${code_index.name}")
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
     TArray<${message_class_name}*> GetAll${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}();
 %       if code_index.is_list():
 
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get ${loader.code.class_name} Of ${code_index.name}")
-    TArray<${message_class_name}*> Get${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, bool& IsValid);
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
+    TArray<${message_class_name}*> GetRow${pb_loader.MakoToCamelName(loader.code.class_name)}_AllOf_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, bool& IsValid);
 
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get ${loader.code.class_name} Of ${code_index.name}")
-    ${message_class_name}* Get${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, int64 Index, bool& IsValid);
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
+    ${message_class_name}* GetRow${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, int64 Index, bool& IsValid);
 %       else:
 
-    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get ${loader.code.class_name} Of ${code_index.name}")
-    ${message_class_name}* Get${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, bool& IsValid);
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
+    ${message_class_name}* GetRow${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, bool& IsValid);
 %       endif
 
 %     endfor

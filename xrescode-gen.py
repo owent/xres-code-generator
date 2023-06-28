@@ -233,6 +233,18 @@ def main():
         dest="file_include_well_known_types",
         default=False)
     parser.add_option(
+        "--file-include-well-known-type",
+        action="append",
+        help="generate file templates only for included well known types",
+        dest="file_include_well_known_type",
+        default=[])
+    parser.add_option(
+        "--file-exclude-well-known-type",
+        action="append",
+        help="generate file templates for well known types but exclude some of them",
+        dest="file_exclude_well_known_type",
+        default=[])
+    parser.add_option(
         "--set",
         action="append",
         help="set custom variables for rendering templates.",
@@ -374,7 +386,9 @@ def main():
                        exclude_tags=options.exclude_tags,
                        shared_outer_type=options.shared_outer_type,
                        shared_outer_field=options.shared_outer_field,
-                       index_extended_well_known_type=options.file_include_well_known_types)
+                       index_extended_well_known_type=options.file_include_well_known_types,
+                       index_include_well_known_type=set(options.file_include_well_known_type),
+                       index_exclude_well_known_type=set(options.file_exclude_well_known_type))
     
     for custom_var in options.set_vars:
         key_value_pair = custom_var.split("=")

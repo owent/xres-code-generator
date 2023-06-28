@@ -19,6 +19,7 @@ else:
 ue_excel_loader_include_rule = pb_set.get_custom_variable("ue_excel_loader_include_rule")
 if not ue_excel_loader_include_rule:
   ue_excel_loader_include_rule = pb_set.get_custom_variable("ue_include_prefix", "ExcelLoader") + "/%(file_path_camelname)s.h"
+ue_excel_group_api_include_rule = pb_set.get_custom_variable("ue_excel_group_api_include_rule", ue_excel_loader_include_rule)
 
 config_manager_include = pb_set.get_custom_variable("config_manager_include", "config/excel/config_manager.h")
 config_group_wrapper_type_name = ue_excel_utils.UECppUClassNameFromString("ConfigGroupWrapper")
@@ -34,7 +35,7 @@ message_include_format_args = {
   "file_base_camelname": message_include_args_file_base_camelname,
   "file_path_camelname": os.path.dirname(file_path_prefix) + "/" + message_include_args_file_base_camelname,
 }
-current_file_include_path = ue_excel_loader_include_rule % message_include_format_args
+current_file_include_path = ue_excel_group_api_include_rule % message_include_format_args
 current_file_include_path = re.sub("//+", "/", current_file_include_path)
 %>
 #include "${current_file_include_path}"
@@ -81,15 +82,15 @@ ${ue_api_definition}TArray<${message_class_name}*> ${config_group_wrapper_type_n
         for(auto& item : item_list.second)
         {
             ${message_class_name}* Value = NewObject<${message_class_name}>();
-            Value->_InternalBindConfigItem(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
-            Ret.Emplace(${message_class_name}(item));
+            Value->_InternalBindLifetime(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
+            Ret.Emplace(Value);
         }
     }
 %       else:
     for(auto& item : config_group_->${loader.get_cpp_public_var_name()}.get_all_of_${code_index.name}())
     {
         ${message_class_name}* Value = NewObject<${message_class_name}>();
-        Value->_InternalBindConfigItem(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
+        Value->_InternalBindLifetime(std::static_pointer_cast<const ::google::protobuf::Message>(item.second), *item.second);
         Ret.Emplace(Value);
     }
 %       endif
@@ -97,7 +98,7 @@ ${ue_api_definition}TArray<${message_class_name}*> ${config_group_wrapper_type_n
 }
 %       if code_index.is_list():
 
-${ue_api_definition}TArray<${message_class_name}*> ${config_group_wrapper_type_name}::Get${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, bool& IsValid)
+${ue_api_definition}TArray<${message_class_name}*> ${config_group_wrapper_type_name}::GetRow${pb_loader.MakoToCamelName(loader.code.class_name)}_AllOf_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, bool& IsValid)
 {
     TArray<${message_class_name}*> Ret;
     if(!config_group_)
@@ -116,14 +117,14 @@ ${ue_api_definition}TArray<${message_class_name}*> ${config_group_wrapper_type_n
 
     for(auto& item : *item_list) {
         ${message_class_name}* Value = NewObject<${message_class_name}>();
-        Value->_InternalBindConfigItem(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
-        Ret.Emplace(${message_class_name}(item));
+        Value->_InternalBindLifetime(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
+        Ret.Emplace(Value);
     }
 
     return Ret;
 }
 
-${ue_api_definition}${message_class_name}* ${config_group_wrapper_type_name}::Get${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, int64 Index, bool& IsValid)
+${ue_api_definition}${message_class_name}* ${config_group_wrapper_type_name}::GetRow${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, int64 Index, bool& IsValid)
 {
     if(!config_group_)
     {
@@ -139,12 +140,12 @@ ${ue_api_definition}${message_class_name}* ${config_group_wrapper_type_name}::Ge
     }
 
     ${message_class_name}* Value = NewObject<${message_class_name}>();
-    Value->_InternalBindConfigItem(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
+    Value->_InternalBindLifetime(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
     return Value;
 }
 %       else:
 
-${ue_api_definition}${message_class_name}* ${config_group_wrapper_type_name}::Get${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, bool& IsValid)
+${ue_api_definition}${message_class_name}* ${config_group_wrapper_type_name}::GetRow${pb_loader.MakoToCamelName(loader.code.class_name)}_Of_${pb_loader.MakoToCamelName(code_index.name)}(${ue_excel_utils.UECppGetLoaderIndexKeyDecl(message_inst, code_index)}, bool& IsValid)
 {
     if(!config_group_)
     {
@@ -160,7 +161,7 @@ ${ue_api_definition}${message_class_name}* ${config_group_wrapper_type_name}::Ge
     }
 
     ${message_class_name}* Value = NewObject<${message_class_name}>();
-    Value->_InternalBindConfigItem(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
+    Value->_InternalBindLifetime(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
     return Value;
 }
 %       endif

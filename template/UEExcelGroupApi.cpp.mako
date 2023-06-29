@@ -77,6 +77,12 @@ ${ue_api_definition}TArray<${message_class_name}*> ${config_group_wrapper_type_n
     }
 
 %       if code_index.is_list():
+    size_t TotalSize = 0;
+    for(auto& item_list : config_group_->${loader.get_cpp_public_var_name()}.get_all_of_${code_index.name}())
+    {
+        TotalSize += item_list.second.size();
+    }
+    Ret.Reserve(static_cast<TArray<${message_class_name}>::SizeType>(TotalSize));
     for(auto& item_list : config_group_->${loader.get_cpp_public_var_name()}.get_all_of_${code_index.name}())
     {
         for(auto& item : item_list.second)
@@ -87,6 +93,7 @@ ${ue_api_definition}TArray<${message_class_name}*> ${config_group_wrapper_type_n
         }
     }
 %       else:
+    Ret.Reserve(static_cast<TArray<${message_class_name}>::SizeType>(config_group_->${loader.get_cpp_public_var_name()}.get_all_of_${code_index.name}().size()));
     for(auto& item : config_group_->${loader.get_cpp_public_var_name()}.get_all_of_${code_index.name}())
     {
         ${message_class_name}* Value = NewObject<${message_class_name}>();
@@ -115,6 +122,7 @@ ${ue_api_definition}TArray<${message_class_name}*> ${config_group_wrapper_type_n
     }
     IsValid = true;
 
+    Ret.Reserve(static_cast<TArray<${message_class_name}>::SizeType>(item_list->size()));
     for(auto& item : *item_list) {
         ${message_class_name}* Value = NewObject<${message_class_name}>();
         Value->_InternalBindLifetime(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);

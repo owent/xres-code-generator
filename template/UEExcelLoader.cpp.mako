@@ -131,7 +131,7 @@ ${ue_api_definition}${field_message_cpp_ue_value_type_name} ${message_class_name
 %           if field_message_cpp_ue_value_type_name == "FString":
     return FString(iter->second.c_str());
 %           elif ue_excel_utils.UECppMessageFieldIsMessage(field_message_with_map_kv_fields[2]):
-    ${field_message_cpp_ue_value_type_name} Value = NewObject<${field_message_cpp_ue_value_origin_type_name}>(this);
+    ${field_message_cpp_ue_value_type_name} Value = NewObject<${field_message_cpp_ue_value_origin_type_name}>();
     Value->_InternalBindLifetime(lifetime_, iter->second);
     return Value;
 %           else:
@@ -147,9 +147,10 @@ ${ue_api_definition}TArray<${cpp_ue_field_type_name}> ${message_class_name}::Get
         return Ret;
     }
     auto& map_entrys = reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}();
+    Ret.Reserve(static_cast<TArray<${cpp_ue_field_type_name}>::SizeType>(map_entrys.size()));
     for(auto& item : map_entrys)
     {
-        ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>(this);
+        ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>();
         Value->_InternalBindLifetime(lifetime_, &item);
         Ret.Emplace(Value);
     }
@@ -179,7 +180,7 @@ ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${messag
     }
 
 %          if ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
-    ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>(this);
+    ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>();
     Value->_InternalBindLifetime(lifetime_, reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}(
         static_cast<int>(Index)
     ));
@@ -227,7 +228,7 @@ else:
   message_field_var_get_data_codes = 'reinterpret_cast<const ' + cpp_pb_message_type + '*>(current_message_)->' + cpp_pb_field_var_name + '()'
 %>
 %            if ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
-    ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>(this);
+    ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>();
     Value->_InternalBindLifetime(lifetime_, ${message_field_var_get_data_codes});
     return Value;
 %            elif cpp_ue_field_type_name == "FString":

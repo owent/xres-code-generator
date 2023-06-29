@@ -191,7 +191,7 @@ namespace details {
   }
 }
 
-EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::${pb_msg_class_name}() {
+EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::${pb_msg_class_name}(): all_loaded_(false) {
 }
 
 EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::~${pb_msg_class_name}(){
@@ -207,6 +207,10 @@ EXCEL_CONFIG_LOADER_API int ${pb_msg_class_name}::on_inited() {
 
 EXCEL_CONFIG_LOADER_API int ${pb_msg_class_name}::load_all() {
   int ret = 0;
+  if (all_loaded_) {
+    return ret;
+  }
+
   ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh(load_file_lock_);
   for (std::unordered_map<std::string, bool>::iterator iter = file_status_.begin(); iter != file_status_.end(); ++ iter) {
     if (!iter->second) {
@@ -220,6 +224,7 @@ EXCEL_CONFIG_LOADER_API int ${pb_msg_class_name}::load_all() {
     }
   }
 
+  all_loaded_ = true;
   return ret;
 }
 
@@ -346,6 +351,7 @@ int ${pb_msg_class_name}::load_list(const char* file_list_path) {
 }
 
 int ${pb_msg_class_name}::reload_file_lists() {
+  all_loaded_ = false;
 % if loader.code.file_list:
   return load_list("${loader.code.file_list}");
 % else:
@@ -683,6 +689,9 @@ EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::${code_index.name}_value_type ${pb
 % endif
 
 EXCEL_CONFIG_LOADER_API const ${pb_msg_class_name}::${code_index.name}_container_type& ${pb_msg_class_name}::get_all_of_${code_index.name}() const {
+  if (!all_loaded_) {
+    const_cast<${pb_msg_class_name}*>(this)->load_all();
+  }
   return ${code_index.name}_data_;
 }
 % endfor

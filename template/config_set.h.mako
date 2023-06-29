@@ -150,6 +150,7 @@ private:
   ::excel::lock::spin_rw_lock           load_file_lock_;
   std::unordered_map<std::string, bool> file_status_; // true: already loaded
   std::list<org::xresloader::pb::xresloader_data_source> datasource_;
+  bool all_loaded_;
 
 % for code_index in loader.code.indexes:
   // ------------------------- index: ${code_index.name} -------------------------

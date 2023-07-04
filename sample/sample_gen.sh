@@ -34,9 +34,11 @@ PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")"
   --set ue_api_definition=EXCELLOADER_API --add-path "$REPO_DIR/template" \
   --set "ue_excel_loader_include_rule=ExcelLoader/%(file_path_camelname)s.h" \
   --set "ue_excel_group_api_include_rule=%(file_basename_without_ext)s.h" \
+  --set "ue_excel_enum_include_rule=ExcelEnum/%(file_basename_without_ext)s.h" \
   -f "H:$REPO_DIR/template/UEExcelLoader.h.mako:ExcelLoader/\${pb_file.get_file_path_camelname()}.h" \
   -f "S:$REPO_DIR/template/UEExcelLoader.cpp.mako:ExcelLoader/\${pb_file.get_file_path_camelname()}.cpp" \
   -g "H:$REPO_DIR/template/UEExcelGroupApi.h.mako" -g "S:$REPO_DIR/template/UEExcelGroupApi.cpp.mako" \
+  -f "H:$REPO_DIR/template/UEExcelEnum.h.mako:ExcelEnum/\${pb_file.get_file_path_camelname()}.h" \
   "$@"
 
 # exit $?

@@ -105,6 +105,10 @@ def UECppUEnumName(context, pb_enum):
   return "E" + ue_type_prefix + pb_loader.MakoToCamelName(context, pb_enum.full_name)
 
 @supports_caller
+def UECppUEnumSupportBlueprint(context, pb_enum):
+  return pb_enum.enum_value_min >= 0 and pb_enum.enum_value_max <= 255
+
+@supports_caller
 def UECppUEnumValueName(context, pb_enum, pb_enum_value_proto):
   ret = UECppUEnumName(context, pb_enum)
   return LOWERCASE_RULE.sub("", ret) + "_" + pb_enum_value_proto.name

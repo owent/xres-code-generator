@@ -1211,6 +1211,13 @@ class PbEnum:
         self.pb_enum = db.get_enum(self.full_name)
         self.descriptor_proto = pb_enum
         self.index_set = index_set
+        self.enum_value_min = 0
+        self.enum_value_max = 0
+        for enum_value in pb_enum.value:
+            if enum_value.number < self.enum_value_min:
+                self.enum_value_min = enum_value.number
+            if enum_value.number > self.enum_value_max:
+                self.enum_value_max = enum_value.number
 
     def get_short_prefix(self, use_full_name=False):
         if use_full_name:

@@ -147,6 +147,7 @@ ${ue_api_definition}${message_class_name}* ${config_group_wrapper_type_name}::Ge
         return nullptr;
     }
 
+    IsValid = true;
     ${message_class_name}* Value = NewObject<${message_class_name}>();
     Value->_InternalBindLifetime(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
     return Value;
@@ -168,6 +169,7 @@ ${ue_api_definition}${message_class_name}* ${config_group_wrapper_type_name}::Ge
         return nullptr;
     }
 
+    IsValid = true;
     ${message_class_name}* Value = NewObject<${message_class_name}>();
     Value->_InternalBindLifetime(std::static_pointer_cast<const ::google::protobuf::Message>(item), *item);
     return Value;

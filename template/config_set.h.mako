@@ -23,6 +23,11 @@ import time
 
 #include "spin_rw_lock.h"
 
+% for block_file in pb_set.get_custom_blocks("custom_config_include"):
+// include custom_config_include: ${block_file}
+<%include file="${block_file}" />
+% endfor
+
 #ifndef EXCEL_CONFIG_LOADER_API
 #  define EXCEL_CONFIG_LOADER_API
 #endif

@@ -15,8 +15,8 @@ import time
 #include <string>
 #include <vector>
 
-% for block_file in pb_set.get_custom_blocks("custom_config_include"):
-// include custom_config_include: ${block_file}
+% for block_file in pb_set.get_custom_blocks("custom_config_easy_api_include"):
+// include custom_config_easy_api_include: ${block_file}
 <%include file="${block_file}" />
 % endfor
 

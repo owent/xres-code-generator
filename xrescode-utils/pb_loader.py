@@ -858,10 +858,14 @@ class PbMsgLoader:
         self.msg_prefix = msg_prefix
         self.nested_from_prefix = nested_from_prefix
         self.full_name = pb_msg.name
+        self.extended_nested_name = pb_msg.name
         if nested_from_prefix:
             self.full_name = nested_from_prefix + self.full_name
+            self.extended_nested_name = (nested_from_prefix + self.extended_nested_name).replace(".", "_")
+        self.extended_nested_full_name = self.extended_nested_name
         if pb_file.package:
             self.full_name = '{0}.{1}'.format(pb_file.package, pb_msg.name)
+            self.extended_nested_full_name = '{0}.{1}'.format(pb_file.package, self.extended_nested_name)
         self.code = None
         self.code_field = None
         self.pb_outer_class_name = None
@@ -1148,12 +1152,18 @@ class PbFile:
     def get_file_base_camelname(self):
         return ToCamelName(self.get_file_basename_without_ext())
     
-    def get_file_path_camelname(self):
+    def get_file_path_camelname(self, basename_prefix = ""):
         res = os.path.dirname(self.name)
         if res:
-            return res + "/" + self.get_file_base_camelname()
+            return res + "/" + basename_prefix + self.get_file_base_camelname()
         else:
             return self.get_file_base_camelname()
+        
+    def get_directory_path(self):
+        return os.path.dirname(self.name)
+    
+    def get_directory_camelname(self):
+        return ToCamelName(self.get_directory_path())
     
     def get_cpp_namespace_decl_begin(self):
         if not self.package:
@@ -1204,10 +1214,14 @@ class PbEnum:
         self.pb_file = pb_file
         self.nested_from_prefix = nested_from_prefix
         self.full_name = pb_enum.name
+        self.extended_nested_name = pb_enum.name
         if nested_from_prefix:
             self.full_name = nested_from_prefix + self.full_name
+            self.extended_nested_name = (nested_from_prefix + self.extended_nested_name).replace(".", "_")
+        self.extended_nested_full_name = self.extended_nested_name
         if pb_file.package:
             self.full_name = '{0}.{1}'.format(pb_file.package, self.full_name)
+            self.extended_nested_full_name = '{0}.{1}'.format(pb_file.package, self.extended_nested_full_name)
         self.pb_enum = db.get_enum(self.full_name)
         self.descriptor_proto = pb_enum
         self.index_set = index_set
@@ -1235,10 +1249,14 @@ class PbMsg:
         self.msg_prefix = msg_prefix
         self.nested_from_prefix = nested_from_prefix
         self.full_name = pb_msg_proto.name
+        self.extended_nested_name = pb_msg_proto.name
         if nested_from_prefix:
             self.full_name = nested_from_prefix + self.full_name
+            self.extended_nested_name = (nested_from_prefix + self.extended_nested_name).replace(".", "_")
+        self.extended_nested_full_name = self.extended_nested_name
         if pb_file.package:
             self.full_name = '{0}.{1}'.format(pb_file.package, self.full_name)
+            self.extended_nested_full_name = '{0}.{1}'.format(pb_file.package, self.extended_nested_full_name)
         self.pb_msg = db.get_message(self.full_name)
         self.descriptor_proto = pb_msg_proto
         self.loaders = []
@@ -1279,7 +1297,7 @@ class PbMsg:
 
     def has_loader(self):
         return len(self.loaders) > 0
-
+    
     def get_pb_header_path(self):
         base_file = os.path.basename(self.pb_file.name)
         suffix_pos = base_file.rfind('.')
@@ -1313,7 +1331,7 @@ class PbMsg:
 
 class PbDescSet:
     def __init__(self,
-                 pb_file_path,
+                 pb_file_paths,
                  tags=[],
                  msg_prefix='',
                  proto_v3=False,
@@ -1323,40 +1341,46 @@ class PbDescSet:
                  shared_outer_field='data_block',
                  index_extended_well_known_type=False,
                  index_include_well_known_type=set(),
-                 index_exclude_well_known_type=set()):
-        self.pb_file = pb_file_path
+                 index_exclude_well_known_type=set(),
+                 pb_exclude_files=[],
+                 pb_exclude_packages=[]):
         self.proto_v3 = proto_v3
         self.pb_include_prefix = pb_include_prefix
         self.custom_variables = dict()
-        local_pb_fds = pb2.FileDescriptorSet.FromString(
-            open(pb_file_path, 'rb').read())
+        self.pb_exclude_files = pb_exclude_files
+        self.pb_exclude_packages = pb_exclude_packages
         pb_file_has_xrescode_extension = False
-        for pb_file in local_pb_fds.file:
-            if os.path.basename(
-                    pb_file.name) == "xrescode_extensions_v3.proto":
-                has_xrescode_loader_message = False
-                has_xrescode_loader_extension = False
-                if pb_file.package != "xrescode":
-                    continue
-                for message_type in pb_file.message_type:
-                    if message_type.name == "xrescode_loader":
-                        has_xrescode_loader_message = True
+        for pb_file_path in pb_file_paths:
+            local_pb_fds = pb2.FileDescriptorSet.FromString(
+                open(pb_file_path, 'rb').read())
+            for pb_file in local_pb_fds.file:
+                if os.path.basename(
+                        pb_file.name) == "xrescode_extensions_v3.proto":
+                    has_xrescode_loader_message = False
+                    has_xrescode_loader_extension = False
+                    if pb_file.package != "xrescode":
+                        continue
+                    for message_type in pb_file.message_type:
+                        if message_type.name == "xrescode_loader":
+                            has_xrescode_loader_message = True
+                            break
+                    for extension in pb_file.extension:
+                        if extension.name == "loader":
+                            has_xrescode_loader_extension = True
+                            break
+                    if has_xrescode_loader_message and has_xrescode_loader_extension:
+                        pb_file_has_xrescode_extension = True
                         break
-                for extension in pb_file.extension:
-                    if extension.name == "loader":
-                        has_xrescode_loader_extension = True
-                        break
-                if has_xrescode_loader_message and has_xrescode_loader_extension:
-                    pb_file_has_xrescode_extension = True
-                    break
         self.db = PbDatabase()
         if pb_file_has_xrescode_extension:
-            self.db.load([pb_file_path])
+            self.db.load(pb_file_paths)
         else:
-            self.db.load([
+            pendig_to_load_files = [
                 os.path.join(os.path.dirname(__file__), '..', 'pb_extension',
                              'xrescode_extensions_v3.pb'), pb_file_path
-            ])
+            ]
+            pendig_to_load_files.extend(pb_file_paths)
+            self.db.load(pendig_to_load_files)
         self.index_set_type = self.db.get_enum('xrescode.xrescode_index_type')
         self.index_set = PbMsgIndexType(
             self.index_set_type.values_by_name['EN_INDEX_KV'],
@@ -1373,6 +1397,24 @@ class PbDescSet:
         self.shared_code_field = None
         for k in self.db.get_raw_file_descriptors():
             pb_file_proto = self.db.get_raw_file_descriptors()[k]
+            # skip by file pattern
+            if self.pb_exclude_files:
+                skip_current_file = False
+                for file_pattern in self.pb_exclude_files:
+                    if file_pattern.match(pb_file_proto.name):
+                        skip_current_file = True
+                        break
+                if skip_current_file:
+                    continue
+            # skip by package pattern
+            if self.pb_exclude_packages and pb_file_proto.package:
+                skip_current_file = False
+                for package_pattern in self.pb_exclude_packages:
+                    if package_pattern.match(pb_file_proto.package):
+                        skip_current_file = True
+                        break
+                if skip_current_file:
+                    continue
             pb_file = PbFile(self.db, pb_file_proto, self.index_set)
             for enum_type_proto in pb_file_proto.enum_type:
                 pb_enum = PbEnum(self.db, pb_file, enum_type_proto, None, self.index_set)

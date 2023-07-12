@@ -253,10 +253,20 @@ def main():
     )
     parser.add_option("-p",
                       "--pb",
-                      action="store",
+                      action="append",
                       help="set pb file path",
                       dest="pb",
-                      default=None)
+                      default=[])
+    parser.add_option("--pb-exclude-file",
+                      action="append",
+                      help="ignore pb file pattern(regex)",
+                      dest="pb_exclude_file",
+                      default=[])
+    parser.add_option("--pb-exclude-package",
+                      action="append",
+                      help="ignore pb package pattern(regex)",
+                      dest="pb_exclude_package",
+                      default=[])
     parser.add_option("-o",
                       "--output-dir",
                       action="store",
@@ -376,6 +386,9 @@ def main():
     template_paths.append(os.path.join(script_dir, 'xrescode-utils'))
     template_paths.append(os.path.join(script_dir, 'template'))
 
+    pb_exclude_files = [re.compile(rule) for rule in options.pb_exclude_file]
+    pb_exclude_packages = [re.compile(rule) for rule in options.pb_exclude_package]
+
     # parse pb file
     import pb_loader
     pb_set = pb_loader.PbDescSet(options.pb,
@@ -388,7 +401,9 @@ def main():
                        shared_outer_field=options.shared_outer_field,
                        index_extended_well_known_type=options.file_include_well_known_types,
                        index_include_well_known_type=set(options.file_include_well_known_type),
-                       index_exclude_well_known_type=set(options.file_exclude_well_known_type))
+                       index_exclude_well_known_type=set(options.file_exclude_well_known_type),
+                       pb_exclude_files=pb_exclude_files,
+                       pb_exclude_packages=pb_exclude_packages)
     
     for custom_var in options.set_vars:
         key_value_pair = custom_var.split("=")

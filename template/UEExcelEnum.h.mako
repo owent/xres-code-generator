@@ -73,6 +73,8 @@ if dependency_pb_file:
     "file_camelname": dependency_pb_file.get_file_camelname(),
     "file_base_camelname": dependency_pb_file.get_file_base_camelname(),
     "file_path_camelname": dependency_pb_file.get_file_path_camelname(),
+    "directory_path": dependency_pb_file.get_directory_path(),
+    "directory_camelname": dependency_pb_file.get_directory_camelname(),
   }
   dependency_file_include_path = ue_excel_enum_include_rule % dependency_file_include_format_args
   dependency_file_include_path = re.sub("//+", "/", dependency_file_include_path)
@@ -93,6 +95,11 @@ else:
 enum_inst = pb_file.pb_enums[enum_full_path]
 enum_class_name = ue_excel_utils.UECppUEnumName(enum_inst)
 enum_class_support_blue_print = ue_excel_utils.UECppUEnumSupportBlueprint(enum_inst)
+enum_value_has_zero = False
+for pb_enum_value_proto in enum_inst.descriptor_proto.value:
+  if pb_enum_value_proto.number == 0:
+    enum_value_has_zero = True
+    break
 %>
 %   if enum_class_support_blue_print:
 UENUM(BlueprintType)
@@ -101,6 +108,9 @@ enum class ${enum_class_name} : uint8
 enum class ${enum_class_name} : int32
 %   endif
 {
+%   if not enum_value_has_zero:
+    ${ue_excel_utils.UECppUEnumValueName(enum_inst, None)}__UNKNOWN = 0,
+%   endif
 %   for pb_enum_value_proto in enum_inst.descriptor_proto.value:
 %   if enum_class_support_blue_print:
     ${ue_excel_utils.UECppUEnumValueName(enum_inst, pb_enum_value_proto)} = ${pb_enum_value_proto.number} UMETA(DisplayName="${pb_enum_value_proto.name}"),

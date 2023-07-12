@@ -30,15 +30,19 @@ PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")"
 "$PREBUILT_PROTOC" -I "$REPO_DIR/sample/proto" -I "$REPO_DIR/pb_extension" "$REPO_DIR/sample/proto/"*.proto "$REPO_DIR/pb_extension/google/protobuf/"*.proto -o "$REPO_DIR/sample/sample.pb"
 
 "$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/uepbcpp" \
-  --set ue_include_prefix=ExcelLoader --set ue_type_prefix=ExcelLoader \
+  --set ue_include_prefix=ExcelLoader --set ue_type_prefix=ExcelLoader --set ue_bp_protocol_type_prefix=Proto \
   --set ue_api_definition=EXCELLOADER_API --add-path "$REPO_DIR/template" \
   --set "ue_excel_loader_include_rule=ExcelLoader/%(file_path_camelname)s.h" \
+  --set "ue_bp_protocol_include_rule=ExcelLoader/%(directory_path)s/Proto%(file_base_camelname)s.h" \
   --set "ue_excel_group_api_include_rule=%(file_basename_without_ext)s.h" \
   --set "ue_excel_enum_include_rule=ExcelEnum/%(file_basename_without_ext)s.h" \
+  --pb-exclude-file "xrescode_extensions_v3.proto" \
   -f "H:$REPO_DIR/template/UEExcelLoader.h.mako:ExcelLoader/\${pb_file.get_file_path_camelname()}.h" \
   -f "S:$REPO_DIR/template/UEExcelLoader.cpp.mako:ExcelLoader/\${pb_file.get_file_path_camelname()}.cpp" \
   -g "H:$REPO_DIR/template/UEExcelGroupApi.h.mako" -g "S:$REPO_DIR/template/UEExcelGroupApi.cpp.mako" \
   -f "H:$REPO_DIR/template/UEExcelEnum.h.mako:ExcelEnum/\${pb_file.get_file_path_camelname()}.h" \
+  -f "H:$REPO_DIR/template/UEBPProtocol.h.mako:ExcelLoader/\${pb_file.get_directory_path()}/Proto\${pb_file.get_file_base_camelname()}.h" \
+  -f "S:$REPO_DIR/template/UEBPProtocol.cpp.mako:ExcelLoader/\${pb_file.get_directory_path()}/Proto\${pb_file.get_file_base_camelname()}.cpp" \
   "$@"
 
 # exit $?

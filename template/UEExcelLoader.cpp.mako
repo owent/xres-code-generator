@@ -31,6 +31,8 @@ current_file_include_format_args = {
   "file_camelname": pb_file.get_file_camelname(),
   "file_base_camelname": pb_file.get_file_base_camelname(),
   "file_path_camelname": pb_file.get_file_path_camelname(),
+  "directory_path": pb_file.get_directory_path(),
+  "directory_camelname": pb_file.get_directory_camelname(),
 }
 current_file_include_path = ue_excel_loader_include_rule % current_file_include_format_args
 current_file_include_path = re.sub("//+", "/", current_file_include_path)
@@ -83,9 +85,14 @@ ${ue_api_definition}void ${message_class_name}::_InternalBindLifetime(std::share
     current_message_ = &CurrentMessage;
     lifetime_ = Lifetime;
 }
+
+${ue_api_definition}const ${protobuf_namespace_prefix}::Message* ${message_class_name}::_InternalGetMessage() const
+{
+    return current_message_;
+}
 %   endif
 %   for pb_field_proto in message_inst.descriptor_proto.field:
-%     if ue_excel_utils.UECppMessageFieldValid(pb_field_proto):
+%     if ue_excel_utils.UECppMessageFieldValid(message_inst, pb_field_proto):
 <%
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 cpp_pb_field_var_name = ue_excel_utils.UECppMessageFieldVarName(pb_field_proto)

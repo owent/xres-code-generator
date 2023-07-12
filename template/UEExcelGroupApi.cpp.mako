@@ -15,6 +15,7 @@ elif file_path_prefix.endswith(".cpp") or file_path_prefix.endswith(".cxx"):
   file_path_prefix = file_path_prefix[:-4]
 else:
   file_path_prefix = file_path_prefix
+file_directory_path = os.path.dirname(file_path_prefix)
 
 ue_excel_loader_include_rule = pb_set.get_custom_variable("ue_excel_loader_include_rule")
 if not ue_excel_loader_include_rule:
@@ -34,6 +35,8 @@ message_include_format_args = {
   "file_camelname": pb_loader.MakoToCamelName(file_path_prefix),
   "file_base_camelname": message_include_args_file_base_camelname,
   "file_path_camelname": os.path.dirname(file_path_prefix) + "/" + message_include_args_file_base_camelname,
+  "directory_path": os.path.dirname(file_directory_path),
+  "directory_camelname": pb_loader.MakoToCamelName(file_directory_path),
 }
 current_file_include_path = ue_excel_group_api_include_rule % message_include_format_args
 current_file_include_path = re.sub("//+", "/", current_file_include_path)

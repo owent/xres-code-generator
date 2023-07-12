@@ -43,6 +43,8 @@ message_include_format_args = {
   "file_camelname": message_inst.pb_file.get_file_camelname(),
   "file_base_camelname": message_inst.pb_file.get_file_base_camelname(),
   "file_path_camelname": message_inst.pb_file.get_file_path_camelname(),
+  "directory_path": message_inst.pb_file.get_directory_path(),
+  "directory_camelname": message_inst.pb_file.get_directory_camelname(),
 }
 current_file_include_path = ue_excel_loader_include_rule % message_include_format_args
 current_file_include_path = re.sub("//+", "/", current_file_include_path)

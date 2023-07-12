@@ -14,15 +14,17 @@ import pb_loader
 LOWERCASE_RULE = re.compile("[a-z]")
 
 @supports_caller
-def UECppUClassNameFromString(context, origin_class_name):
+def UECppUClassNameFromString(context, origin_class_name, ue_type_prefix=None):
   pb_set = context.get("pb_set", runtime.UNDEFINED)
-  ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
+  if ue_type_prefix is None:
+    ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
   return "U" + ue_type_prefix + pb_loader.MakoToCamelName(context, origin_class_name)
 
 @supports_caller
-def UECppUClassName(context, pb_msg):
+def UECppUClassName(context, pb_msg, ue_type_prefix=None):
   pb_set = context.get("pb_set", runtime.UNDEFINED)
-  ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
+  if ue_type_prefix is None:
+    ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
   return "U" + ue_type_prefix + pb_loader.MakoToCamelName(context, pb_msg.full_name)
 
 @supports_caller
@@ -53,9 +55,17 @@ def UECppMessageFieldVarName(context, pb_field_proto):
   return pb_loader.MakoPbMsgGetCppFieldVarName(context, pb_field_proto)
 
 @supports_caller
-def UECppMessageFieldValid(context, pb_field_proto):
+def UECppMessageFieldValid(context, pb_msg, pb_field_proto):
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_BYTES:
     return False
+  if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
+    pb_set = context.get("pb_set", runtime.UNDEFINED)
+    pb_msg_inst = pb_set.get_msg_by_type(pb_field_proto.type_name)
+    if not pb_msg_inst:
+      pb_msg_inst = pb_set.get_msg_by_type(pb_msg.full_name + '.' + pb_field_proto.type_name)
+    if not pb_msg_inst:
+      pb_msg_inst = pb_set.get_msg_by_type(pb_msg.pb_file.package + '.' + pb_field_proto.type_name)
+    return pb_msg_inst is not None
   return True
 
 @supports_caller
@@ -99,9 +109,10 @@ def UECppMessageFieldIsRepeated(context, pb_field_proto):
   return pb_field_proto.label == pb2.FieldDescriptorProto.LABEL_REPEATED
 
 @supports_caller
-def UECppUEnumName(context, pb_enum):
+def UECppUEnumName(context, pb_enum, ue_type_prefix=None):
   pb_set = context.get("pb_set", runtime.UNDEFINED)
-  ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
+  if ue_type_prefix is None:
+    ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
   return "E" + ue_type_prefix + pb_loader.MakoToCamelName(context, pb_enum.full_name)
 
 @supports_caller
@@ -109,15 +120,18 @@ def UECppUEnumSupportBlueprint(context, pb_enum):
   return pb_enum.enum_value_min >= 0 and pb_enum.enum_value_max <= 255
 
 @supports_caller
-def UECppUEnumValueName(context, pb_enum, pb_enum_value_proto):
-  ret = UECppUEnumName(context, pb_enum)
-  return LOWERCASE_RULE.sub("", ret) + "_" + pb_enum_value_proto.name
+def UECppUEnumValueName(context, pb_enum, pb_enum_value_proto, ue_type_prefix=None):
+  ret = UECppUEnumName(context, pb_enum, ue_type_prefix)
+  if pb_enum_value_proto is None:
+    return LOWERCASE_RULE.sub("", ret)
+  else:
+    return LOWERCASE_RULE.sub("", ret) + "_" + pb_enum_value_proto.name
 
 @supports_caller
-def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto, message_type_suffix=""):
+def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto, message_type_suffix="", ue_type_prefix=None):
   # pb_set = context.get("pb_set", runtime.UNDEFINED)
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
-    return UECppUClassName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto)) + message_type_suffix
+    return UECppUClassName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto), ue_type_prefix) + message_type_suffix
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_ENUM:
     # UE blue print only support enum type base uint8, but protobuf use int32 instead
     return 'int32'
@@ -130,17 +144,17 @@ def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto, message_type_suff
   return pb_loader.MakoPbMsgGetPbFieldUECppType(context, pb_field_proto)
 
 @supports_caller
-def UECppGetLoaderIndexKeyDecl(context, pb_msg, pb_msg_index):
+def UECppGetLoaderIndexKeyDecl(context, pb_msg, pb_msg_index, ue_type_prefix=None):
     decls = []
     for fd in pb_msg_index.fields:
-        decls.append("{0} {1}".format(UECppMessageFieldTypeName(context, pb_msg, fd), pb_loader.MakoToCamelName(context, fd.name)))
+        decls.append("{0} {1}".format(UECppMessageFieldTypeName(context, pb_msg, fd, "", ue_type_prefix), pb_loader.MakoToCamelName(context, fd.name)))
     return ", ".join(decls)
 
 @supports_caller
-def UECppGetLoaderIndexKeyParams(context, pb_msg, pb_msg_index):
+def UECppGetLoaderIndexKeyParams(context, pb_msg, pb_msg_index, ue_type_prefix=None):
     decls = []
     for fd in pb_msg_index.fields:
-        fd_type = UECppMessageFieldTypeName(context, pb_msg, fd)
+        fd_type = UECppMessageFieldTypeName(context, pb_msg, fd, "", ue_type_prefix)
         if fd_type == 'FString':
             decls.append("TCHAR_TO_ANSI(*" + pb_loader.MakoToCamelName(context, fd.name) + ")")
         else:

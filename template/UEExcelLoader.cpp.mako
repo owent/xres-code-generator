@@ -166,6 +166,41 @@ ${ue_api_definition}TArray<${cpp_ue_field_type_name}> ${message_class_name}::Get
 }
 %         else:
 
+${ue_api_definition}TArray<${cpp_ue_field_type_name}> ${message_class_name}::GetAllOf${message_field_var_name}()
+{
+    TArray<${cpp_ue_field_type_name}> Ret;
+    if (nullptr == current_message_)
+    {
+        return Ret;
+    }
+
+    auto& array_entrys = reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}();
+    Ret.Reserve(static_cast<TArray<${cpp_ue_field_type_name}>::SizeType>(array_entrys.size()));
+    for(auto& item : array_entrys)
+    {
+%          if cpp_ue_field_type_name == "bool":
+        Ret.Emplace(item);
+%          elif cpp_ue_field_type_name == "float":
+        Ret.Emplace(static_cast<float>(item));
+%          elif cpp_ue_field_type_name == "FString":
+        Ret.Emplace(FString(item.c_str()));
+%          elif ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
+        Ret.Emplace(static_cast<${cpp_ue_field_type_name}>(item));
+%          elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
+        ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>();
+        if (nullptr != Value)
+        {
+            Value->_InternalBindLifetime(lifetime_, item);
+            Ret.Emplace(Value);
+        }
+%          else:
+        Ret.Emplace(static_cast<${cpp_ue_field_type_name}>(item));
+%          endif
+    }
+
+    return Ret;
+}
+
 ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${message_field_var_name}(int64 Index, bool& IsValid)
 {
     IsValid = nullptr != current_message_ && Index >= 0 && Get${message_field_var_name}Size() > Index;

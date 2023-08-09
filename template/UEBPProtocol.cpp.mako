@@ -120,6 +120,7 @@ else:
             *NewItem = item.second;
             ${message_field_var_name}.Add(${field_message_cpp_ue_key_expression}, NewItem);
         }
+        ${message_field_var_name}.Emplace(NewItem);
 %            else:
         ${message_field_var_name}.Add(${field_message_cpp_ue_key_expression}, static_cast<${field_message_cpp_ue_value_type_name}>(item.second));
 %            endif

@@ -98,6 +98,7 @@ message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 cpp_pb_field_var_name = ue_excel_utils.UECppMessageFieldVarName(pb_field_proto)
 cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*")
 cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto)
+field_inst = message_inst.fields[pb_field_proto.name]
 %>
 %       if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
 ${ue_api_definition}int64 ${message_class_name}::Get${message_field_var_name}Size()
@@ -259,6 +260,17 @@ ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${messag
         return static_cast<${cpp_ue_field_type_name}>(0);
 %            endif
     }
+%            if field_inst and field_inst.pb_oneof:
+    if (${field_inst.get_cpp_oneof_field_full_name()} != current_message_->${field_inst.pb_oneof.get_cpp_case_call()})
+    {
+       IsValid = false;
+    }
+%            elif not ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto) and ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
+    if (!current_message_->has_${cpp_pb_field_var_name}())
+    {
+       IsValid = false;
+    }
+%            endif
 <%
 if ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto):
   message_field_var_get_data_codes = 'reinterpret_cast<' + protobuf_namespace_prefix + "::Map<" + message_inst_map_key_field_cpp_pb_type + ", " + message_inst_map_value_field_cpp_pb_type + ">::const_pointer>(current_message_)"
@@ -281,6 +293,35 @@ else:
 }
 %         endif
 %       endif
+%     endif
+%   endfor
+%   for oneof_name in message_inst.oneofs:
+<%
+oneof_inst = message_inst.oneofs[oneof_name]
+oneof_class_name = ue_excel_utils.UECppUOneofEnumName(oneof_inst)
+message_oneof_var_name = ue_excel_utils.UECppMessageOneofName(oneof_inst.descriptor_proto)
+oneof_class_support_blue_print = ue_excel_utils.UECppUOneofEnumSupportBlueprint(oneof_inst)
+%>
+%     if oneof_class_support_blue_print:
+${ue_api_definition}${oneof_class_name} ${message_class_name}::Get${message_oneof_var_name}Case()
+{
+    if(nullptr == current_message_)
+    {
+        return static_cast<${oneof_class_name}>(0);
+    }
+
+    return static_cast<${oneof_class_name}>(current_message_->${oneof_inst.get_cpp_case_call()});
+}
+%     else:
+${ue_api_definition}int32 ${message_class_name}::Get${message_oneof_var_name}Case()
+{
+    if(nullptr == current_message_)
+    {
+        return 0;
+    }
+
+    return static_cast<int32>(current_message_->${oneof_inst.get_cpp_case_call()});
+}
 %     endif
 %   endfor
 % endfor

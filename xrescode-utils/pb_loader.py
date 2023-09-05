@@ -1241,6 +1241,41 @@ class PbEnum:
         ret = "".join([x[0:1].upper() + x[1:].lower() for x in use_name.split('_')])
         return LOWERCASE_RULE.sub("", ret)
 
+class PbField:
+    def __init__(self, db, pb_msg, pb_field_proto, index_set):
+        self.db = db
+        self.pb_msg = pb_msg
+        self.pb_file = pb_msg.pb_file
+        self.full_name = '{0}.{1}'.format(pb_msg.full_name, pb_field_proto.name)
+        self.descriptor_proto = pb_field_proto
+        self.pb_field = pb_msg.pb_msg.fields_by_number[pb_field_proto.number]
+        self.index_set = index_set
+        self.pb_oneof = None
+
+    def get_cpp_oneof_field_name(self):
+        return 'k{0}'.format(ToCamelName(self.descriptor_proto.name))
+    
+    def get_cpp_oneof_field_full_name(self):
+        return '{0}::{1}'.format(self.pb_msg.full_name.replace(".", "::"), self.get_cpp_oneof_field_name())
+
+class PbOneof:
+    def __init__(self, db, pb_msg, pb_oneof_proto, index_set, oneofs_by_name):
+        self.db = db
+        self.pb_msg = pb_msg
+        self.pb_file = pb_msg.pb_file
+        self.full_name = '{0}.{1}'.format(pb_msg.full_name, pb_oneof_proto.name)
+        self.descriptor_proto = pb_oneof_proto
+        self.pb_oneof = oneofs_by_name[pb_oneof_proto.name]
+        self.index_set = index_set
+        self.fields = dict()
+
+    def get_cpp_case_call(self):
+        return '{0}_case()'.format(self.descriptor_proto.name)
+    
+    def get_cpp_case_type(self):
+        return '{0}::{1}Case'.format(self.pb_msg.full_name.replace(".", "::"), ToCamelName(self.descriptor_proto.name))
+
+
 class PbMsg:
     def __init__(self, db, pb_file, pb_msg_proto, msg_prefix, nested_from_prefix,
                  index_set):
@@ -1261,6 +1296,23 @@ class PbMsg:
         self.descriptor_proto = pb_msg_proto
         self.loaders = []
         self.index_set = index_set
+        self.fields = dict()
+        self.oneofs = dict()
+        oneofs_by_name = dict()
+        for oneof_desc in self.pb_msg.oneofs:
+            oneofs_by_name[oneof_desc.name] = oneof_desc
+        for pb_field_proto in pb_msg_proto.field:
+            self.fields[pb_field_proto.name] = PbField(db, self, pb_field_proto, index_set)
+        for pb_oneof_proto in pb_msg_proto.oneof_decl:
+            oneof_inst = PbOneof(db, self, pb_oneof_proto, index_set, oneofs_by_name)
+            self.oneofs[pb_oneof_proto.name] = oneof_inst
+        # Setup fields for oneofs
+        for field_name in self.fields:
+            field_inst = self.fields[field_name]
+            if field_inst.pb_field.containing_oneof:
+                oneof_inst = self.oneofs[field_inst.pb_field.containing_oneof.name]
+                oneof_inst.fields[field_name] = field_inst
+                field_inst.pb_oneof = oneof_inst
 
     def setup_code(self, fds, include_tags, exclude_tags):
         if self.pb_file.package == 'google.protobuf':

@@ -113,6 +113,34 @@ message_inst = pb_file.pb_msgs[message_full_path]
 message_class_name = ue_excel_utils.UECppUClassName(message_inst)
 %>
 // ========================== ${message_class_name} ==========================
+%   for oneof_name in message_inst.oneofs:
+<%
+oneof_inst = message_inst.oneofs[oneof_name]
+oneof_class_name = ue_excel_utils.UECppUOneofEnumName(oneof_inst)
+oneof_class_support_blue_print = ue_excel_utils.UECppUOneofEnumSupportBlueprint(oneof_inst)
+%>
+%     if oneof_class_support_blue_print:
+UENUM(BlueprintType)
+enum class ${oneof_class_name} : uint8
+%     else:
+enum class ${oneof_class_name} : int32
+%     endif
+{
+    ${ue_excel_utils.UECppUUOneofEnumValueName(oneof_inst, None)} = 0,
+%     for pb_field_name in oneof_inst.fields:
+<%
+pb_field_inst = oneof_inst.fields[pb_field_name]
+current_enum_field_name = ue_excel_utils.UECppUUOneofEnumValueName(oneof_inst, pb_field_inst)
+%>
+%       if oneof_class_support_blue_print:
+    ${current_enum_field_name} = ${pb_field_inst.descriptor_proto.number} UMETA(DisplayName="${current_enum_field_name}"),
+%       else:
+    ${current_enum_field_name} = ${pb_field_inst.descriptor_proto.number}, // ${pb_field_inst.descriptor_proto.name}
+%       endif
+%     endfor
+};
+
+%   endfor
 UCLASS(Blueprintable, BlueprintType)
 class ${ue_api_definition}${message_class_name} : public UObject
 {
@@ -181,6 +209,22 @@ field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVField
     ${cpp_ue_field_type_name} Get${message_field_var_name}(bool& IsValid);
 %         endif
 %       endif
+%     endif
+%   endfor
+
+%   for oneof_name in message_inst.oneofs:
+<%
+oneof_inst = message_inst.oneofs[oneof_name]
+oneof_class_name = ue_excel_utils.UECppUOneofEnumName(oneof_inst)
+message_oneof_var_name = ue_excel_utils.UECppMessageOneofName(oneof_inst.descriptor_proto)
+oneof_class_support_blue_print = ue_excel_utils.UECppUOneofEnumSupportBlueprint(oneof_inst)
+%>
+%     if oneof_class_support_blue_print:
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get ${message_oneof_var_name} Case")
+    ${oneof_class_name} Get${message_oneof_var_name}Case();
+%     else:
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get ${message_oneof_var_name} Case")
+    int32 Get${message_oneof_var_name}Case();
 %     endif
 %   endfor
 

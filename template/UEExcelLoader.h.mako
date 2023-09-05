@@ -126,11 +126,11 @@ enum class ${oneof_class_name} : uint8
 enum class ${oneof_class_name} : int32
 %     endif
 {
-    ${ue_excel_utils.UECppUUOneofEnumValueName(oneof_inst, None)} = 0,
+    ${ue_excel_utils.UECppUOneofEnumValueName(oneof_inst, None)} = 0,
 %     for pb_field_name in oneof_inst.fields:
 <%
 pb_field_inst = oneof_inst.fields[pb_field_name]
-current_enum_field_name = ue_excel_utils.UECppUUOneofEnumValueName(oneof_inst, pb_field_inst)
+current_enum_field_name = ue_excel_utils.UECppUOneofEnumValueName(oneof_inst, pb_field_inst)
 %>
 %       if oneof_class_support_blue_print:
     ${current_enum_field_name} = ${pb_field_inst.descriptor_proto.number} UMETA(DisplayName="${current_enum_field_name}"),
@@ -139,6 +139,26 @@ current_enum_field_name = ue_excel_utils.UECppUUOneofEnumValueName(oneof_inst, p
 %       endif
 %     endfor
 };
+%     if not oneof_class_support_blue_print:
+<%
+oneof_helper_class_name = ue_excel_utils.UECppUOneofClassName(oneof_inst)
+%>
+UCLASS(Blueprintable, BlueprintType)
+class ${ue_api_definition}${oneof_helper_class_name} : public UObject
+{
+    GENERATED_BODY()
+
+public:
+    ${oneof_helper_class_name}();
+%     for pb_field_name in oneof_inst.fields:
+<%
+pb_field_inst = oneof_inst.fields[pb_field_name]
+%>
+    UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get ${oneof_name}")
+    static int32 Get${ue_excel_utils.UECppUOneofClassValueName(oneof_inst, pb_field_inst)}();
+%     endfor
+};
+%     endif
 
 %   endfor
 UCLASS(Blueprintable, BlueprintType)

@@ -65,6 +65,30 @@ message_class_name = ue_excel_utils.UECppUClassName(message_inst)
 cpp_pb_message_type = message_inst.full_name.replace(".", "::")
 %>
 // ========================== ${message_class_name} ==========================
+%   for oneof_name in message_inst.oneofs:
+<%
+oneof_inst = message_inst.oneofs[oneof_name]
+oneof_class_support_blue_print = ue_excel_utils.UECppUOneofEnumSupportBlueprint(oneof_inst)
+%>
+%     if not oneof_class_support_blue_print:
+<%
+oneof_helper_class_name = ue_excel_utils.UECppUOneofClassName(oneof_inst)
+%>
+${ue_api_definition}${oneof_helper_class_name}::${oneof_helper_class_name}() : Super()
+{
+}
+%     for pb_field_name in oneof_inst.fields:
+<%
+pb_field_inst = oneof_inst.fields[pb_field_name]
+%>
+${ue_api_definition} int32 ${oneof_helper_class_name}::Get${ue_excel_utils.UECppUOneofClassValueName(oneof_inst, pb_field_inst)}()
+{
+    return ${pb_field_inst.descriptor_proto.number};
+}
+%     endfor
+%     endif
+
+%   endfor
 ${ue_api_definition}${message_class_name}::${message_class_name}() : Super(), current_message_(nullptr)
 {
 }
@@ -261,12 +285,12 @@ ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${messag
 %            endif
     }
 %            if field_inst and field_inst.pb_oneof:
-    if (${field_inst.get_cpp_oneof_field_full_name()} != current_message_->${field_inst.pb_oneof.get_cpp_case_call()})
+    if (${field_inst.get_cpp_oneof_field_full_name()} != reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${field_inst.pb_oneof.get_cpp_case_call()})
     {
        IsValid = false;
     }
 %            elif not ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto) and ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
-    if (!current_message_->has_${cpp_pb_field_var_name}())
+    if (!reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->has_${cpp_pb_field_var_name}())
     {
        IsValid = false;
     }

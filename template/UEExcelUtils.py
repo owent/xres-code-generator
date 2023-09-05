@@ -139,6 +139,13 @@ def UECppUOneofEnumName(context, pb_oneof, ue_type_prefix=None):
   return "E" + ue_type_prefix + pb_loader.MakoToCamelName(context, pb_oneof.full_name)
 
 @supports_caller
+def UECppUOneofClassName(context, pb_oneof, ue_type_prefix=None):
+  pb_set = context.get("pb_set", runtime.UNDEFINED)
+  if ue_type_prefix is None:
+    ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
+  return "U" + ue_type_prefix + "OneofHelper" + pb_loader.MakoToCamelName(context, pb_oneof.full_name)
+
+@supports_caller
 def UECppUOneofEnumSupportBlueprint(context, pb_oneof):
   for field_name in pb_oneof.fields:
     pb_field = pb_oneof.fields[field_name]
@@ -149,13 +156,16 @@ def UECppUOneofEnumSupportBlueprint(context, pb_oneof):
   return True
 
 @supports_caller
-def UECppUUOneofEnumValueName(context, pb_oneof, pb_field, ue_type_prefix=None):
+def UECppUOneofEnumValueName(context, pb_oneof, pb_field, ue_type_prefix=None):
   ret = UECppUOneofEnumName(context, pb_oneof, ue_type_prefix)
   if pb_field is None:
     return LOWERCASE_RULE.sub("", ret) + "_NOT_SET"
   else:
-    json_name = pb_field.descriptor_proto.json_name
-    return LOWERCASE_RULE.sub("", ret) + "_" + json_name[0:1].upper() + json_name[1:]
+    return LOWERCASE_RULE.sub("", ret) + "_" + pb_loader.MakoToCamelName(context, pb_field.descriptor_proto.name)
+  
+@supports_caller
+def UECppUOneofClassValueName(context, pb_oneof, pb_field):
+  return pb_loader.MakoToCamelName(context, pb_oneof.descriptor_proto.name) + pb_loader.MakoToCamelName(context, pb_field.descriptor_proto.name)
 
 @supports_caller
 def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto, message_type_suffix="", ue_type_prefix=None):

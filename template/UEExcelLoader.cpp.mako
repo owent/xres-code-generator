@@ -334,7 +334,7 @@ ${ue_api_definition}${oneof_class_name} ${message_class_name}::Get${message_oneo
         return static_cast<${oneof_class_name}>(0);
     }
 
-    return static_cast<${oneof_class_name}>(current_message_->${oneof_inst.get_cpp_case_call()});
+    return static_cast<${oneof_class_name}>(reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${oneof_inst.get_cpp_case_call()});
 }
 %     else:
 ${ue_api_definition}int32 ${message_class_name}::Get${message_oneof_var_name}Case()
@@ -344,7 +344,7 @@ ${ue_api_definition}int32 ${message_class_name}::Get${message_oneof_var_name}Cas
         return 0;
     }
 
-    return static_cast<int32>(current_message_->${oneof_inst.get_cpp_case_call()});
+    return static_cast<int32>(reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${oneof_inst.get_cpp_case_call()});
 }
 %     endif
 %   endfor

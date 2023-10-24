@@ -7,6 +7,7 @@ REPO_DIR=".."
 mkdir -p "$REPO_DIR/sample/pbcpp"
 mkdir -p "$REPO_DIR/sample/pblua"
 mkdir -p "$REPO_DIR/sample/upblua"
+mkdir -p "$REPO_DIR/sample/lua-protobuf"
 mkdir -p "$REPO_DIR/sample/pbcs"
 mkdir -p "$REPO_DIR/sample/uepbcpp"
 cp -rvf "$REPO_DIR/template/common/lua/"*.lua "$REPO_DIR/sample/pblua"
@@ -14,6 +15,7 @@ cp -rvf "$REPO_DIR/template/common/cpp/"* "$REPO_DIR/sample/pbcpp"
 cp -rvf "$REPO_DIR/template/common/cs/"* "$REPO_DIR/sample/pbcs"
 cp -rvf "$REPO_DIR/template/common/upblua/"*.lua "$REPO_DIR/sample/upblua"
 cp -rvf "$REPO_DIR/template/common/lua/vardump.lua" "$REPO_DIR/sample/upblua"
+cp -rvf "$REPO_DIR/template/common/lua/vardump.lua" "$REPO_DIR/sample/lua-protobuf"
 
 PYTHON_BIN="$(which python3 2>/dev/null)"
 
@@ -60,6 +62,10 @@ PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")"
 
 "$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/upblua" \
   -g "$REPO_DIR/template/DataTableCustomIndexUpb.lua.mako" \
+  "$@"
+
+"$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/lua-protobuf" \
+  -g "$REPO_DIR/template/DataTableCustomIndexUpb.lua.mako:DataTableCustomIndexLuaProtobuf.lua" \
   "$@"
 
 "$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs" \
@@ -194,6 +200,41 @@ for _, v1 in ipairs(data2) do
     end
 end
 ' >upblua/main.lua
+
+echo 'local pb = require('pb')
+
+local function load_pb(file_path)
+  local f = io.open(file_path, "rb")
+  if f == nil then
+    error(string.format("Open file %s failed", file_path))
+    return nil
+  end
+  local data = f:read("a")
+  f:close()
+  pb.load(data)
+end
+
+load_pb('pb_header_v3.pb')
+load_pb('../sample.pb')
+
+
+local excel_config_service = require("DataTableServiceLuaProtobuf")
+excel_config_service:ReloadTables()
+
+print("----------------------- Get by reflection and Key-List index -----------------------")
+local current_group = excel_config_service:GetCurrentGroup()
+local role_upgrade_cfg2 = excel_config_service:GetByGroup(current_group, "role_upgrade_cfg")
+-- require("vardump")
+-- vardump(role_upgrade_cfg2, { show_all = true })
+local data2 = role_upgrade_cfg2:GetByIndex("id", 10001) -- using the Key-List index: id
+for _, v1 in ipairs(data2) do
+  print(string.format("\tid: %s, level: %s", tostring(v1.Id), tostring(v1.Level)))
+end
+print("Fields of " .. role_upgrade_cfg2:GetMessageDescriptor().name)
+for _, fds in ipairs(role_upgrade_cfg2:GetMessageDescriptor().fields) do
+  print(string.format("\t%s %s=%s", fds.type, fds.name, tostring(fds.number)))
+end
+' >lua-protobuf/main.lua
 
 echo 'using System;
 using excel;

@@ -252,6 +252,63 @@ for _, v1 in ipairs(data2) do
 end
 ```
 
+### For lua - lua-protobuf
+
+1. Build lua-protobuf from <https://github.com/starwing/lua-protobuf>
+2. Copy common files from [template/common/lua-protobuf](template/common/lua-protobuf)
+3. Generate loader codes by template [template/DataTableCustomIndexUpb.lua.mako](template/DataTableCustomIndexUpb.lua.mako) and rename the output to `DataTableCustomIndexLuaProtobuf.lua`
+
+```bash
+mkdir -p "$REPO_DIR/sample/lua-protobuf";
+cp -rvf "$REPO_DIR/template/common/lua-protobuf/"*.lua "$REPO_DIR/sample/lua-protobuf";
+cp -rvf "$REPO_DIR/template/common/lua/vardump.lua" "$REPO_DIR/sample/lua-protobuf";
+
+python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/lua-protobuf"   \
+    -g "$REPO_DIR/template/DataTableCustomIndexUpb.lua.mako:DataTableCustomIndexLuaProtobuf.lua"                                \
+    "$@"
+
+```
+
+4. At last, just use the generated `DataTableCustomIndexLuaProtobuf` to visit datas.
+
+```lua
+local pb = require('pb')
+
+-- ============== Begin: load dependency pb files ==============
+local function load_pb(file_path)
+  local f = io.open(file_path, "rb")
+  if f == nil then
+    error(string.format("Open file %s failed", file_path))
+    return nil
+  end
+  local data = f:read("a")
+  f:close()
+  pb.load(data)
+end
+
+load_pb('pb_header_v3.pb')
+load_pb('sample.pb')
+-- ============== End: load dependency pb files ==============
+
+local excel_config_service = require("DataTableServiceLuaProtobuf")
+excel_config_service:ReloadTables()
+
+print("----------------------- Get by reflection and Key-List index -----------------------")
+local current_group = excel_config_service:GetCurrentGroup()
+local role_upgrade_cfg2 = excel_config_service:GetByGroup(current_group, "role_upgrade_cfg")
+-- require("vardump")
+-- vardump(role_upgrade_cfg2, { show_all = true })
+local data2 = role_upgrade_cfg2:GetByIndex("id", 10001) -- using the Key-List index: id
+for _, v1 in ipairs(data2) do
+  print(string.format("\tid: %s, level: %s", tostring(v1.Id), tostring(v1.Level)))
+end
+print("Fields of " .. role_upgrade_cfg2:GetMessageDescriptor().name)
+for _, fds in ipairs(role_upgrade_cfg2:GetMessageDescriptor().fields) do
+  print(string.format("\t%s %s=%s", fds.type, fds.name, tostring(fds.number)))
+end
+
+```
+
 ### For C\#/CSharp
 
 1. Generate loader codes by template [template/ConfigSet.cs.mako](template/ConfigSet.cs.mako) , [template/ConfigSetManager.cs.mako](template/ConfigSetManager.cs.mako)

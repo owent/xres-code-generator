@@ -102,6 +102,7 @@ venv.bak/
 /sample/pbcpp/*
 /sample/pblua/*
 /sample/upblua/*
+/sample/lua-protobuf/*
 /sample/pbcs/*
 /sample/uepbcpp/*
 

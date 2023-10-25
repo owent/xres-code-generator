@@ -36,12 +36,12 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
     local data_set = raw_data_containers[index_cfg.filePath]
     if data_set == nil then
         local pb = require('pb')
-        local data_desc_msg = pb.type(index_cfg.messageName)
+        local data_desc_msg = pb.type(index_cfg.fullName)
         if data_desc_msg == nil then
             if 'function' == type(index_loader.__service.OnError) then
                 local msg = string.format('Index "%s" of message "%s": can not find message descriptor %s',
                     index_loader.Name,
-                    index_cfg.messageName, index_cfg.messageName)
+                    index_cfg.fullName, index_cfg.fullName)
                 pcall(index_loader.__service.OnError, msg, index_loader, index_cfg.indexName)
             end
             return
@@ -52,7 +52,7 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
             if 'function' == type(index_loader.__service.OnError) then
                 local msg = string.format('Index "%s" of message "%s": can not load file data %s: %s', index_loader.Name
                     ,
-                    index_cfg.messageName, index_cfg.filePath, data_block)
+                    index_cfg.fullName, index_cfg.filePath, data_block)
                 pcall(index_loader.__service.OnError, msg, index_loader, index_cfg.indexName)
             end
             return
@@ -64,7 +64,7 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
             if 'function' == type(index_loader.__service.OnError) then
                 local msg = string.format('Index "%s" of message "%s": can not parse file data %s: %s',
                     index_loader.Name,
-                    index_cfg.messageName, index_cfg.filePath, xresloader_datablocks)
+                    index_cfg.fullName, index_cfg.filePath, xresloader_datablocks)
                 pcall(index_loader.__service.OnError, msg, index_loader, index_cfg.indexName)
             end
             return
@@ -76,7 +76,7 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
             pcall(index_loader.__service.OnInfo, msg, index_loader, index_cfg.indexName)
         end
         for row_index = 1, #xresloader_datablocks.data_block do
-            local data_result, data_row = pcall(pb.decode, index_cfg.messageName,
+            local data_result, data_row = pcall(pb.decode, index_cfg.fullName,
                 xresloader_datablocks.data_block[row_index])
             if data_result then
                 table.insert(all_rows, data_row)
@@ -86,17 +86,17 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
                         'Index "%s" of message "%s": can not parse data row %d in file %s with message %s: %s'
                         ,
                         index_loader.Name,
-                        index_cfg.messageName, row_index, index_cfg.filePath, index_cfg.fullName, data_row)
+                        index_cfg.fullName, row_index, index_cfg.filePath, index_cfg.fullName, data_row)
                     pcall(index_loader.__service.OnError, msg, index_loader, index_cfg.indexName)
                 end
             end
         end
         local message_descriptor_inst = {
-            name = index_cfg.messageName,
+            name = index_cfg.fullName,
             pb_handle = data_desc_msg,
             fields = {}
         }
-        for fd_name, fd_number, fd_type in pb.fields(index_cfg.messageName) do
+        for fd_name, fd_number, fd_type in pb.fields(index_cfg.fullName) do
             table.insert(message_descriptor_inst.fields, {
                 name = fd_name,
                 number = fd_number,

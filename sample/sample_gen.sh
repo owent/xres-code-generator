@@ -232,7 +232,11 @@ for _, v1 in ipairs(data2) do
 end
 print("Fields of " .. role_upgrade_cfg2:GetMessageDescriptor().name)
 for _, fds in ipairs(role_upgrade_cfg2:GetMessageDescriptor().fields) do
-  print(string.format("\t%s %s=%s", fds.type, fds.name, tostring(fds.number)))
+  if fds.type.type == nil then
+    print(string.format("\t%s %s=%s", fds.type.name, fds.name, tostring(fds.number)))
+  else
+    print(string.format("\t%s(%s) %s=%s", fds.type.name, fds.type.type, fds.name, tostring(fds.number)))
+  end
 end
 ' >lua-protobuf/main.lua
 

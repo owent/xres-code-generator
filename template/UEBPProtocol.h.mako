@@ -175,6 +175,10 @@ public:
 
     ${message_class_name}& operator=(const ${message_inst.extended_nested_full_name.replace(".", "::")}& other);
 
+    ${message_class_name}& operator<<(const ${message_inst.extended_nested_full_name.replace(".", "::")}& other);
+
+    ${message_class_name}& operator>>(${message_inst.extended_nested_full_name.replace(".", "::")}& other);
+
 %   for pb_field_proto in message_inst.descriptor_proto.field:
 %     if ue_excel_utils.UECppMessageFieldValid(message_inst, pb_field_proto):
 <%

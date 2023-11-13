@@ -120,7 +120,6 @@ else:
             *NewItem = item.second;
             ${message_field_var_name}.Add(${field_message_cpp_ue_key_expression}, NewItem);
         }
-        ${message_field_var_name}.Emplace(NewItem);
 %            else:
         ${message_field_var_name}.Add(${field_message_cpp_ue_key_expression}, static_cast<${field_message_cpp_ue_value_type_name}>(item.second));
 %            endif
@@ -137,6 +136,7 @@ else:
         {
             *NewItem = item;
         }
+        ${message_field_var_name}.Emplace(NewItem);
 %            else:
         ${message_field_var_name}.Emplace(static_cast<${cpp_ue_field_type_name}>(item));
 %            endif
@@ -169,4 +169,98 @@ else:
 %   endfor
     return *this;
 }
+
+${ue_api_definition}${message_class_name}& ${message_class_name}::operator<<(const ${message_inst.extended_nested_full_name.replace(".", "::")}& other)
+{
+    return *this = other;
+}
+
+${ue_api_definition}${message_class_name}& ${message_class_name}::operator>>(${message_inst.extended_nested_full_name.replace(".", "::")}& other)
+{
+%   for pb_field_proto in message_inst.descriptor_proto.field:
+%     if ue_excel_utils.UECppMessageFieldValid(message_inst, pb_field_proto):
+<%
+message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
+cpp_pb_field_var_name = ue_excel_utils.UECppMessageFieldVarName(pb_field_proto)
+if ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
+  cpp_std_field_type_name = message_inst.get_field_cpp_protobuf_type(pb_field_proto)
+else:
+  cpp_std_field_type_name = pb_loader.MakoPbMsgGetPbFieldCppType(pb_field_proto)
+cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_protocol_type_prefix)
+%>
+%       if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
+%         if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
+<%
+field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
+field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_protocol_type_prefix)
+if ue_excel_utils.UECppMessageFieldIsEnum(field_message_with_map_kv_fields[1]):
+  field_message_cpp_std_key_type_name = field_message_with_map_kv_fields[0].get_field_cpp_protobuf_type(field_message_with_map_kv_fields[1])
+else:
+  field_message_cpp_std_key_type_name = pb_loader.MakoPbMsgGetPbFieldCppType(field_message_with_map_kv_fields[1])
+field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_protocol_type_prefix)
+if ue_excel_utils.UECppMessageFieldIsEnum(field_message_with_map_kv_fields[2]):
+  field_message_cpp_std_key_type_name = field_message_with_map_kv_fields[0].get_field_cpp_protobuf_type(field_message_with_map_kv_fields[2])
+else:
+  field_message_cpp_std_value_type_name = pb_loader.MakoPbMsgGetPbFieldCppType(field_message_with_map_kv_fields[2])
+field_message_cpp_ue_key_init = None
+if field_message_cpp_ue_key_type_name == "FString" or field_message_cpp_ue_key_type_name == "FName":
+    field_message_cpp_ue_key_init = "auto __xrescode_key_of_{0} = StringCast<ANSICHAR>(*item.Key);".format(cpp_pb_field_var_name)
+    field_message_cpp_ue_key_expression = "std::string(__xrescode_key_of_{0}.Get(), static_cast<std::string::size_type>(__xrescode_key_of_{0}.Length()))".format(cpp_pb_field_var_name)
+else:
+    field_message_cpp_ue_key_expression = "static_cast<{0}>(item.Key)".format(field_message_cpp_std_key_type_name)
+%>
+    for (auto& item : ${message_field_var_name})
+    {
+%            if field_message_cpp_ue_key_init:
+        ${field_message_cpp_ue_key_init}
+%            endif
+%            if field_message_cpp_ue_value_type_name == "FString":
+        auto __xrescode_value_of_${cpp_pb_field_var_name} = StringCast<ANSICHAR>(*item.Value);
+        other.mutable_${cpp_pb_field_var_name}()->emplace(${field_message_cpp_ue_key_expression}, std::string{__xrescode_value_of_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_value_of_${cpp_pb_field_var_name}.Length())});
+%            elif ue_excel_utils.UECppMessageFieldIsMessage(field_message_with_map_kv_fields[2]):
+        if(item.Value != nullptr)
+        {
+            (*item.Value) >> (*other.mutable_${cpp_pb_field_var_name}())[${field_message_cpp_ue_key_expression}];
+        }
+%            else:
+        other.mutable_${cpp_pb_field_var_name}()->emplace(${field_message_cpp_ue_key_expression}, static_cast<${field_message_cpp_std_value_type_name}>(item.Value));
+%            endif
+    }
+%         else:
+    other.mutable_${cpp_pb_field_var_name}()->Reserve(static_cast<int>(${message_field_var_name}.Num()));
+    for (auto& item : ${message_field_var_name})
+    {
+%            if cpp_ue_field_type_name == "FString":
+        auto __xrescode_${cpp_pb_field_var_name} = StringCast<ANSICHAR>(*item);
+        other.add_${cpp_pb_field_var_name}(__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
+%            elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
+        if (item != nullptr)
+        {
+            (*item) >> (*other.add_${cpp_pb_field_var_name}());
+        }
+%            else:
+        other.add_${cpp_pb_field_var_name}(static_cast<${cpp_std_field_type_name}>(item));
+%            endif
+    }
+%         endif
+%       else:
+%          if cpp_ue_field_type_name == "FString":
+    {
+        auto __xrescode_${cpp_pb_field_var_name} = StringCast<ANSICHAR>(*${message_field_var_name});
+        other.set_${cpp_pb_field_var_name}(__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
+    }
+%          elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
+    if(${message_field_var_name} != nullptr)
+    {
+        (*${message_field_var_name}) >> *other.mutable_${cpp_pb_field_var_name}();
+    }
+%          else:
+    other.set_${cpp_pb_field_var_name}(static_cast<${cpp_std_field_type_name}>(${message_field_var_name}));
+%          endif
+%       endif
+%     endif
+%   endfor
+    return *this;
+}
+
 % endfor

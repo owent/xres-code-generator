@@ -214,8 +214,8 @@ local function load_pb(file_path)
   pb.load(data)
 end
 
-load_pb('pb_header_v3.pb')
-load_pb('../sample.pb')
+load_pb("pb_header_v3.pb")
+load_pb("../sample.pb")
 
 
 local excel_config_service = require("DataTableServiceLuaProtobuf")

@@ -28,8 +28,14 @@ message xrescode_loader {
     string                  class_name = 401;
 }
 
+message xrescode_ue_type {
+    bool bp_protocol_with_ustruct   = 1; // UEBPProtocol.* will not generate USTRUCT by default
+    bool bp_protocol_without_uclass = 2; // UEBPProtocol.* will generate UCLASS by default
+}
+
 extend google.protobuf.MessageOptions {
     repeated xrescode_loader loader = 1351; // loaders
+    xrescode_ue_type         ue     = 1352; // ue
 }
 
 // extend google.protobuf.FieldOptions { bool excel_row = 1351; }

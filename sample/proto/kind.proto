@@ -11,17 +11,6 @@ enum EnTestEnumType {
     EN_TET_ONE  = 1;
 }
 
-message sample_without_ustruct { int32 a = 1; }
-
-message sample_without_uclass {
-    option (xrescode.ue) = {
-        bp_protocol_with_ustruct : true
-        bp_protocol_without_uclass : true
-    };
-
-    string b = 1;
-}
-
 message role_upgrade_cfg {
     option (org.xresloader.ue.helper)       = "helper";
     option (org.xresloader.msg_description) = "Test role_upgrade_cfg with multi keys";
@@ -60,4 +49,17 @@ message role_upgrade_cfg {
         sample_without_ustruct TestNoUStrust = 10;
         sample_without_uclass  TestNoUClass  = 11;
     }
+
+    role_upgrade_cfg TestSelfRef = 12;
+}
+
+message sample_without_ustruct { int32 a = 1; }
+
+message sample_without_uclass {
+    option (xrescode.ue) = {
+        bp_protocol_with_ustruct : true
+        bp_protocol_without_uclass : true
+    };
+
+    string b = 1;
 }

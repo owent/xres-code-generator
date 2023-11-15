@@ -42,7 +42,7 @@ def UECppMessageIsMap(context, pb_msg_proto):
 
 @supports_caller
 def UECppMessageProtocolWithUClass(context, pb_msg):
-  if pb_msg.pb_file.package == 'google.protobuf':
+  if pb_msg.pb_file.package == 'google.protobuf' or pb_msg.pb_file.package == '.google.protobuf':
     return True
   if UECppMessageIsMap(context, pb_msg.descriptor_proto):
     return True
@@ -53,7 +53,7 @@ def UECppMessageProtocolWithUClass(context, pb_msg):
 
 @supports_caller
 def UECppMessageProtocolWithUStruct(context, pb_msg):
-  if pb_msg.pb_file.package == 'google.protobuf':
+  if pb_msg.pb_file.package == 'google.protobuf' or pb_msg.pb_file.package == '.google.protobuf':
     return True
   if UECppMessageIsMap(context, pb_msg.descriptor_proto):
     return False
@@ -227,10 +227,13 @@ def UECppUOneofClassValueName(context, pb_oneof, pb_field):
   return pb_loader.MakoToCamelName(context, pb_oneof.descriptor_proto.name) + pb_loader.MakoToCamelName(context, pb_field.descriptor_proto.name)
 
 @supports_caller
-def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto, message_type_suffix="", ue_type_prefix=None):
+def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto, message_type_suffix="", ue_type_prefix=None, uclass=True):
   # pb_set = context.get("pb_set", runtime.UNDEFINED)
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
-    return UECppUClassName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto), ue_type_prefix) + message_type_suffix
+    if uclass:
+      return UECppUClassName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto), ue_type_prefix) + message_type_suffix
+    else:
+      return UECppUStructName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto), ue_type_prefix) + message_type_suffix
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_ENUM:
     # UE blue print only support enum type base uint8, but protobuf use int32 instead
     return 'int32'

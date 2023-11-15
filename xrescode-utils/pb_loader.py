@@ -1147,6 +1147,43 @@ class PbFile:
         self.descriptor_proto = pb_file
         self.pb_msgs = dict()
         self.pb_enums = dict()
+        self.__topological_sorted_messages_cache = None
+
+    def get_topological_sorted_messages(self):
+        if self.__topological_sorted_messages_cache is not None:
+            return self.__topological_sorted_messages_cache
+        ret = []
+        topological_map = dict()
+        topological_notify = dict()
+        for msg in self.pb_msgs.values():
+            deps = set()
+            for field_inst in msg.fields.values():
+                if field_inst.pb_field.message_type is not None and field_inst.pb_field.message_type.file == self.pb_file:
+                    dep_full_name = field_inst.pb_field.message_type.full_name
+                    if dep_full_name.startswith('.'):
+                        dep_full_name = dep_full_name[1:]
+                    if dep_full_name == msg.full_name:
+                        continue
+                    deps.add(dep_full_name)
+                    if dep_full_name in topological_notify:
+                        topological_notify[dep_full_name].add(msg.full_name)
+                    else:
+                        topological_notify[dep_full_name] = set([msg.full_name])
+            topological_map[msg.full_name] = { "instance" : msg, "deps": deps }
+        topological_readys = []
+        for msg_inst in topological_map.values():
+            if not msg_inst["deps"]:
+                topological_readys.append(msg_inst)
+        while topological_readys:
+            msg_inst = topological_readys.pop()
+            ret.append(msg_inst["instance"])
+            if msg_inst["instance"].full_name in topological_notify:
+                for dep_full_name in topological_notify[msg_inst["instance"].full_name]:
+                    topological_map[dep_full_name]["deps"].remove(msg_inst["instance"].full_name)
+                    if not topological_map[dep_full_name]["deps"]:
+                        topological_readys.append(topological_map[dep_full_name])
+        self.__topological_sorted_messages_cache = ret
+        return ret
 
     def get_file_path_without_ext(self):
         if self.name.endswith(".proto"):

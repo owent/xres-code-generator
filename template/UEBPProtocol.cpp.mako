@@ -5,6 +5,9 @@ import os
 import re
 %><%namespace name="ue_excel_utils" module="UEExcelUtils"/><%namespace name="pb_loader" module="pb_loader"/><%
 ue_bp_protocol_type_prefix = pb_set.get_custom_variable("ue_bp_protocol_type_prefix", pb_set.get_custom_variable("ue_type_prefix", ""))
+ue_bp_uenum_type_prefix = pb_set.get_custom_variable("ue_bp_uclass_type_prefix", ue_bp_protocol_type_prefix + "E")
+ue_bp_uclass_type_prefix = pb_set.get_custom_variable("ue_bp_uclass_type_prefix", ue_bp_protocol_type_prefix + "C")
+ue_bp_ustruct_type_prefix = pb_set.get_custom_variable("ue_bp_ustruct_type_prefix", ue_bp_protocol_type_prefix + "S")
 protobuf_include_prefix = pb_set.get_custom_variable("protobuf_include_prefix")
 protobuf_include_suffix = pb_set.get_custom_variable("protobuf_include_suffix")
 protobuf_namespace_prefix = pb_set.get_custom_variable("protobuf_namespace_prefix", "::google::protobuf")
@@ -71,17 +74,14 @@ if enable_excel_loader != "0" and enable_excel_loader != "no" and enable_excel_l
 // clang-format on
 % endif
 
-% for message_full_path in pb_file.pb_msgs:
+% for message_inst in pb_file.get_topological_sorted_messages():
 <%
-message_inst = pb_file.pb_msgs[message_full_path]
-message_class_name = ue_excel_utils.UECppUClassName(message_inst, ue_bp_protocol_type_prefix)
-message_struct_name = ue_excel_utils.UECppUStructName(message_inst, ue_bp_protocol_type_prefix)
-message_with_uclass = ue_excel_utils.UECppMessageProtocolWithUClass(message_inst)
+message_struct_name = ue_excel_utils.UECppUStructName(message_inst, ue_bp_ustruct_type_prefix)
 message_with_ustruct = ue_excel_utils.UECppMessageProtocolWithUStruct(message_inst)
 if ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto):
   continue
 cpp_pb_message_type = message_inst.extended_nested_full_name.replace(".", "::")
-%>
+%>\
 %   if message_with_ustruct:
 // ========================== ${message_struct_name} ==========================
 ${ue_api_definition}${message_struct_name}& operator<<(${message_struct_name}& target, const ${message_inst.extended_nested_full_name.replace(".", "::")}& source)
@@ -89,7 +89,7 @@ ${ue_api_definition}${message_struct_name}& operator<<(${message_struct_name}& t
 %     for oneof_name in message_inst.oneofs:
 <%
 oneof_inst = message_inst.oneofs[oneof_name]
-oneof_class_name = ue_excel_utils.UECppUOneofEnumName(oneof_inst, ue_bp_protocol_type_prefix)
+oneof_class_name = ue_excel_utils.UECppUOneofEnumName(oneof_inst, ue_bp_uenum_type_prefix)
 oneof_class_support_blue_print = ue_excel_utils.UECppUOneofEnumSupportBlueprint(oneof_inst)
 message_oneof_var_name = ue_excel_utils.UECppMessageOneofName(oneof_inst.descriptor_proto)
 %>
@@ -111,8 +111,8 @@ pb_field_proto = pb_field_inst.descriptor_proto
 <%
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 cpp_pb_field_var_name = ue_excel_utils.UECppMessageFieldVarName(pb_field_proto)
-cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_protocol_type_prefix)
-cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_protocol_type_prefix)
+cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix)
+cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix)
 %>
 %         if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
 %           if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
@@ -162,7 +162,7 @@ if ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
   cpp_std_field_type_name = message_inst.get_field_cpp_protobuf_type(pb_field_proto)
 else:
   cpp_std_field_type_name = pb_loader.MakoPbMsgGetPbFieldCppType(pb_field_proto)
-cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_protocol_type_prefix)
+cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix)
 %>
 %         if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
 %           if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
@@ -172,8 +172,8 @@ cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, 
     for (auto& item : source.${message_field_var_name})
     {
 %              if cpp_ue_field_type_name == "FString":
-        auto __xrescode_${cpp_pb_field_var_name} = StringCast<ANSICHAR>(*item);
-        target.add_${cpp_pb_field_var_name}(__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
+        auto __xrescode_${cpp_pb_field_var_name} = FTCHARToUTF8((const TCHAR*)*item);
+        target.add_${cpp_pb_field_var_name}((ANSICHAR*)__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
 %              elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
         item >> (*target.add_${cpp_pb_field_var_name}());
 %              else:
@@ -186,9 +186,9 @@ cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, 
 <% field_prefix_ident = "    " %>\
 <% field_prefix_ident = "    " %>\
 %              if ue_excel_utils.UECppUOneofEnumSupportBlueprint(pb_field_inst.pb_oneof):
-    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == ${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_protocol_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_protocol_type_prefix)})
+    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == ${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_uenum_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_uenum_type_prefix)})
 %              else:
-    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == static_cast<int32>(${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_protocol_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_protocol_type_prefix)}))
+    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == static_cast<int32>(${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_uenum_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_uenum_type_prefix)}))
 %              endif
     {
 %            else:
@@ -196,8 +196,8 @@ cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, 
 %            endif
 %            if cpp_ue_field_type_name == "FString":
     ${field_prefix_ident}{
-    ${field_prefix_ident}    auto __xrescode_${cpp_pb_field_var_name} = StringCast<ANSICHAR>(*source.${message_field_var_name});
-    ${field_prefix_ident}    target.set_${cpp_pb_field_var_name}(__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
+    ${field_prefix_ident}    auto __xrescode_${cpp_pb_field_var_name} = FTCHARToUTF8((const TCHAR*)*source.${message_field_var_name});
+    ${field_prefix_ident}    target.set_${cpp_pb_field_var_name}((ANSICHAR*)__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
     ${field_prefix_ident}}
 %            elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
     ${field_prefix_ident}source.${message_field_var_name} >> *target.mutable_${cpp_pb_field_var_name}();
@@ -213,6 +213,17 @@ cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, 
     return source;
 }
 %   endif
+
+% endfor
+% for message_full_path in pb_file.pb_msgs:
+<%
+message_inst = pb_file.pb_msgs[message_full_path]
+message_class_name = ue_excel_utils.UECppUClassName(message_inst, ue_bp_uclass_type_prefix)
+message_with_uclass = ue_excel_utils.UECppMessageProtocolWithUClass(message_inst)
+if ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto):
+  continue
+cpp_pb_message_type = message_inst.extended_nested_full_name.replace(".", "::")
+%>\
 %   if message_with_uclass:
 // ========================== ${message_class_name} ==========================
 ${ue_api_definition}${message_class_name}::${message_class_name}() : Super()
@@ -224,7 +235,7 @@ ${ue_api_definition}${message_class_name}& ${message_class_name}::operator=(cons
 %     for oneof_name in message_inst.oneofs:
 <%
 oneof_inst = message_inst.oneofs[oneof_name]
-oneof_class_name = ue_excel_utils.UECppUOneofEnumName(oneof_inst, ue_bp_protocol_type_prefix)
+oneof_class_name = ue_excel_utils.UECppUOneofEnumName(oneof_inst, ue_bp_uenum_type_prefix)
 oneof_class_support_blue_print = ue_excel_utils.UECppUOneofEnumSupportBlueprint(oneof_inst)
 message_oneof_var_name = ue_excel_utils.UECppMessageOneofName(oneof_inst.descriptor_proto)
 %>
@@ -246,16 +257,16 @@ pb_field_proto = pb_field_inst.descriptor_proto
 <%
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 cpp_pb_field_var_name = ue_excel_utils.UECppMessageFieldVarName(pb_field_proto)
-cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_protocol_type_prefix)
-cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_protocol_type_prefix)
+cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix, False)
+cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_uclass_type_prefix, False)
 %>
 %         if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
 %           if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
 <%
 field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
-field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_protocol_type_prefix)
-field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_protocol_type_prefix)
-field_message_cpp_ue_value_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "", ue_bp_protocol_type_prefix)
+field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_uclass_type_prefix, False)
+field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_uclass_type_prefix, False)
+field_message_cpp_ue_value_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "", ue_bp_uclass_type_prefix, False)
 if field_message_cpp_ue_key_type_name == "FString":
     field_message_cpp_ue_key_expression = "FString(item.first.c_str())"
 elif field_message_cpp_ue_key_type_name == "FName":
@@ -348,26 +359,26 @@ if ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
   cpp_std_field_type_name = message_inst.get_field_cpp_protobuf_type(pb_field_proto)
 else:
   cpp_std_field_type_name = pb_loader.MakoPbMsgGetPbFieldCppType(pb_field_proto)
-cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_protocol_type_prefix)
+cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)
 %>
 %         if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
 %           if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
 <%
 field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
-field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_protocol_type_prefix)
+field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_uclass_type_prefix)
 if ue_excel_utils.UECppMessageFieldIsEnum(field_message_with_map_kv_fields[1]):
   field_message_cpp_std_key_type_name = field_message_with_map_kv_fields[0].get_field_cpp_protobuf_type(field_message_with_map_kv_fields[1])
 else:
   field_message_cpp_std_key_type_name = pb_loader.MakoPbMsgGetPbFieldCppType(field_message_with_map_kv_fields[1])
-field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_protocol_type_prefix)
+field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_uclass_type_prefix)
 if ue_excel_utils.UECppMessageFieldIsEnum(field_message_with_map_kv_fields[2]):
   field_message_cpp_std_key_type_name = field_message_with_map_kv_fields[0].get_field_cpp_protobuf_type(field_message_with_map_kv_fields[2])
 else:
   field_message_cpp_std_value_type_name = pb_loader.MakoPbMsgGetPbFieldCppType(field_message_with_map_kv_fields[2])
 field_message_cpp_ue_key_init = None
 if field_message_cpp_ue_key_type_name == "FString" or field_message_cpp_ue_key_type_name == "FName":
-    field_message_cpp_ue_key_init = "auto __xrescode_key_of_{0} = StringCast<ANSICHAR>(*item.Key);".format(cpp_pb_field_var_name)
-    field_message_cpp_ue_key_expression = "std::string(__xrescode_key_of_{0}.Get(), static_cast<std::string::size_type>(__xrescode_key_of_{0}.Length()))".format(cpp_pb_field_var_name)
+    field_message_cpp_ue_key_init = "auto __xrescode_key_of_{0} = FTCHARToUTF8((const TCHAR*)*item.Key);".format(cpp_pb_field_var_name)
+    field_message_cpp_ue_key_expression = "std::string((ANSICHAR*)__xrescode_key_of_{0}.Get(), static_cast<std::string::size_type>(__xrescode_key_of_{0}.Length()))".format(cpp_pb_field_var_name)
 else:
     field_message_cpp_ue_key_expression = "static_cast<{0}>(item.Key)".format(field_message_cpp_std_key_type_name)
 %>
@@ -377,8 +388,8 @@ else:
         ${field_message_cpp_ue_key_init}
 %              endif
 %              if field_message_cpp_ue_value_type_name == "FString":
-        auto __xrescode_value_of_${cpp_pb_field_var_name} = StringCast<ANSICHAR>(*item.Value);
-        other.mutable_${cpp_pb_field_var_name}()->emplace(${field_message_cpp_ue_key_expression}, std::string{__xrescode_value_of_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_value_of_${cpp_pb_field_var_name}.Length())});
+        auto __xrescode_value_of_${cpp_pb_field_var_name} = FTCHARToUTF8((const TCHAR*)*item.Value);
+        other.mutable_${cpp_pb_field_var_name}()->emplace(${field_message_cpp_ue_key_expression}, std::string{(ANSICHAR*)__xrescode_value_of_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_value_of_${cpp_pb_field_var_name}.Length())});
 %              elif ue_excel_utils.UECppMessageFieldIsMessage(field_message_with_map_kv_fields[2]):
         if(item.Value != nullptr)
         {
@@ -393,8 +404,8 @@ else:
     for (auto& item : ${message_field_var_name})
     {
 %              if cpp_ue_field_type_name == "FString":
-        auto __xrescode_${cpp_pb_field_var_name} = StringCast<ANSICHAR>(*item);
-        other.add_${cpp_pb_field_var_name}(__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
+        auto __xrescode_${cpp_pb_field_var_name} = FTCHARToUTF8((const TCHAR*)*item);
+        other.add_${cpp_pb_field_var_name}((ANSICHAR*)__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
 %              elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
         if (item != nullptr)
         {
@@ -409,9 +420,9 @@ else:
 %            if pb_field_inst.pb_oneof is not None:
 <% field_prefix_ident = "    " %>\
 %              if ue_excel_utils.UECppUOneofEnumSupportBlueprint(pb_field_inst.pb_oneof):
-    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == ${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_protocol_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_protocol_type_prefix)})
+    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == ${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_uenum_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_uenum_type_prefix)})
 %              else:
-    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == static_cast<int32>(${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_protocol_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_protocol_type_prefix)}))
+    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == static_cast<int32>(${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_uenum_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_uenum_type_prefix)}))
 %              endif
     {
 %            else:

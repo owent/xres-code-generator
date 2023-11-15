@@ -232,6 +232,11 @@ def ToCamelName(str):
         strlist[i] = FirstCharUpper(strlist[i])
     return "".join(strlist)
 
+def PbMsgGetPbOneofVarName(oneof):
+    return oneof.name.lower()
+
+def PbMsgGetPbOneofFn(field):
+    return "{0}_case()".format(PbMsgGetPbOneofVarName(field))
 
 def PbMsgGetPbFieldVarName(field):
     lower_name = field.name.lower()
@@ -295,6 +300,13 @@ def MakoFirstCharUpper(context, arg):
 def MakoToCamelName(context, str):
     return ToCamelName(str)
 
+@supports_caller
+def MakoPbMsgGetCppOneofVarName(context, arg):
+    return PbMsgGetPbOneofVarName(arg)
+
+@supports_caller
+def MakoPbMsgGetCppOneof(context, arg):
+    return PbMsgGetPbOneofFn(arg)
 
 @supports_caller
 def MakoPbMsgGetCppFieldVarName(context, arg):
@@ -1350,6 +1362,14 @@ class PbMsg:
     def has_loader(self):
         return len(self.loaders) > 0
     
+    def get_extension(self, path):
+        extension_handle = self.db.get_extension(path)
+        if extension_handle is None:
+            return None
+        if extension_handle not in self.pb_msg.GetOptions().Extensions:
+            return None
+        return self.pb_msg.GetOptions().Extensions[extension_handle]
+    
     def get_pb_header_path(self):
         base_file = os.path.basename(self.pb_file.name)
         suffix_pos = base_file.rfind('.')
@@ -1522,10 +1542,13 @@ class PbDescSet:
 
         return msg_obj
 
-    def get_msg_by_type(self, type_name):
+    def get_message_by_type(self, type_name):
         if type_name and type_name[0:1] == ".":
             type_name = type_name[1:]
         return self.pb_msgs.get(type_name, None)
+    
+    def get_msg_by_type(self, type_name):
+        return self.get_message_by_type(type_name)
     
     def get_enum_by_type(self, type_name):
         if type_name and type_name[0:1] == ".":

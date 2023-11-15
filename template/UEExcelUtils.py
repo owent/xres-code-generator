@@ -28,10 +28,39 @@ def UECppUClassName(context, pb_msg, ue_type_prefix=None):
   return "U" + ue_type_prefix + pb_loader.MakoToCamelName(context, pb_msg.full_name)
 
 @supports_caller
+def UECppUStructName(context, pb_msg, ue_type_prefix=None):
+  pb_set = context.get("pb_set", runtime.UNDEFINED)
+  if ue_type_prefix is None:
+    ue_type_prefix = pb_set.get_custom_variable("ue_type_prefix", "")
+  return "F" + ue_type_prefix + pb_loader.MakoToCamelName(context, pb_msg.full_name)
+
+@supports_caller
 def UECppMessageIsMap(context, pb_msg_proto):
   if pb_msg_proto.options:
     return pb_msg_proto.options.map_entry
   return False
+
+@supports_caller
+def UECppMessageProtocolWithUClass(context, pb_msg):
+  if pb_msg.pb_file.package == 'google.protobuf':
+    return True
+  if UECppMessageIsMap(context, pb_msg.descriptor_proto):
+    return True
+  ext = pb_msg.get_extension('xrescode.ue')
+  if ext is None:
+    return True
+  return not ext.bp_protocol_without_uclass
+
+@supports_caller
+def UECppMessageProtocolWithUStruct(context, pb_msg):
+  if pb_msg.pb_file.package == 'google.protobuf':
+    return True
+  if UECppMessageIsMap(context, pb_msg.descriptor_proto):
+    return False
+  ext = pb_msg.get_extension('xrescode.ue')
+  if ext is None:
+    return False
+  return ext.bp_protocol_with_ustruct
 
 @supports_caller
 def UECppMessageGetMapKVFields(context, pb_msg_proto):
@@ -49,6 +78,14 @@ def UECppMessageGetMapKVFields(context, pb_msg_proto):
 @supports_caller
 def UECppMessageOneofName(context, pb_oneof_proto):
   return pb_loader.MakoToCamelName(context, pb_oneof_proto.name)
+
+@supports_caller
+def UECppMessageOneofVarName(context, pb_oneof_proto):
+  return pb_loader.MakoPbMsgGetCppFieldVarName(context, pb_oneof_proto)
+
+@supports_caller
+def UECppMessageOneofGetterName(context, pb_oneof_proto):
+  return pb_loader.MakoPbMsgGetCppOneof(context, pb_oneof_proto)
 
 @supports_caller
 def UECppMessageFieldName(context, pb_field_proto):
@@ -107,6 +144,28 @@ def UECppMessageFieldGetMapKVFields(context, pb_msg, pb_field_proto):
   if res is None:
     return None
   return (pb_msg_inst, res[0], res[1])
+
+@supports_caller
+def UECppMessageFieldSupportUClass(context, pb_msg, pb_field_proto):
+  if pb_field_proto.type != pb2.FieldDescriptorProto.TYPE_MESSAGE:
+    return True
+  if UECppMessageFieldIsMap(context, pb_msg, pb_field_proto):
+    map_pb_msg, _map_key_pb_field, map_value_pb_field = UECppMessageFieldGetMapKVFields(context, pb_msg, pb_field_proto)
+    return UECppMessageFieldSupportUClass(context, map_pb_msg, map_value_pb_field)
+  pb_set = context.get("pb_set", runtime.UNDEFINED)
+  field_pb_msg = pb_set.get_message_by_type(pb_field_proto.type_name)
+  return UECppMessageProtocolWithUClass(context, field_pb_msg)
+
+@supports_caller
+def UECppMessageFieldSupportUStruct(context, pb_msg, pb_field_proto):
+  if pb_field_proto.type != pb2.FieldDescriptorProto.TYPE_MESSAGE:
+    return True
+  if UECppMessageFieldIsMap(context, pb_msg, pb_field_proto):
+    map_pb_msg, _map_key_pb_field, map_value_pb_field = UECppMessageFieldGetMapKVFields(context, pb_msg, pb_field_proto)
+    return UECppMessageFieldSupportUStruct(context, map_pb_msg, map_value_pb_field)
+  pb_set = context.get("pb_set", runtime.UNDEFINED)
+  field_pb_msg = pb_set.get_message_by_type(pb_field_proto.type_name)
+  return UECppMessageProtocolWithUStruct(context, field_pb_msg)
 
 @supports_caller
 def UECppMessageFieldIsRepeated(context, pb_field_proto):

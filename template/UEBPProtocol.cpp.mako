@@ -107,12 +107,15 @@ pb_field_proto = pb_field_inst.descriptor_proto
 %       if not ue_excel_utils.UECppMessageFieldSupportUStruct(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support USTRUCT.
+%       elif ue_excel_utils.UECppMessageFieldReferenceSelf(message_inst, pb_field_proto):
+
+    // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support reference to self in USTRUCT.
 %       elif ue_excel_utils.UECppMessageFieldValid(message_inst, pb_field_proto):
 <%
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 cpp_pb_field_var_name = ue_excel_utils.UECppMessageFieldVarName(pb_field_proto)
-cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix)
-cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix)
+cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix, False)
+cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix, False)
 %>
 %         if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
 %           if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
@@ -154,6 +157,9 @@ pb_field_proto = pb_field_inst.descriptor_proto
 %       if not ue_excel_utils.UECppMessageFieldSupportUStruct(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support USTRUCT.
+%       elif ue_excel_utils.UECppMessageFieldReferenceSelf(message_inst, pb_field_proto):
+
+    // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support reference to self in USTRUCT.
 %       elif ue_excel_utils.UECppMessageFieldValid(message_inst, pb_field_proto):
 <%
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
@@ -162,7 +168,7 @@ if ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
   cpp_std_field_type_name = message_inst.get_field_cpp_protobuf_type(pb_field_proto)
 else:
   cpp_std_field_type_name = pb_loader.MakoPbMsgGetPbFieldCppType(pb_field_proto)
-cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix)
+cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix, False)
 %>
 %         if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
 %           if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
@@ -240,9 +246,9 @@ oneof_class_support_blue_print = ue_excel_utils.UECppUOneofEnumSupportBlueprint(
 message_oneof_var_name = ue_excel_utils.UECppMessageOneofName(oneof_inst.descriptor_proto)
 %>
 %       if oneof_class_support_blue_print:
-    ${message_oneof_var_name} = static_cast<${oneof_class_name}>(source.${ue_excel_utils.UECppMessageOneofGetterName(oneof_inst.descriptor_proto)});
+    ${message_oneof_var_name} = static_cast<${oneof_class_name}>(other.${ue_excel_utils.UECppMessageOneofGetterName(oneof_inst.descriptor_proto)});
 %       else:
-    ${message_oneof_var_name} = static_cast<int32>(source.${ue_excel_utils.UECppMessageOneofGetterName(oneof_inst.descriptor_proto)});
+    ${message_oneof_var_name} = static_cast<int32>(other.${ue_excel_utils.UECppMessageOneofGetterName(oneof_inst.descriptor_proto)});
 %       endif
 %     endfor
 %     for pb_field_key in message_inst.fields:
@@ -257,16 +263,16 @@ pb_field_proto = pb_field_inst.descriptor_proto
 <%
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 cpp_pb_field_var_name = ue_excel_utils.UECppMessageFieldVarName(pb_field_proto)
-cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix, False)
-cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_uclass_type_prefix, False)
+cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)
+cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_uclass_type_prefix)
 %>
 %         if ue_excel_utils.UECppMessageFieldIsRepeated(pb_field_proto):
 %           if ue_excel_utils.UECppMessageFieldIsMap(message_inst, pb_field_proto):
 <%
 field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
-field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_uclass_type_prefix, False)
-field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_uclass_type_prefix, False)
-field_message_cpp_ue_value_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "", ue_bp_uclass_type_prefix, False)
+field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_uclass_type_prefix)
+field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_uclass_type_prefix)
+field_message_cpp_ue_value_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "", ue_bp_uclass_type_prefix)
 if field_message_cpp_ue_key_type_name == "FString":
     field_message_cpp_ue_key_expression = "FString(item.first.c_str())"
 elif field_message_cpp_ue_key_type_name == "FName":
@@ -420,9 +426,9 @@ else:
 %            if pb_field_inst.pb_oneof is not None:
 <% field_prefix_ident = "    " %>\
 %              if ue_excel_utils.UECppUOneofEnumSupportBlueprint(pb_field_inst.pb_oneof):
-    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == ${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_uenum_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_uenum_type_prefix)})
+    if (${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == ${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_uenum_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_uenum_type_prefix)})
 %              else:
-    if (source.${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == static_cast<int32>(${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_uenum_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_uenum_type_prefix)}))
+    if (${ue_excel_utils.UECppMessageOneofName(pb_field_inst.pb_oneof.descriptor_proto)} == static_cast<int32>(${ue_excel_utils.UECppUOneofEnumName(pb_field_inst.pb_oneof, ue_bp_uenum_type_prefix)}::${ue_excel_utils.UECppUOneofEnumValueName(pb_field_inst.pb_oneof, pb_field_inst, ue_bp_uenum_type_prefix)}))
 %              endif
     {
 %            else:

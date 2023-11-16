@@ -231,6 +231,9 @@ message_oneof_var_name = ue_excel_utils.UECppMessageOneofName(oneof_inst.descrip
 %       if not ue_excel_utils.UECppMessageFieldSupportUStruct(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support USTRUCT.
+%       elif ue_excel_utils.UECppMessageFieldReferenceSelf(message_inst, pb_field_proto):
+
+    // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support reference to self in USTRUCT.
 %       elif ue_excel_utils.UECppMessageFieldValid(message_inst, pb_field_proto):
 <%
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
@@ -241,7 +244,7 @@ message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
 %>    // We do not decide how to support map type yet, so we just ignore ${pb_field_proto.name} field here.
     // UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_struct_name}")
-    // TMap<${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_ustruct_type_prefix, False)}, ${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "", ue_bp_protocol_type_prefix, False)}> ${message_field_var_name};
+    // TMap<${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_ustruct_type_prefix, False)}, ${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "", ue_bp_ustruct_type_prefix, False)}> ${message_field_var_name};
 %           else:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_struct_name}")
@@ -313,7 +316,7 @@ message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
 %>
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_class_name}")
-    TMap<${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_uclass_type_prefix)}, ${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_protocol_type_prefix)}> ${message_field_var_name};
+    TMap<${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_uclass_type_prefix)}, ${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_uclass_type_prefix)}> ${message_field_var_name};
 %           else:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_class_name}")

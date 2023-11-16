@@ -168,6 +168,21 @@ def UECppMessageFieldSupportUStruct(context, pb_msg, pb_field_proto):
   return UECppMessageProtocolWithUStruct(context, field_pb_msg)
 
 @supports_caller
+def UECppMessageFieldReferenceSelf(context, pb_msg, pb_field_proto):
+  if pb_field_proto.type != pb2.FieldDescriptorProto.TYPE_MESSAGE:
+    return False
+  if UECppMessageFieldIsMap(context, pb_msg, pb_field_proto):
+    _map_pb_msg, _map_key_pb_field, map_value_pb_field = UECppMessageFieldGetMapKVFields(context, pb_msg, pb_field_proto)
+    map_value_type = map_value_pb_field.type_name
+    if map_value_type.startswith('.'):
+      map_value_type = map_value_type[1:]
+    return map_value_type == pb_msg.full_name
+  pb_field_proto_type = pb_field_proto.type_name
+  if pb_field_proto_type.startswith('.'):
+    pb_field_proto_type = pb_field_proto_type[1:]
+  return pb_field_proto_type == pb_msg.full_name
+
+@supports_caller
 def UECppMessageFieldIsRepeated(context, pb_field_proto):
   return pb_field_proto.label == pb2.FieldDescriptorProto.LABEL_REPEATED
 

@@ -436,8 +436,8 @@ else:
 %            endif
 %            if cpp_ue_field_type_name == "FString":
     ${field_prefix_ident}{
-    ${field_prefix_ident}    auto __xrescode_${cpp_pb_field_var_name} = StringCast<ANSICHAR>(*${message_field_var_name});
-    ${field_prefix_ident}    other.set_${cpp_pb_field_var_name}(__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
+    ${field_prefix_ident}    auto __xrescode_${cpp_pb_field_var_name} = FTCHARToUTF8((const TCHAR*)*${message_field_var_name});
+    ${field_prefix_ident}    other.set_${cpp_pb_field_var_name}((ANSICHAR*)__xrescode_${cpp_pb_field_var_name}.Get(), static_cast<std::string::size_type>(__xrescode_${cpp_pb_field_var_name}.Length()));
     ${field_prefix_ident}}
 %            elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
     ${field_prefix_ident}if(${message_field_var_name} != nullptr)

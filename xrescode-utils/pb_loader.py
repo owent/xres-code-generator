@@ -1307,6 +1307,14 @@ class PbField:
     def get_cpp_oneof_field_full_name(self):
         return '{0}::{1}'.format(self.pb_msg.full_name.replace(".", "::"), self.get_cpp_oneof_field_name())
 
+    def get_extension(self, path):
+        extension_handle = self.db.get_extension(path)
+        if extension_handle is None:
+            return None
+        if extension_handle not in self.pb_field.GetOptions().Extensions:
+            return None
+        return self.pb_field.GetOptions().Extensions[extension_handle]
+
 class PbOneof:
     def __init__(self, db, pb_msg, pb_oneof_proto, index_set, oneofs_by_name):
         self.db = db

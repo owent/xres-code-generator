@@ -107,6 +107,9 @@ pb_field_proto = pb_field_inst.descriptor_proto
 %       if not ue_excel_utils.UECppMessageFieldSupportUStruct(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support USTRUCT.
+%       elif ue_excel_utils.UECppMessageFieldIgnoreUStruct(message_inst, pb_field_proto):
+
+    // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} has ustruct_field_ignore option.
 %       elif ue_excel_utils.UECppMessageFieldReferenceSelf(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support reference to self in USTRUCT.
@@ -157,6 +160,9 @@ pb_field_proto = pb_field_inst.descriptor_proto
 %       if not ue_excel_utils.UECppMessageFieldSupportUStruct(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support USTRUCT.
+%       elif ue_excel_utils.UECppMessageFieldIgnoreUStruct(message_inst, pb_field_proto):
+
+    // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} has ustruct_field_ignore option.
 %       elif ue_excel_utils.UECppMessageFieldReferenceSelf(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support reference to self in USTRUCT.
@@ -259,6 +265,9 @@ pb_field_proto = pb_field_inst.descriptor_proto
 %       if not ue_excel_utils.UECppMessageFieldSupportUClass(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support UCLASS.
+%       elif ue_excel_utils.UECppMessageFieldIgnoreUClass(message_inst, pb_field_proto):
+
+    // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} has uclass_field_ignore option.
 %       elif ue_excel_utils.UECppMessageFieldValid(message_inst, pb_field_proto):
 <%
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
@@ -357,6 +366,9 @@ pb_field_proto = pb_field_inst.descriptor_proto
 %       if not ue_excel_utils.UECppMessageFieldSupportUClass(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support USTRUCT.
+%       elif ue_excel_utils.UECppMessageFieldIgnoreUClass(message_inst, pb_field_proto):
+
+    // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} has uclass_field_ignore option.
 %       elif ue_excel_utils.UECppMessageFieldValid(message_inst, pb_field_proto):
 <%
 message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)

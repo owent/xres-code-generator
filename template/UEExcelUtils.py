@@ -157,6 +157,16 @@ def UECppMessageFieldSupportUClass(context, pb_msg, pb_field_proto):
   return UECppMessageProtocolWithUClass(context, field_pb_msg)
 
 @supports_caller
+def UECppMessageFieldIgnoreUClass(context, pb_msg, pb_field_proto):
+  pb_field = pb_msg.fields[pb_field_proto.name]
+  if not pb_field:
+    return False
+  ext = pb_field.get_extension('xrescode.ue_field')
+  if ext is None:
+    return False
+  return ext.uclass_field_ignore
+
+@supports_caller
 def UECppMessageFieldSupportUStruct(context, pb_msg, pb_field_proto):
   if pb_field_proto.type != pb2.FieldDescriptorProto.TYPE_MESSAGE:
     return True
@@ -166,6 +176,16 @@ def UECppMessageFieldSupportUStruct(context, pb_msg, pb_field_proto):
   pb_set = context.get("pb_set", runtime.UNDEFINED)
   field_pb_msg = pb_set.get_message_by_type(pb_field_proto.type_name)
   return UECppMessageProtocolWithUStruct(context, field_pb_msg)
+
+@supports_caller
+def UECppMessageFieldIgnoreUStruct(context, pb_msg, pb_field_proto):
+  pb_field = pb_msg.fields[pb_field_proto.name]
+  if not pb_field:
+    return False
+  ext = pb_field.get_extension('xrescode.ue_field')
+  if ext is None:
+    return False
+  return ext.ustruct_field_ignore
 
 @supports_caller
 def UECppMessageFieldReferenceSelf(context, pb_msg, pb_field_proto):

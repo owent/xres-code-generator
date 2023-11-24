@@ -365,7 +365,7 @@ pb_field_proto = pb_field_inst.descriptor_proto
 %>\
 %       if not ue_excel_utils.UECppMessageFieldSupportUClass(message_inst, pb_field_proto):
 
-    // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support USTRUCT.
+    // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} do not support UCLASS.
 %       elif ue_excel_utils.UECppMessageFieldIgnoreUClass(message_inst, pb_field_proto):
 
     // ${message_inst.full_name}.${pb_field_proto.name} is ignored because ${pb_field_proto.type_name} has uclass_field_ignore option.

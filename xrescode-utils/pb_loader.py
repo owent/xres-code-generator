@@ -232,6 +232,11 @@ def ToCamelName(str):
         strlist[i] = FirstCharUpper(strlist[i])
     return "".join(strlist)
 
+def PbMsgGetPbOneofVarName(oneof):
+    return oneof.name.lower()
+
+def PbMsgGetPbOneofFn(field):
+    return "{0}_case()".format(PbMsgGetPbOneofVarName(field))
 
 def PbMsgGetPbFieldVarName(field):
     lower_name = field.name.lower()
@@ -295,6 +300,13 @@ def MakoFirstCharUpper(context, arg):
 def MakoToCamelName(context, str):
     return ToCamelName(str)
 
+@supports_caller
+def MakoPbMsgGetCppOneofVarName(context, arg):
+    return PbMsgGetPbOneofVarName(arg)
+
+@supports_caller
+def MakoPbMsgGetCppOneof(context, arg):
+    return PbMsgGetPbOneofFn(arg)
 
 @supports_caller
 def MakoPbMsgGetCppFieldVarName(context, arg):
@@ -1135,6 +1147,43 @@ class PbFile:
         self.descriptor_proto = pb_file
         self.pb_msgs = dict()
         self.pb_enums = dict()
+        self.__topological_sorted_messages_cache = None
+
+    def get_topological_sorted_messages(self):
+        if self.__topological_sorted_messages_cache is not None:
+            return self.__topological_sorted_messages_cache
+        ret = []
+        topological_map = dict()
+        topological_notify = dict()
+        for msg in self.pb_msgs.values():
+            deps = set()
+            for field_inst in msg.fields.values():
+                if field_inst.pb_field.message_type is not None and field_inst.pb_field.message_type.file == self.pb_file:
+                    dep_full_name = field_inst.pb_field.message_type.full_name
+                    if dep_full_name.startswith('.'):
+                        dep_full_name = dep_full_name[1:]
+                    if dep_full_name == msg.full_name:
+                        continue
+                    deps.add(dep_full_name)
+                    if dep_full_name in topological_notify:
+                        topological_notify[dep_full_name].add(msg.full_name)
+                    else:
+                        topological_notify[dep_full_name] = set([msg.full_name])
+            topological_map[msg.full_name] = { "instance" : msg, "deps": deps }
+        topological_readys = []
+        for msg_inst in topological_map.values():
+            if not msg_inst["deps"]:
+                topological_readys.append(msg_inst)
+        while topological_readys:
+            msg_inst = topological_readys.pop()
+            ret.append(msg_inst["instance"])
+            if msg_inst["instance"].full_name in topological_notify:
+                for dep_full_name in topological_notify[msg_inst["instance"].full_name]:
+                    topological_map[dep_full_name]["deps"].remove(msg_inst["instance"].full_name)
+                    if not topological_map[dep_full_name]["deps"]:
+                        topological_readys.append(topological_map[dep_full_name])
+        self.__topological_sorted_messages_cache = ret
+        return ret
 
     def get_file_path_without_ext(self):
         if self.name.endswith(".proto"):
@@ -1258,6 +1307,14 @@ class PbField:
     def get_cpp_oneof_field_full_name(self):
         return '{0}::{1}'.format(self.pb_msg.full_name.replace(".", "::"), self.get_cpp_oneof_field_name())
 
+    def get_extension(self, path):
+        extension_handle = self.db.get_extension(path)
+        if extension_handle is None:
+            return None
+        if extension_handle not in self.pb_field.GetOptions().Extensions:
+            return None
+        return self.pb_field.GetOptions().Extensions[extension_handle]
+
 class PbOneof:
     def __init__(self, db, pb_msg, pb_oneof_proto, index_set, oneofs_by_name):
         self.db = db
@@ -1349,6 +1406,14 @@ class PbMsg:
 
     def has_loader(self):
         return len(self.loaders) > 0
+    
+    def get_extension(self, path):
+        extension_handle = self.db.get_extension(path)
+        if extension_handle is None:
+            return None
+        if extension_handle not in self.pb_msg.GetOptions().Extensions:
+            return None
+        return self.pb_msg.GetOptions().Extensions[extension_handle]
     
     def get_pb_header_path(self):
         base_file = os.path.basename(self.pb_file.name)
@@ -1522,10 +1587,13 @@ class PbDescSet:
 
         return msg_obj
 
-    def get_msg_by_type(self, type_name):
+    def get_message_by_type(self, type_name):
         if type_name and type_name[0:1] == ".":
             type_name = type_name[1:]
         return self.pb_msgs.get(type_name, None)
+    
+    def get_msg_by_type(self, type_name):
+        return self.get_message_by_type(type_name)
     
     def get_enum_by_type(self, type_name):
         if type_name and type_name[0:1] == ".":

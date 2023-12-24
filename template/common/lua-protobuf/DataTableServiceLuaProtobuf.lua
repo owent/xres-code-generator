@@ -34,8 +34,8 @@ local DataTableSet = {}
 -- ===================== DataTableSet =====================
 local function __SetupIndex(index_loader, raw_data_containers, data_container, index_cfg)
     local data_set = raw_data_containers[index_cfg.filePath]
+    local pb = require('pb')
     if data_set == nil then
-        local pb = require('pb')
         local data_desc_msg = pb.type(index_cfg.fullName)
         if data_desc_msg == nil then
             if 'function' == type(index_loader.__service.OnError) then
@@ -94,14 +94,41 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
         local message_descriptor_inst = {
             name = index_cfg.fullName,
             pb_handle = data_desc_msg,
-            fields = {}
+            fields = {},
+            fields_by_number = {},
+            fields_by_name = {},
         }
+        local message_typeinfo = index_loader.__types[index_cfg.fullName]
+        if message_typeinfo == nil then
+            local typeinfo_name, typeinfo_bashname, typeinfo_type = pb.type(index_cfg.fullName)
+            message_typeinfo = {
+                name = typeinfo_name or index_cfg.fullName,
+                bashname = typeinfo_bashname,
+                type = typeinfo_type,
+            }
+            index_loader.__types[message_typeinfo.name] = message_typeinfo
+            index_loader.__types[index_cfg.fullName] = message_typeinfo
+        end
         for fd_name, fd_number, fd_type in pb.fields(index_cfg.fullName) do
+            local typeinfo = index_loader.__types[fd_type]
+            if typeinfo == nil then
+                local typeinfo_name, typeinfo_bashname, typeinfo_type = pb.type(fd_type)
+                typeinfo = {
+                    name = typeinfo_name or fd_type,
+                    bashname = typeinfo_bashname,
+                    type = typeinfo_type,
+                }
+                index_loader.__types[fd_type] = typeinfo
+            end
             table.insert(message_descriptor_inst.fields, {
                 name = fd_name,
                 number = fd_number,
-                type = fd_type,
+                type = typeinfo,
             })
+        end
+        for _, fds in ipairs(message_descriptor_inst.fields) do
+            message_descriptor_inst.fields_by_number[fds.number] = fds
+            message_descriptor_inst.fields_by_name[fds.name] = fds
         end
         data_set = { origin = xresloader_datablocks, all_rows = all_rows, message_descriptor = message_descriptor_inst }
         raw_data_containers[index_cfg.filePath] = data_set
@@ -125,13 +152,22 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
         local cfg_item = index_data.data
         local parent_node = nil
         local last_key = nil
+        local last_keyv = nil
         for _, keyv in ipairs(index_cfg.keys) do
+            last_keyv = keyv
             last_key = cfgv[keyv] or nil
             parent_node = cfg_item
             cfg_item = parent_node[last_key]
             if cfg_item == nil and last_key ~= nil then
                 cfg_item = {}
                 parent_node[last_key] = cfg_item
+                local field_typeinfo = data_set.message_descriptor.fields_by_name[keyv]
+                if field_typeinfo ~= nil and field_typeinfo.type.type == 'enum' then
+                    local enum_number_value = pb.enum(field_typeinfo.type.name, last_key)
+                    if enum_number_value ~= nil then
+                        parent_node[enum_number_value] = cfg_item
+                    end
+                end
             end
         end
 
@@ -139,6 +175,13 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
             table.insert(cfg_item, cfgv)
         elseif last_key ~= nil then
             parent_node[last_key] = cfgv
+            local field_typeinfo = data_set.message_descriptor.fields_by_name[last_keyv]
+            if field_typeinfo ~= nil and field_typeinfo.type.type == 'enum' then
+                local enum_number_value = pb.enum(field_typeinfo.type.name, last_key)
+                if enum_number_value ~= nil then
+                    parent_node[enum_number_value] = cfgv
+                end
+            end
         end
     end
 
@@ -259,6 +302,7 @@ function DataTableService.LoadTables(self)
             __indexes = v,
             __index_handles = nil,
             __service = self,
+            __types = {},
         }
         setmetatable(loader, { __index = DataTableSet })
         self.__current_group[k] = loader

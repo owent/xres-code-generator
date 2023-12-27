@@ -29,6 +29,7 @@ else
 fi
 
 PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")"
+echo "Using protoc=$PREBUILT_PROTOC"
 "$PREBUILT_PROTOC" -I "$REPO_DIR/sample/proto" -I "$REPO_DIR/pb_extension" "$REPO_DIR/sample/proto/"*.proto "$REPO_DIR/pb_extension/google/protobuf/"*.proto -o "$REPO_DIR/sample/sample.pb"
 
 "$PYTHON_BIN" "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/uepbcpp" \

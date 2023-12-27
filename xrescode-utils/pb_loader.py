@@ -591,11 +591,14 @@ class PbMsgIndexType:
 class PbMsgIndex:
     def __init__(self, pb_msg, pb_ext_index, index_set):
         self.name = None
+        self.pb_msg = pb_msg
         self.index_set = index_set
+        self.field_names = [[x.strip() for x in y.split(".")] for y in pb_ext_index.fields]
+        self.sort_by_names = [[x.strip() for x in y.split(".")] for y in pb_ext_index.sort_by]
         if pb_ext_index.name:
             self.name = pb_ext_index.name
         else:
-            self.name = "_".join(pb_ext_index.fields).lower()
+            self.name = "_".join(["_".join(x) for x in self.field_names]).lower()
 
         self.camelname = ToCamelName(self.name)
 
@@ -604,6 +607,7 @@ class PbMsgIndex:
         self.get_file_expression = None
         # self.index_type
         self.fields = []
+        self.sort_by = []
         for fd in pb_ext_index.fields:
             pb_fd = None
             for test_pb_fd in pb_msg.fields:
@@ -629,7 +633,29 @@ class PbMsgIndex:
                 self.fields.clear()
                 break
             self.fields.append(pb_fd)
-
+        self.sort_by = []
+        for fd in pb_ext_index.sort_by:
+            pb_fd = None
+            for test_pb_fd in pb_msg.fields:
+                if test_pb_fd.name == fd:
+                    pb_fd = test_pb_fd
+                    break
+            if pb_fd is None:
+                sys.stderr.write(
+                    '[XRESCODE ERROR] index {0} invalid, because field {1} is not found in {2}\n'
+                    .format(self.name, fd, pb_msg.name))
+                break
+            if pb_fd.label == pb_fd.LABEL_REPEATED:
+                sys.stderr.write(
+                    '[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n'
+                    .format(self.name, fd, pb_msg.name))
+                break
+            if pb_fd.type == pb_fd.TYPE_MESSAGE:
+                sys.stderr.write(
+                    '[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be message\n'
+                    .format(self.name, fd, pb_msg.name))
+                break
+            self.sort_by.append(pb_fd)
         if pb_ext_index.index_type:
             self.index_type = pb_ext_index.index_type
         else:

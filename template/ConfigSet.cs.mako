@@ -85,15 +85,17 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             int count = table.${loader.get_camel_code_field_name()}.Count;
             for (var i = 0; i < count; i++)
             {
+%   for code_index in loader.code.indexes:
                 ${code_index.camelname}ValueItemType iteminfo = ConfigSetManager.Instance.Parse<${code_index.camelname}ValueItemType>(table.${loader.get_camel_code_field_name()}[i].ToByteArray(), ${code_index.camelname}ValueItemType.Parser);
                 if (iteminfo == null) continue;
+%   endfor
                 MergeData(iteminfo);
             }
         }
 
+%   for code_index in loader.code.indexes:
         protected void MergeData(${code_index.camelname}ValueItemType iteminfo) {
             if (iteminfo == null) return;
-%   for code_index in loader.code.indexes:
 %     if len(code_index.fields) == 1:
             var key_${code_index.name} = (${code_index.get_cs_key_type_list()})iteminfo.${code_index.get_cs_key_params()};
 %     else:

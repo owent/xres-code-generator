@@ -20,6 +20,7 @@ message role_upgrade_cfg {
         indexes : {
             fields : "Id"
             index_type : EN_INDEX_KL // Key - List index: (Id) => list<role_upgrade_cfg>
+            sort_by: "Level"
         }
         indexes : {
             fields : "Id"

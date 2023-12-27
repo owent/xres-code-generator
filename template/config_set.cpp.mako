@@ -579,6 +579,17 @@ const ${pb_msg_class_name}::${code_index.name}_value_type* ${pb_msg_class_name}:
     return nullptr;
   }
 
+%   if code_index.sort_by:
+  std::sort(iter->second.begin(), iter->second.end(),
+    [](const item_ptr_type& l, const item_ptr_type& r) {
+%     for sort_fd in code_index.sort_by:
+      if (l->${PbMsgGetPbFieldFn(sort_fd)} != r->${PbMsgGetPbFieldFn(sort_fd)}) {
+        return l->${PbMsgGetPbFieldFn(sort_fd)} < r->${PbMsgGetPbFieldFn(sort_fd)};
+      }
+%     endfor
+      return false;
+    });
+%   endif
   return &iter->second;
 
 % endif

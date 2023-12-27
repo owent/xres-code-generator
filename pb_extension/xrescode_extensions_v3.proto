@@ -17,6 +17,7 @@ message xrescode_index {
     xrescode_index_type index_type      = 3;
     string              file_mapping    = 4;
     bool                allow_not_found = 5;
+    repeated string     sort_by         = 6;
 }
 
 message xrescode_loader {

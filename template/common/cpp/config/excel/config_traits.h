@@ -51,19 +51,20 @@ struct EXCEL_CONFIG_SYMBOL_VISIBLE config_traits<type_guard> : public type_guard
 };
 **/
 
+template <class Y>
 struct EXCEL_CONFIG_SYMBOL_VISIBLE tuple_hasher;
 
 struct EXCEL_CONFIG_SYMBOL_VISIBLE hash_guard {};
 
 template <class T>
 struct EXCEL_CONFIG_SYMBOL_VISIBLE hash_traits {
-  template <class>
-  using hash = tuple_hasher;
+  template <class Y>
+  using hash = tuple_hasher<Y>;
 };
 
 struct EXCEL_CONFIG_SYMBOL_VISIBLE type_guard {
   template <class Key, class Value>
-  using map_type = std::unordered_map<Key, Value, hash_traits<tuple_hasher>::template hash<Key>>;
+  using map_type = std::unordered_map<Key, Value, hash_traits<hash_guard>::template hash<Key>>;
 
   template <class Y>
   using shared_ptr = std::shared_ptr<Y>;
@@ -109,6 +110,7 @@ struct EXCEL_CONFIG_SYMBOL_VISIBLE tuple_hasher_at_index<Index, true> {
   }
 };
 
+template <class T>
 struct EXCEL_CONFIG_SYMBOL_VISIBLE tuple_hasher {
   template <class... Args>
   std::size_t operator()(const std::tuple<Args...>& t) const {

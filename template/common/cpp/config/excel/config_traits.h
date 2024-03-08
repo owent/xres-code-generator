@@ -7,6 +7,7 @@
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
 
 #ifndef EXCEL_CONFIG_SYMBOL_VISIBLE
 #  if __GNUC__ >= 4

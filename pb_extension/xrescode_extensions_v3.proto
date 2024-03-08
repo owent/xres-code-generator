@@ -22,7 +22,7 @@ message xrescode_index {
 
 message xrescode_loader {
     string                  file_list  = 101;
-    string                  file_path  = 102;
+    repeated string         file_path  = 102;
     string                  code_field = 103;
     repeated xrescode_index indexes    = 201;
     repeated string         tags       = 301;

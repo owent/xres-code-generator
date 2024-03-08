@@ -18,8 +18,8 @@ local DataTableService = {
 local DataTableSet = {}
 
 -- ===================== DataTableSet =====================
-local function __SetupIndex(data_container, index_cfg)
-    local data_block = require(index_cfg.filePath)
+local function __SetupIndexFromFile(data_container, index_cfg, index_file_path)
+    local data_block = require(index_file_path)
     if data_block == nil then
         return
     end
@@ -33,7 +33,7 @@ local function __SetupIndex(data_container, index_cfg)
         return
     end
 
-    local index_data = {
+    local index_data = data_container[index_cfg.indexName] or {
         options = index_cfg.options or {},
         data = {}
     }
@@ -60,6 +60,16 @@ local function __SetupIndex(data_container, index_cfg)
     end
 
     data_container[index_cfg.indexName] = index_data
+end
+
+local function __SetupIndex(data_container, index_cfg)
+    data_container[index_cfg.indexName] = nil
+    for _, v in ipairs(index_cfg.filePath) do
+        if v == nil then
+            return
+        end
+        __SetupIndexFromFile(data_container, index_cfg, v)
+    end
 end
 
 function DataTableSet.GetAllIndexes(self)

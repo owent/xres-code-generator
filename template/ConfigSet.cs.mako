@@ -146,10 +146,16 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %         if  loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
             string file_path = ${"$\"" + code_line + "\""};
-%         else:
-            string file_path = "${loader.code.file_path}";
-%         endif
             Load(file_path);
+%         else:
+%           if not isinstance(loader.code.file_path, str):
+%             for one_file_path in loader.code.file_path:
+            Load("${one_file_path}");
+%             endfor
+%           else:
+            Load("${loader.code.file_path}");
+%           endif
+%         endif
             ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
             return ret ?? new ${code_index.camelname}ValueType();
 %       else:
@@ -163,10 +169,16 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %         if  loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
             string file_path = ${"$\"" + code_line + "\""};
-%         else:
-            string file_path = "${loader.code.file_path}";
-%         endif
             Load(file_path);
+%         else:
+%           if not isinstance(loader.code.file_path, str):
+%             for one_file_path in loader.code.file_path:
+            Load("${one_file_path}");
+%             endfor
+%           else:
+            Load("${loader.code.file_path}");
+%           endif
+%         endif
             ${code_index.camelname}Data.TryGetValue(key, out ret);
             return ret ?? new ${code_index.camelname}ValueType();
 %       endif
@@ -187,10 +199,16 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %         if  loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
                 string file_path = ${"$\"" + code_line + "\""};
+            Load(file_path);
 %         else:
-                string file_path = "${loader.code.file_path}";
+%           if not isinstance(loader.code.file_path, str):
+%             for one_file_path in loader.code.file_path:
+            Load("${one_file_path}");
+%             endfor
+%           else:
+            Load("${loader.code.file_path}");
+%           endif
 %         endif
-                Load(file_path);
                 ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
             }
             list = ret;
@@ -203,10 +221,16 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %         if  loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
                 string file_path = ${"$\"" + code_line + "\""};
-%         else:
-                string file_path = "${loader.code.file_path}";
-%         endif
                 Load(file_path);
+%         else:
+%           if not isinstance(loader.code.file_path, str):
+%             for one_file_path in loader.code.file_path:
+                Load("${one_file_path}");
+%             endfor
+%           else:
+                Load("${loader.code.file_path}");
+%           endif
+%         endif
                 ${code_index.camelname}Data.TryGetValue(key, out ret);
             }
             list = ret;
@@ -234,10 +258,16 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %         if  loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
             string file_path = ${"$\"" + code_line + "\""};
-%         else:
-            string file_path = "${loader.code.file_path}";
-%         endif
             Load(file_path);
+%         else:
+%           if not isinstance(loader.code.file_path, str):
+%             for one_file_path in loader.code.file_path:
+            Load("${one_file_path}");
+%             endfor
+%           else:
+            Load("${loader.code.file_path}");
+%           endif
+%         endif
             ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
             return ret;
 %       else:
@@ -251,10 +281,16 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %         if  loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
             string file_path = ${"$\"" + code_line + "\""};
-%         else:
-            string file_path = "${loader.code.file_path}";
-%         endif
             Load(file_path);
+%         else:
+%           if not isinstance(loader.code.file_path, str):
+%             for one_file_path in loader.code.file_path:
+            Load("${one_file_path}");
+%             endfor
+%           else:
+            Load("${loader.code.file_path}");
+%           endif
+%         endif
             ${code_index.camelname}Data.TryGetValue(key, out ret);
             return ret;
 %       endif

@@ -12,7 +12,10 @@ return {
   -- ======================================== ${loader.code.class_name} ========================================
   ${loader.code.class_name} = {<%
     if loader.code.file_path:
-      loader_data_source = ', filePath = "{0}"'.format(loader.code.file_path)
+      if not isinstance(loader.code.file_path, str):
+        loader_data_source = ', filePath = {' + '"{0}"'.format('", "'.join([x for x in loader.code.file_path])) + '}'
+      else:
+        loader_data_source = ', filePath = {' + '"{0}"'.format(loader.code.file_path) + '}'
     elif loader.code.file_list:
       loader_data_source = ', fileList = "{0}"'.format(loader.code.file_list)
     else:

@@ -32,8 +32,8 @@ local DataTableService = {
 local DataTableSet = {}
 
 -- ===================== DataTableSet =====================
-local function __SetupIndex(index_loader, raw_data_containers, data_container, index_cfg)
-    local data_set = raw_data_containers[index_cfg.filePath]
+local function __SetupIndexFromFile(index_loader, raw_data_containers, data_container, index_cfg, index_file_path)
+    local data_set = raw_data_containers[index_file_path]
     local pb = require('pb')
     if data_set == nil then
         local data_desc_msg = pb.type(index_cfg.fullName)
@@ -47,12 +47,12 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
             return
         end
 
-        local load_file_result, data_block = pcall(index_loader.__service.BufferLoader, index_cfg.filePath)
+        local load_file_result, data_block = pcall(index_loader.__service.BufferLoader, index_file_path)
         if not load_file_result then
             if 'function' == type(index_loader.__service.OnError) then
                 local msg = string.format('Index "%s" of message "%s": can not load file data %s: %s', index_loader.Name
                     ,
-                    index_cfg.fullName, index_cfg.filePath, data_block)
+                    index_cfg.fullName, index_file_path, data_block)
                 pcall(index_loader.__service.OnError, msg, index_loader, index_cfg.indexName)
             end
             return
@@ -64,7 +64,7 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
             if 'function' == type(index_loader.__service.OnError) then
                 local msg = string.format('Index "%s" of message "%s": can not parse file data %s: %s',
                     index_loader.Name,
-                    index_cfg.fullName, index_cfg.filePath, xresloader_datablocks)
+                    index_cfg.fullName, index_file_path, xresloader_datablocks)
                 pcall(index_loader.__service.OnError, msg, index_loader, index_cfg.indexName)
             end
             return
@@ -86,7 +86,7 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
                         'Index "%s" of message "%s": can not parse data row %d in file %s with message %s: %s'
                         ,
                         index_loader.Name,
-                        index_cfg.fullName, row_index, index_cfg.filePath, index_cfg.fullName, data_row)
+                        index_cfg.fullName, row_index, index_file_path, index_cfg.fullName, data_row)
                     pcall(index_loader.__service.OnError, msg, index_loader, index_cfg.indexName)
                 end
             end
@@ -131,7 +131,7 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
             message_descriptor_inst.fields_by_name[fds.name] = fds
         end
         data_set = { origin = xresloader_datablocks, all_rows = all_rows, message_descriptor = message_descriptor_inst }
-        raw_data_containers[index_cfg.filePath] = data_set
+        raw_data_containers[index_file_path] = data_set
     end
 
     local all_rows = data_set.all_rows
@@ -143,7 +143,7 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
         return
     end
 
-    local index_data = {
+    local index_data = data_container[index_cfg.indexName] or {
         options = index_cfg.options or {},
         data = {}
     }
@@ -186,6 +186,16 @@ local function __SetupIndex(index_loader, raw_data_containers, data_container, i
     end
 
     data_container[index_cfg.indexName] = index_data
+end
+
+local function __SetupIndex(index_loader, raw_data_containers, data_container, index_cfg)
+    data_container[index_cfg.indexName] = nil
+    for _, v in ipairs(index_cfg.filePath) do
+        if v == nil then
+            return
+        end
+        __SetupIndexFromFile(index_loader, raw_data_containers, data_container, index_cfg, v)
+    end
 end
 
 function DataTableSet.GetAllIndexes(self)

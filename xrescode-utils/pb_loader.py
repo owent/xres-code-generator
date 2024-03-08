@@ -885,7 +885,7 @@ class PbMsgCodeExt:
     def is_valid(self):
         if self.outer_msg is None or self.inner_msg is None:
             return False
-        return self.file_list is not None or self.file_path is not None
+        return self.file_list is not None or self.file_path
 
 
 class PbMsgLoader:

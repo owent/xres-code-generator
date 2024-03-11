@@ -41,12 +41,12 @@ struct EXCEL_CONFIG_SYMBOL_VISIBLE config_traits<type_guard> : public type_guard
   using shared_ptr = util::memory::strong_rc_ptr<Y>;
 
   template <class Y, class... Args>
-  util::memory::strong_rc_ptr<Y> make_shared(Args&&... args) {
+  inline static util::memory::strong_rc_ptr<Y> make_shared(Args&&... args) {
     return util::memory::make_strong_rc<Y>(std::forward<Args>(args)...);
   }
 
   template <class Y, class... Args>
-  util::memory::strong_rc_ptr<Y> const_pointer_cast(Args&&... args) {
+  inline static util::memory::strong_rc_ptr<Y> const_pointer_cast(Args&&... args) {
     return util::memory::const_pointer_cast<Y>(std::forward<Args>(args)...);
   }
 };

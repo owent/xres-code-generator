@@ -203,7 +203,7 @@ for _, v1 in ipairs(data2) do
 end
 ' >upblua/main.lua
 
-echo 'local pb = require('pb')
+echo 'local pb = require("pb")
 
 local function load_pb(file_path)
   local f = io.open(file_path, "rb")

@@ -702,12 +702,20 @@ class PbMsgIndex:
         for fd in self.fields:
             decls.append(fd.name)
         return quote + (quote + ", " + quote).join(decls) + quote
-
+    
     def get_cs_key_params(self):
         decls = []
         for fd in self.fields:
             decls.append(ToCamelName(fd.name))
         return ", ".join(decls)
+
+    def get_sort_by_names(self, quote='"'):
+        decls = []
+        for fd in self.sort_by:
+            decls.append(ToCamelName(fd.name))
+        if not decls:
+            return ""
+        return quote + (quote + ", " + quote).join(decls) + quote
 
     def get_load_file_code(self, var_name):
         code_lines = []
@@ -724,7 +732,7 @@ class PbMsgIndex:
                     self.name))
             if self.file_mapping:
                 next_index = 0
-                for mo in re.finditer('\{\s*([\w_]+)s*\}', self.file_mapping):
+                for mo in re.finditer('\\{\\s*([\\w_]+)s*\\}', self.file_mapping):
                     key_var_name = mo.group(1).lower()
                     if key_var_name not in fileds_mapping:
                         sys.stderr.write(
@@ -770,7 +778,7 @@ class PbMsgIndex:
                 .format(self.name))
             if self.file_mapping:
                 next_index = 0
-                for mo in re.finditer('\{\s*([\w_]+)s*\}', self.file_mapping):
+                for mo in re.finditer('\\{\\s*([\\w_]+)s*\\}', self.file_mapping):
                     key_var_name = mo.group(1).lower()
                     if key_var_name not in fileds_mapping:
                         sys.stderr.write(

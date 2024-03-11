@@ -39,7 +39,7 @@ return {
         else:
           code_index_allow_not_found = 'false'
 %>      -- require("DataTableService").Get("${loader.code.class_name}"):GetByIndex("${code_index.name}", ${code_index.get_key_names()})
-      { indexName = "${code_index.name}"${loader_data_source}, fullName = '${loader.full_name}', messageName = '${loader.pb_msg.name}', options = { isList = ${code_index_is_list}, allowNotFound = ${code_index_allow_not_found} }, keys = { ${code_index.get_key_names()} } },
+      { indexName = "${code_index.name}"${loader_data_source}, fullName = '${loader.full_name}', messageName = '${loader.pb_msg.name}', options = { isList = ${code_index_is_list}, allowNotFound = ${code_index_allow_not_found}, sortBy = { ${code_index.get_sort_by_names()} } }, keys = { ${code_index.get_key_names()} } },
 %     endfor
   },
 %   endfor

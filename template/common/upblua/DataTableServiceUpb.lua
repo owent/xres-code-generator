@@ -113,10 +113,7 @@ local function __SetupIndexFromFile(index_loader, raw_data_containers, data_cont
         return
     end
 
-    local index_data = data_container[index_cfg.indexName] or {
-        options = index_cfg.options or {},
-        data = {}
-    }
+    local index_data = data_container[index_cfg.indexName]
 
     for _, cfgv in ipairs(all_rows) do
         local cfg_item = index_data.data
@@ -142,13 +139,38 @@ local function __SetupIndexFromFile(index_loader, raw_data_containers, data_cont
     data_container[index_cfg.indexName] = index_data
 end
 
+local function __SetupIndexSortBy(data_set, left_level, sort_by)
+    if left_level > 0 then
+        for _, v in pairs(data_set) do
+            __SetupIndexSortBy(v, left_level - 1, sort_by)
+        end
+    else
+        table.sort(data_set, function(a, b)
+            for _, v in ipairs(sort_by) do
+                if a[v] ~= b[v] then
+                    return a[v] < b[v]
+                end
+            end
+            return false
+        end)
+    end
+end
+
 local function __SetupIndex(index_loader, raw_data_containers, data_container, index_cfg)
-    data_container[index_cfg.indexName] = nil
+    local data_set = {
+        options = index_cfg.options or {},
+        data = {}
+    }
+    data_container[index_cfg.indexName] = data_set
     for _, v in ipairs(index_cfg.filePath) do
         if v == nil then
             return
         end
         __SetupIndexFromFile(index_loader, raw_data_containers, data_container, index_cfg, v)
+    end
+    -- sort list items if it's a list index and has sort keys
+    if index_cfg.options.isList and index_cfg.options.sortBy ~= nil and #index_cfg.options.sortBy > 0 then
+        __SetupIndexSortBy(data_set.data, #index_cfg.keys, index_cfg.options.sortBy)
     end
 end
 

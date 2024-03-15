@@ -431,14 +431,25 @@ void ${pb_msg_class_name}::merge_data(item_ptr_type item) {
     }
 
 %   if code_index.is_list():
-    excel_config_type_traits::const_pointer_cast<std::vector<item_ptr_type> >(${code_index.name}_data_[idx])->push_back(item);
+    excel_config_type_traits::shared_ptr<std::vector<item_ptr_type> > data_set = excel_config_type_traits::const_pointer_cast<std::vector<item_ptr_type> >(${code_index.name}_data_[idx]);
+    if (!data_set) {
+      data_set = excel_config_type_traits::make_shared<std::vector<item_ptr_type> >();
+      ${code_index.name}_data_[idx] = excel_config_type_traits::const_pointer_cast<const std::vector<item_ptr_type> >(data_set);
+    }
+    data_set->push_back(item);
 %   else:
     ${code_index.name}_data_[idx] = item;
 %   endif
 % else:
 %   if code_index.is_list():
-    excel_config_type_traits::const_pointer_cast<std::vector<item_ptr_type> >(${code_index.name}_data_
-      [std::make_tuple(${code_index.get_key_value_list("item->")})])->push_back(item);
+    excel_config_type_traits::shared_ptr<std::vector<item_ptr_type> > data_set = excel_config_type_traits::const_pointer_cast<std::vector<item_ptr_type> >(${code_index.name}_data_
+      [std::make_tuple(${code_index.get_key_value_list("item->")})]);
+    if (!data_set) {
+      data_set = excel_config_type_traits::make_shared<std::vector<item_ptr_type> >();
+      ${code_index.name}_data_[std::make_tuple(${code_index.get_key_value_list("item->")})] =
+        excel_config_type_traits::const_pointer_cast<const std::vector<item_ptr_type> >(data_set);
+    }
+    data_set->push_back(item);
 %   else:
     std::tuple<${code_index.get_key_type_list()}> key = std::make_tuple(${code_index.get_key_value_list("item->")});
     if (${code_index.name}_data_.end() != ${code_index.name}_data_.find(key)) {

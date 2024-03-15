@@ -10,7 +10,7 @@
 #include <utility>
 
 #ifndef EXCEL_CONFIG_SYMBOL_VISIBLE
-#  if __GNUC__ >= 4
+#  if defined(__GNUC__) && __GNUC__ >= 4
 #    if !(defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__))
 #      define EXCEL_CONFIG_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
 #    endif

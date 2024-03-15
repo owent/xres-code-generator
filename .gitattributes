@@ -1,5 +1,7 @@
 *.sh eol=lf
 *.py eol=lf
+*.h eol=lf
+*.cpp eol=lf
 *.md eol=crlf
 *.txt eol=crlf
 *.exe filter=lfs diff=lfs merge=lfs -text

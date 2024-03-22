@@ -46,12 +46,14 @@ int e = errno
 
 #include "${cpp_include_prefix}config_manager.h"
 
+#include "${cpp_include_prefix}thread_support.h"
+
 #if defined(_REENTRANT)
 #  define EXCEL_CONFIG_TLS_USE_PTHREAD 1
-#elif defined(THREAD_TLS_ENABLED) && THREAD_TLS_ENABLED
+#elif defined(EXCEL_CONFIG_THREAD_TLS_ENABLED) && EXCEL_CONFIG_THREAD_TLS_ENABLED
 #  define EXCEL_CONFIG_TLS_USE_THREAD_LOCAL 1
-#  if defined(THREAD_TLS)
-#    define EXCEL_CONFIG_TLS_THREAD_LOCAL THREAD_TLS
+#  if defined(EXCEL_CONFIG_THREAD_TLS)
+#    define EXCEL_CONFIG_TLS_THREAD_LOCAL EXCEL_CONFIG_THREAD_TLS
 #  endif
 #else
 #  define EXCEL_CONFIG_TLS_USE_PTHREAD 1

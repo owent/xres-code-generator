@@ -1,0 +1,121 @@
+// Copyright 2024 xresloader
+
+#pragma once
+
+// ===================================== thread local storage =====================================
+/**
+ * 导入线程特性支持 (thread)
+ * 规则如下
+ * @see http://en.wikipedia.org/wiki/Thread-local_storage#C.2B.2B
+ * @note 不支持 C++ Builder 编译器
+ */
+// IOS 不支持tls
+#if defined(__APPLE__)
+#  include <TargetConditionals.h>
+
+#  if TARGET_OS_IPHONE || TARGET_OS_EMBEDDED || TARGET_IPHONE_SIMULATOR
+#    define EXCEL_CONFIG_THREAD_TLS
+#  endif
+#endif
+
+// android 不支持tls
+#if !defined(EXCEL_CONFIG_THREAD_TLS) && defined(__ANDROID__)
+#  define EXCEL_CONFIG_THREAD_TLS
+#endif
+
+#if !defined(EXCEL_CONFIG_THREAD_TLS) && defined(__clang__)
+#  if __has_feature(cxx_thread_local)
+#    define EXCEL_CONFIG_THREAD_TLS thread_local
+#    define EXCEL_CONFIG_THREAD_TLS_ENABLED 1
+#  elif __has_feature(c_thread_local) || __has_extension(c_thread_local)
+#    define EXCEL_CONFIG_THREAD_TLS _Thread_local
+#    define EXCEL_CONFIG_THREAD_TLS_ENABLED 1
+#  else
+#    define EXCEL_CONFIG_THREAD_TLS __thread
+#    define EXCEL_CONFIG_THREAD_TLS_ENABLED 1
+#  endif
+#endif
+
+#if !defined(EXCEL_CONFIG_THREAD_TLS) && defined(__cplusplus) && __cplusplus >= 201103L
+#  define EXCEL_CONFIG_THREAD_TLS thread_local
+#  define EXCEL_CONFIG_THREAD_TLS_ENABLED 1
+#endif
+
+// VC 2003
+#if !defined(EXCEL_CONFIG_THREAD_TLS) && defined(_MSC_VER)
+
+#  if _MSC_VER >= 1900
+#    define EXCEL_CONFIG_THREAD_TLS thread_local
+#    define EXCEL_CONFIG_THREAD_TLS_ENABLED 1
+#  elif _MSC_VER >= 1300
+#    define EXCEL_CONFIG_THREAD_TLS __declspec(thread)
+#    define EXCEL_CONFIG_THREAD_TLS_ENABLED 1
+#  else
+#    define EXCEL_CONFIG_THREAD_TLS __thread
+#    define EXCEL_CONFIG_THREAD_TLS_ENABLED 1
+#  endif
+
+#elif !defined(EXCEL_CONFIG_THREAD_TLS) && (defined(__GNUC__) || defined(__clang__))
+// clang & gcc
+#  define EXCEL_CONFIG_THREAD_TLS __thread
+#  define EXCEL_CONFIG_THREAD_TLS_ENABLED 1
+
+#endif
+
+#if !defined(EXCEL_CONFIG_THREAD_TLS)
+#  define EXCEL_CONFIG_THREAD_TLS
+#endif
+
+// ===================================== thread sleep & yield =====================================
+#if (defined(__cplusplus) && __cplusplus >= 201103L) || (defined(_MSC_VER) && _MSC_VER >= 1800)
+#  include <thread>
+#  define THREAD_SLEEP_MS(x) std::this_thread::sleep_for(std::chrono::milliseconds(x))
+#  define EXCEL_CONFIG_THREAD_YIELD() std::this_thread::yield()
+
+#elif defined(_MSC_VER)
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
+
+#  include <Windows.h>
+#  define THREAD_SLEEP_MS(x) Sleep(x)
+#  define EXCEL_CONFIG_THREAD_YIELD() YieldProcessor()
+
+#else
+#  include <unistd.h>
+
+#  define THREAD_SLEEP_MS(x)                    \
+    ((x > 1000) ? sleep(x / 1000) : usleep(0)); \
+    usleep((x % 1000) * 1000)
+#  if defined(__linux__) || defined(__unix__)
+#    include <sched.h>
+#    define EXCEL_CONFIG_THREAD_YIELD() sched_yield()
+#  elif defined(__GNUC__) || defined(__clang__)
+#    if defined(__i386__) || defined(__x86_64__)
+/**
+ * See: Intel(R) 64 and IA-32 Architectures Software Developer's Manual V2
+ * PAUSE-Spin Loop Hint, 4-57
+ * http://www.intel.com/content/www/us/en/architecture-and-technology/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.html?wapkw=instruction+set+reference
+ */
+#      define EXCEL_CONFIG_THREAD_YIELD() __asm__ __volatile__("pause")
+#    elif defined(__ia64__) || defined(__ia64)
+/**
+ * See: Intel(R) Itanium(R) Architecture Developer's Manual, Vol.3
+ * hint - Performance Hint, 3:145
+ * http://www.intel.com/content/www/us/en/processors/itanium/itanium-architecture-vol-3-manual.html
+ */
+#      define EXCEL_CONFIG_THREAD_YIELD() __asm__ __volatile__("hint @pause")
+#    elif defined(__arm__) && !defined(__ANDROID__)
+/**
+ * See: ARM Architecture Reference Manuals (YIELD)
+ * http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.subset.architecture.reference/index.html
+ */
+#      define EXCEL_CONFIG_THREAD_YIELD() __asm__ __volatile__("yield")
+#    else
+#      define EXCEL_CONFIG_THREAD_YIELD()
+#    endif
+#  else
+#    define EXCEL_CONFIG_THREAD_YIELD()
+#  endif
+
+#endif

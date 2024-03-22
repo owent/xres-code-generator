@@ -1597,6 +1597,23 @@ class PbDescSet:
                 if fd.name == shared_outer_field and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
                     self.shared_code_field = fd
                     break
+        else:
+            sys.stderr.write(
+                "[XRESCODE ERROR] Can not find shared outer message {0}\n".
+                format(shared_outer_type))
+            if shared_outer_type == 'org.xresloader.pb.xresloader_datablocks':
+                if len(pb_file_paths) == 1:
+                    pb_file_path_maessage = pb_file_paths[0]
+                else:
+                    pb_file_path_maessage = "any one of {0}".format(", ".join([str(x) for x in pb_file_paths]))
+                sys.stderr.write(
+                    "[XRESCODE ERROR] Please consider package {0} or {1} into {2}\n".
+                format(
+                    "https://github.com/xresloader/xresloader-protocol/blob/main/core/pb_header_v3.proto",
+                    "https://github.com/xresloader/xresloader-protocol/blob/main/core/pb_header.proto",
+                    pb_file_path_maessage
+                ))
+            self.add_failed_count()
         for k in self.pb_msgs:
             v = self.pb_msgs[k]
             v.setup_code(self, tags, exclude_tags)

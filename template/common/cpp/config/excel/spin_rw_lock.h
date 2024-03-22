@@ -93,21 +93,23 @@ class CONFIG_EXCEL_CONFIG_API_HEAD_ONLY lock_holder {
 
   lock_holder(lock_holder &&other) noexcept : lock_flag_(other.lock_flag_) { other.lock_flag_ = nullptr; }
 
-  ~lock_holder() {
-    if (nullptr != lock_flag_) {
-      TUnlockAct()(*lock_flag_);
-    }
-  }
+  ~lock_holder() { reset(); }
 
   lock_holder &operator=(lock_holder &&other) {
-    if (nullptr != lock_flag_) {
-      TUnlockAct()(*lock_flag_);
-    }
+    reset();
 
     lock_flag_ = other.lock_flag_;
     other.lock_flag_ = nullptr;
 
     return *this;
+  }
+
+  inline void reset() {
+    if (nullptr != lock_flag_) {
+      value_type *lock = lock_flag_;
+      lock_flag_ = nullptr;
+      TUnlockAct()(*lock);
+    }
   }
 
   bool is_available() const { return nullptr != lock_flag_; }

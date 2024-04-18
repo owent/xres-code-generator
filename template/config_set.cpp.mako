@@ -457,7 +457,8 @@ void ${pb_msg_class_name}::merge_data(item_ptr_type item) {
       excel_config_type_traits::const_pointer_cast<std::vector<item_ptr_type> >(${code_index.name}_data_[key]);
     if (!data_set) {
       data_set = excel_config_type_traits::make_shared<std::vector<item_ptr_type> >();
-      ${code_index.name}_data_[key] = excel_config_type_traits::const_pointer_cast<const std::vector<item_ptr_type> >(data_set);
+      ${code_index.name}_data_[key] =
+        excel_config_type_traits::const_pointer_cast<const std::vector<item_ptr_type> >(data_set);
     }
     data_set->push_back(item);
 %   else:

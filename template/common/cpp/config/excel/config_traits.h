@@ -4,6 +4,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
@@ -145,6 +146,80 @@ struct EXCEL_CONFIG_SYMBOL_VISIBLE config_traits {
   template <class Y, class... Args>
   inline static std::shared_ptr<Y> const_pointer_cast(Args&&... args) {
     return type_guard::const_pointer_cast<Y>(std::forward<Args>(args)...);
+  }
+};
+
+EXCEL_CONFIG_SYMBOL_VISIBLE inline bool value_traits_is_default(const std::string& input) noexcept {
+  return input.empty();
+}
+
+EXCEL_CONFIG_SYMBOL_VISIBLE inline bool value_traits_is_default(bool input) noexcept { return !input; }
+
+template <class T>
+EXCEL_CONFIG_SYMBOL_VISIBLE inline bool value_traits_is_default(const T& input) noexcept {
+  return static_cast<T>(0) == static_cast<T>(input);
+}
+
+template <std::size_t Index, std::size_t Size>
+struct EXCEL_CONFIG_SYMBOL_VISIBLE key_tuple_trait_enable
+    : public std::conditional<(Index < Size), std::true_type, std::false_type>::type {};
+
+template <std::size_t Index, bool Enable>
+struct EXCEL_CONFIG_SYMBOL_VISIBLE key_tuple_trait_any_default_at_index;
+
+template <std::size_t Index>
+struct EXCEL_CONFIG_SYMBOL_VISIBLE key_tuple_trait_any_default_at_index<Index, false> {
+  template <class... Args>
+  bool operator()(const std::tuple<Args...>&) const noexcept {
+    return false;
+  }
+};
+
+template <std::size_t Index>
+struct EXCEL_CONFIG_SYMBOL_VISIBLE key_tuple_trait_any_default_at_index<Index, true> {
+  template <class... Args>
+  bool operator()(const std::tuple<Args...>& t) const noexcept {
+    if (value_traits_is_default(std::get<Index>(t))) {
+      return true;
+    }
+
+    return key_tuple_trait_any_default_at_index<Index + 1, key_tuple_trait_enable<Index + 1, sizeof...(Args)>::value>()(
+        t);
+  }
+};
+
+template <std::size_t Index, bool Enable>
+struct EXCEL_CONFIG_SYMBOL_VISIBLE key_tuple_trait_all_default_at_index;
+
+template <std::size_t Index>
+struct EXCEL_CONFIG_SYMBOL_VISIBLE key_tuple_trait_all_default_at_index<Index, false> {
+  template <class... Args>
+  bool operator()(const std::tuple<Args...>&) const noexcept {
+    return true;
+  }
+};
+
+template <std::size_t Index>
+struct EXCEL_CONFIG_SYMBOL_VISIBLE key_tuple_trait_all_default_at_index<Index, true> {
+  template <class... Args>
+  bool operator()(const std::tuple<Args...>& t) const noexcept {
+    if (!value_traits_is_default(std::get<Index>(t))) {
+      return false;
+    }
+
+    return key_tuple_trait_all_default_at_index<Index + 1, key_tuple_trait_enable<Index + 1, sizeof...(Args)>::value>()(
+        t);
+  }
+};
+
+template <class... Args>
+struct EXCEL_CONFIG_SYMBOL_VISIBLE key_traits {
+  inline static bool check_any_default(const std::tuple<Args...>& t) noexcept {
+    return key_tuple_trait_any_default_at_index<0, key_tuple_trait_enable<0, sizeof...(Args)>::value>()(t);
+  }
+
+  inline static bool check_all_default(const std::tuple<Args...>& t) noexcept {
+    return key_tuple_trait_all_default_at_index<0, key_tuple_trait_enable<0, sizeof...(Args)>::value>()(t);
   }
 };
 

@@ -5,45 +5,49 @@ package xrescode;
 import "google/protobuf/descriptor.proto";
 
 enum xrescode_index_type {
-    EN_INDEX_KV = 0;
-    EN_INDEX_KL = 1;
-    EN_INDEX_IV = 2;
-    EN_INDEX_IL = 3;
+  EN_INDEX_KV = 0;
+  EN_INDEX_KL = 1;
+  EN_INDEX_IV = 2;
+  EN_INDEX_IL = 3;
 }
 
 message xrescode_index {
-    string              name            = 1;
-    repeated string     fields          = 2;
-    xrescode_index_type index_type      = 3;
-    string              file_mapping    = 4;
-    bool                allow_not_found = 5;
-    repeated string     sort_by         = 6;
+  string name = 1;
+  repeated string fields = 2;
+  xrescode_index_type index_type = 3;
+  string file_mapping = 4;
+  bool allow_not_found = 5;
+  repeated string sort_by = 6;
+  bool ignore_any_default_key = 7;  // Ignore one row if any key field is empty or default(0, false or "")
+  bool ignore_all_default_key = 8;  // Ignore one row if all key fields are empty or default(0, false or "")
 }
 
 message xrescode_loader {
-    string                  file_list  = 101;
-    repeated string         file_path  = 102;
-    string                  code_field = 103;
-    repeated xrescode_index indexes    = 201;
-    repeated string         tags       = 301;
-    string                  class_name = 401;
+  string file_list = 101;
+  repeated string file_path = 102;
+  string code_field = 103;
+  repeated xrescode_index indexes = 201;
+  repeated string tags = 301;
+  string class_name = 401;
 }
 
 message xrescode_ue_field {
-    bool ustruct_field_ignore = 101;
-    bool uclass_field_ignore  = 102;
+  bool ustruct_field_ignore = 101;
+  bool uclass_field_ignore = 102;
 }
 
 message xrescode_ue_type {
-    bool bp_protocol_with_ustruct   = 1; // UEBPProtocol.* will not generate USTRUCT by default
-    bool bp_protocol_without_uclass = 2; // UEBPProtocol.* will generate UCLASS by default
+  bool bp_protocol_with_ustruct = 1;    // UEBPProtocol.* will not generate USTRUCT by default
+  bool bp_protocol_without_uclass = 2;  // UEBPProtocol.* will generate UCLASS by default
 }
 
 extend google.protobuf.MessageOptions {
-    repeated xrescode_loader loader = 1351; // loaders
-    xrescode_ue_type         ue     = 1352; // ue
+  repeated xrescode_loader loader = 1351;  // loaders
+  xrescode_ue_type ue = 1352;              // ue
 }
 
-extend google.protobuf.FieldOptions { xrescode_ue_field ue_field = 1351; }
+extend google.protobuf.FieldOptions {
+  xrescode_ue_field ue_field = 1351;
+}
 
 // extend google.protobuf.FieldOptions { bool excel_row = 1351; }

@@ -20,6 +20,7 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #include <unordered_map>
 #include <memory>
 #include <cstring>
+#include <list>
 
 % for block_file in pb_set.get_custom_blocks("custom_config_include"):
 // include custom_config_include: ${block_file}

@@ -604,6 +604,8 @@ class PbMsgIndex:
 
         self.file_mapping = pb_ext_index.file_mapping
         self.allow_not_found = pb_ext_index.allow_not_found
+        self.ignore_any_default_key = pb_ext_index.ignore_any_default_key
+        self.ignore_all_default_key = pb_ext_index.ignore_all_default_key
         self.get_file_expression = None
         # self.index_type
         self.fields = []

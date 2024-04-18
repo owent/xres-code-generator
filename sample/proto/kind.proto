@@ -27,6 +27,21 @@ message role_upgrade_cfg {
       fields: "Level"
       index_type: EN_INDEX_KV  // Key - Value index: (Id, Level) => role_upgrade_cfg
     }
+    indexes: {
+      fields: "Id"
+      fields: "CostType"
+      index_type: EN_INDEX_KL  // Key - List index: (Id) => list<role_upgrade_cfg>
+      sort_by: "Level"
+      ignore_any_default_key: true
+    }
+    indexes: {
+      fields: "Id"
+      fields: "CostType"
+      fields: "CostValue"
+      index_type: EN_INDEX_KL  // Key - Value index: (Id) => role_upgrade_cfg
+      sort_by: "Level"
+      ignore_all_default_key: true
+    }
     tags: "client"
     tags: "server"
   };

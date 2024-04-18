@@ -163,6 +163,26 @@ for _,v1 in ipairs(data2) do
         print(string.format("\t\t%s=%s", k, tostring(v2)))
     end
 end
+
+local data3 = role_upgrade_cfg2:GetByIndex("id_costtype", 10001, 0)
+if data3 == nil or #data3 == 0 then
+  print("CHECK: Index id_costtype has no (10001, 0) -- success")
+  if #role_upgrade_cfg2:GetByIndex("id_costtype", 10001, 10001) > 0 then
+    print("CHECK: Index id_costtype has (10001, 10001) -- success")
+  else
+    print("CHECK: Index id_costtype has (10001, 10001) -- failed")
+  end
+else
+  print("CHECK: Index id_costtype has no (10001, 0) -- failed")
+end
+
+local data4 = role_upgrade_cfg2:GetByIndex("id_costtype_costvalue", 10001, 0, 0)
+if data4 ~= nil then
+  print("CHECK: Index id_costtype_costvalue has (10001, 0, 0) -- success")
+else
+  print("CHECK: Index id_costtype_costvalue has (10001, 0, 0) -- failed")
+end
+
 ' >pblua/main.lua
 
 echo '-- We will use require(...) to load
@@ -201,6 +221,26 @@ for _, v1 in ipairs(data2) do
         print(string.format("\t\t%s=%s", fds:name(), tostring(v1[fds:name()])))
     end
 end
+
+local data3 = role_upgrade_cfg2:GetByIndex("id_costtype", 10001, 0)
+if data3 == nil or #data3 == 0 then
+  print("CHECK: Index id_costtype has no (10001, 0) -- success")
+  if #role_upgrade_cfg2:GetByIndex("id_costtype", 10001, 10001) > 0 then
+    print("CHECK: Index id_costtype has (10001, 10001) -- success")
+  else
+    print("CHECK: Index id_costtype has (10001, 10001) -- failed")
+  end
+else
+  print("CHECK: Index id_costtype has no (10001, 0) -- failed")
+end
+
+local data4 = role_upgrade_cfg2:GetByIndex("id_costtype_costvalue", 10001, 0, 0)
+if data4 ~= nil then
+  print("CHECK: Index id_costtype_costvalue has (10001, 0, 0) -- success")
+else
+  print("CHECK: Index id_costtype_costvalue has (10001, 0, 0) -- failed")
+end
+
 ' >upblua/main.lua
 
 echo 'local pb = require("pb")
@@ -240,6 +280,26 @@ for _, fds in ipairs(role_upgrade_cfg2:GetMessageDescriptor().fields) do
     print(string.format("\t%s(%s) %s=%s", fds.type.name, fds.type.type, fds.name, tostring(fds.number)))
   end
 end
+
+local data3 = role_upgrade_cfg2:GetByIndex("id_costtype", 10001, 0)
+if data3 == nil or #data3 == 0 then
+  print("CHECK: Index id_costtype has no (10001, 0) -- success")
+  if #role_upgrade_cfg2:GetByIndex("id_costtype", 10001, 10001) > 0 then
+    print("CHECK: Index id_costtype has (10001, 10001) -- success")
+  else
+    print("CHECK: Index id_costtype has (10001, 10001) -- failed")
+  end
+else
+  print("CHECK: Index id_costtype has no (10001, 0) -- failed")
+end
+
+local data4 = role_upgrade_cfg2:GetByIndex("id_costtype_costvalue", 10001, 0, 0)
+if data4 ~= nil then
+  print("CHECK: Index id_costtype_costvalue has (10001, 0, 0) -- success")
+else
+  print("CHECK: Index id_costtype_costvalue has (10001, 0, 0) -- failed")
+end
+
 ' >lua-protobuf/main.lua
 
 echo 'using System;

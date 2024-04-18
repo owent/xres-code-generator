@@ -441,9 +441,20 @@ void ${pb_msg_class_name}::merge_data(item_ptr_type item) {
     ${code_index.name}_data_[idx] = item;
 %   endif
 % else:
+    std::tuple<${code_index.get_key_type_list()}> key = std::make_tuple(${code_index.get_key_value_list("item->")});
+%   if code_index.ignore_any_default_key:
+    if (::excel::traits::key_traits<${code_index.get_key_type_list()}>::check_any_default(key)) {
+      break;
+    }
+%   endif
+%   if code_index.ignore_all_default_key:
+    if (::excel::traits::key_traits<${code_index.get_key_type_list()}>::check_all_default(key)) {
+      break;
+    }
+%   endif
 %   if code_index.is_list():
-    excel_config_type_traits::shared_ptr<std::vector<item_ptr_type> > data_set = excel_config_type_traits::const_pointer_cast<std::vector<item_ptr_type> >(${code_index.name}_data_
-      [std::make_tuple(${code_index.get_key_value_list("item->")})]);
+    excel_config_type_traits::shared_ptr<std::vector<item_ptr_type> > data_set =
+      excel_config_type_traits::const_pointer_cast<std::vector<item_ptr_type> >(${code_index.name}_data_[key]);
     if (!data_set) {
       data_set = excel_config_type_traits::make_shared<std::vector<item_ptr_type> >();
       ${code_index.name}_data_[std::make_tuple(${code_index.get_key_value_list("item->")})] =
@@ -451,7 +462,6 @@ void ${pb_msg_class_name}::merge_data(item_ptr_type item) {
     }
     data_set->push_back(item);
 %   else:
-    std::tuple<${code_index.get_key_type_list()}> key = std::make_tuple(${code_index.get_key_value_list("item->")});
     if (${code_index.name}_data_.end() != ${code_index.name}_data_.find(key)) {
       EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] merge_data() with key=<${code_index.get_key_fmt_list()}> for %s is already exists, we will cover it with the newer value",
         ${code_index.get_key_fmt_value_list("item->")}, "${pb_msg_class_name}");

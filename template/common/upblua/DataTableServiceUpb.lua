@@ -115,10 +115,22 @@ local function __SetupIndexFromFile(index_loader, raw_data_containers, data_cont
 
     local index_data = data_container[index_cfg.indexName]
 
+    local ignore_any_default_key = index_cfg.options.ignoreAnyDefaultKey
+    local ignore_all_default_key = index_cfg.options.ignoreAllDefaultKey
     for _, cfgv in ipairs(all_rows) do
         local cfg_item = index_data.data
         local parent_node = nil
         local last_key = nil
+        local has_default_key = false
+        local all_default_key = true
+        if last_key ~= nil and last_key ~= 0 and last_key ~= "" and last_key then
+            all_default_key = false
+        else
+            has_default_key = true
+            if ignore_any_default_key then
+                break
+            end
+        end
         for _, keyv in ipairs(index_cfg.keys) do
             last_key = cfgv[keyv] or nil
             parent_node = cfg_item
@@ -129,10 +141,12 @@ local function __SetupIndexFromFile(index_loader, raw_data_containers, data_cont
             end
         end
 
-        if index_data.options.isList then
-            table.insert(cfg_item, cfgv)
-        elseif last_key ~= nil then
-            parent_node[last_key] = cfgv
+        if not (ignore_any_default_key and has_default_key) and not (ignore_all_default_key and all_default_key) then
+            if index_data.options.isList then
+                table.insert(cfg_item, cfgv)
+            elseif last_key ~= nil then
+                parent_node[last_key] = cfgv
+            end
         end
     end
 

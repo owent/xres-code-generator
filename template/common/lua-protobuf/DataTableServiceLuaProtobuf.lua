@@ -145,14 +145,26 @@ local function __SetupIndexFromFile(index_loader, raw_data_containers, data_cont
 
     local index_data = data_container[index_cfg.indexName]
 
+    local ignore_any_default_key = index_cfg.options.ignoreAnyDefaultKey
+    local ignore_all_default_key = index_cfg.options.ignoreAllDefaultKey
     for _, cfgv in ipairs(all_rows) do
         local cfg_item = index_data.data
         local parent_node = nil
         local last_key = nil
         local last_keyv = nil
+        local has_default_key = false
+        local all_default_key = true
         for _, keyv in ipairs(index_cfg.keys) do
             last_keyv = keyv
             last_key = cfgv[keyv] or nil
+            if last_key ~= nil and last_key ~= 0 and last_key ~= "" and last_key then
+                all_default_key = false
+            else
+                has_default_key = true
+                if ignore_any_default_key then
+                    break
+                end
+            end
             parent_node = cfg_item
             cfg_item = parent_node[last_key]
             if cfg_item == nil and last_key ~= nil then
@@ -168,15 +180,17 @@ local function __SetupIndexFromFile(index_loader, raw_data_containers, data_cont
             end
         end
 
-        if index_data.options.isList then
-            table.insert(cfg_item, cfgv)
-        elseif last_key ~= nil then
-            parent_node[last_key] = cfgv
-            local field_typeinfo = data_set.message_descriptor.fields_by_name[last_keyv]
-            if field_typeinfo ~= nil and field_typeinfo.type.type == 'enum' then
-                local enum_number_value = pb.enum(field_typeinfo.type.name, last_key)
-                if enum_number_value ~= nil then
-                    parent_node[enum_number_value] = cfgv
+        if not (ignore_any_default_key and has_default_key) and not (ignore_all_default_key and all_default_key) then
+            if index_data.options.isList then
+                table.insert(cfg_item, cfgv)
+            elseif last_key ~= nil then
+                parent_node[last_key] = cfgv
+                local field_typeinfo = data_set.message_descriptor.fields_by_name[last_keyv]
+                if field_typeinfo ~= nil and field_typeinfo.type.type == 'enum' then
+                    local enum_number_value = pb.enum(field_typeinfo.type.name, last_key)
+                    if enum_number_value ~= nil then
+                        parent_node[enum_number_value] = cfgv
+                    end
                 end
             end
         end

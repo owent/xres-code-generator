@@ -34,12 +34,17 @@ return {
         else:
           code_index_allow_not_found = 'false'
 
-        if loader.code:
-          code_index_allow_not_found = 'true'
+        if code_index.ignore_any_default_key:
+          ignore_any_default_key = 'true'
         else:
-          code_index_allow_not_found = 'false'
+          ignore_any_default_key = 'false'
+
+        if code_index.ignore_all_default_key:
+          ignore_all_default_key = 'true'
+        else:
+          ignore_all_default_key = 'false'
 %>      -- require("DataTableService").Get("${loader.code.class_name}"):GetByIndex("${code_index.name}", ${code_index.get_key_names()})
-      { indexName = "${code_index.name}"${loader_data_source}, fullName = '${loader.full_name}', messageName = '${loader.pb_msg.name}', options = { isList = ${code_index_is_list}, allowNotFound = ${code_index_allow_not_found}, sortBy = { ${code_index.get_sort_by_names()} } }, keys = { ${code_index.get_key_names()} } },
+      { indexName = "${code_index.name}"${loader_data_source}, fullName = '${loader.full_name}', messageName = '${loader.pb_msg.name}', options = { isList = ${code_index_is_list}, allowNotFound = ${code_index_allow_not_found}, ignoreAnyDefaultKey = ${ignore_any_default_key}, ignoreAllDefaultKey = ${ignore_all_default_key}, sortBy = { ${code_index.get_sort_by_names()} } }, keys = { ${code_index.get_key_names()} } },
 %     endfor
   },
 %   endfor

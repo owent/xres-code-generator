@@ -119,9 +119,9 @@ struct EXCEL_CONFIG_SYMBOL_VISIBLE tuple_hasher {
     return tuple_hasher_at_index<0, tuple_hasher_enable<0, sizeof...(Args)>::value>()(0, t);
   }
 
-  template <class Arg>
-  std::size_t operator()(Arg&& t) {
-    return std::hash<typename std::remove_cv<typename std::remove_reference<Arg>::type>::type>()(std::forward<Arg>(t));
+  template <class... Args>
+  std::size_t operator()(std::tuple<Args...>&& t) const {
+    return tuple_hasher_at_index<0, tuple_hasher_enable<0, sizeof...(Args)>::value>()(0, t);
   }
 
   template <class Arg>

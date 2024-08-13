@@ -475,16 +475,22 @@ void ${pb_msg_class_name}::merge_data(item_ptr_type item) {
 }
 
 % for code_index in loader.code.indexes:
+<%
+    if code_index.allow_not_found:
+      ignore_not_found_var = "/*ignore_not_found*/"
+    else:
+      ignore_not_found_var = "ignore_not_found"
+%>\
 // ------------------- index: ${code_index.name} APIs -------------------
 % if code_index.is_list():
 EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::${code_index.name}_value_type
   ${pb_msg_class_name}::get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
-  return _get_list_by_${code_index.name}(${code_index.get_key_params()});
+  return _get_list_by_${code_index.name}(${code_index.get_key_params()}, false);
 }
 
 EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::item_ptr_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index) {
-  ${pb_msg_class_name}::${code_index.name}_value_type list_item = 
-    _get_list_by_${code_index.name}(${code_index.get_key_params()});
+  ${pb_msg_class_name}::${code_index.name}_value_type list_item =
+    _get_list_by_${code_index.name}(${code_index.get_key_params()}, false);
   if (nullptr == list_item) {
 %   if not code_index.allow_not_found:
     EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}>, index=%llu for %s failed, list not found",
@@ -544,8 +550,28 @@ EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::item_ptr_type ${pb_msg_class_name}
   return (*list_item)[index];
 }
 
+EXCEL_CONFIG_LOADER_API bool ${pb_msg_class_name}::contains_${code_index.name}(${code_index.get_key_decl()}, size_t index) {
+  ${pb_msg_class_name}::${code_index.name}_value_type list_item =
+    _get_list_by_${code_index.name}(${code_index.get_key_params()}, true);
+  if (!list_item) {
+    return false;
+  }
+
+  return index < list_item->size();
+}
+
+EXCEL_CONFIG_LOADER_API std::size_t ${pb_msg_class_name}::get_sizeof_${code_index.name}(${code_index.get_key_decl()}) {
+  ${pb_msg_class_name}::${code_index.name}_value_type list_item =
+    _get_list_by_${code_index.name}(${code_index.get_key_params()}, true);
+  if (!list_item) {
+    return 0;
+  }
+
+  return list_item->size();
+}
+
 ${pb_msg_class_name}::${code_index.name}_value_type
-  ${pb_msg_class_name}::_get_list_by_${code_index.name}(${code_index.get_key_decl()}) {
+  ${pb_msg_class_name}::_get_list_by_${code_index.name}(${code_index.get_key_decl()}, bool ${ignore_not_found_var}) {
   ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh;
   if (enable_multithread_lock_) {
     rlh = ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
@@ -611,10 +637,12 @@ ${pb_msg_class_name}::${code_index.name}_value_type
   }
 
 %   if not code_index.allow_not_found:
-  EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
-    "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
-  );
-  if (config_manager::me()->get_on_not_found()) {
+  if (!ignore_not_found) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+      "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
+    );
+  }
+  if (!ignore_not_found && config_manager::me()->get_on_not_found()) {
     config_manager::on_not_found_event_data_t evt_data;
     evt_data.data_source = &datasource_;
     evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
@@ -639,10 +667,12 @@ ${pb_msg_class_name}::${code_index.name}_value_type
   iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
   if (iter == ${code_index.name}_data_.end()) {
 %   if not code_index.allow_not_found:
-    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
-      "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
-    );
-    if (config_manager::me()->get_on_not_found()) {
+    if(!ignore_not_found) {
+      EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+        "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
+      );
+    }
+    if (!ignore_not_found && config_manager::me()->get_on_not_found()) {
       config_manager::on_not_found_event_data_t evt_data;
       evt_data.data_source = &datasource_;
       evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
@@ -690,6 +720,15 @@ ${pb_msg_class_name}::${code_index.name}_value_type
 
 % else:
 EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::${code_index.name}_value_type ${pb_msg_class_name}::get_by_${code_index.name}(${code_index.get_key_decl()}) {
+  return _get_by_${code_index.name}(${code_index.get_key_params()}, false);
+}
+
+EXCEL_CONFIG_LOADER_API bool ${pb_msg_class_name}::contains_${code_index.name}(${code_index.get_key_decl()}) {
+  return !!_get_by_${code_index.name}(${code_index.get_key_params()}, true);
+}
+
+${pb_msg_class_name}::${code_index.name}_value_type
+  ${pb_msg_class_name}::_get_by_${code_index.name}(${code_index.get_key_decl()}, bool ${ignore_not_found_var}) {
 % if code_index.is_vector():
   size_t idx = 0;
 %   for idx_field in code_index.fields:
@@ -755,10 +794,12 @@ EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::${code_index.name}_value_type ${pb
   }
 
 %   if not code_index.allow_not_found:
-  EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
-    "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
-  );
-  if (config_manager::me()->get_on_not_found()) {
+  if (!ignore_not_found) {
+    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+      "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
+    );
+  }
+  if (!ignore_not_found && config_manager::me()->get_on_not_found()) {
     config_manager::on_not_found_event_data_t evt_data;
     evt_data.data_source = &datasource_;
     evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();
@@ -783,10 +824,12 @@ EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::${code_index.name}_value_type ${pb
   iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
   if (iter == ${code_index.name}_data_.end()) {
 %   if not code_index.allow_not_found:
-    EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
-      "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
-    );
-    if (config_manager::me()->get_on_not_found()) {
+    if (!ignore_not_found) {
+      EXCEL_CONFIG_MANAGER_LOGERROR("[EXCEL] load index %s with key=<${code_index.get_key_fmt_list()}> for %s failed, not found",
+        "${code_index.name}", ${code_index.get_key_params_fmt_value_list()}, "${pb_msg_class_name}"
+      );
+    }
+    if (!ignore_not_found && config_manager::me()->get_on_not_found()) {
       config_manager::on_not_found_event_data_t evt_data;
       evt_data.data_source = &datasource_;
       evt_data.message_descriptor = ${loader.get_pb_inner_class_name()}::descriptor();

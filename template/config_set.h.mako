@@ -181,12 +181,18 @@ public:
   EXCEL_CONFIG_LOADER_API ${code_index.name}_value_type
     get_list_by_${code_index.name}(${code_index.get_key_decl()});
   EXCEL_CONFIG_LOADER_API item_ptr_type get_by_${code_index.name}(${code_index.get_key_decl()}, size_t index);
+  EXCEL_CONFIG_LOADER_API bool contains_${code_index.name}(${code_index.get_key_decl()}, size_t index);
+  EXCEL_CONFIG_LOADER_API std::size_t get_sizeof_${code_index.name}(${code_index.get_key_decl()});
 private:
-  ${code_index.name}_value_type _get_list_by_${code_index.name}(${code_index.get_key_decl()});
+  ${code_index.name}_value_type _get_list_by_${code_index.name}(${code_index.get_key_decl()}, bool ignore_not_found);
 public:
 % else:
   using ${code_index.name}_value_type = item_ptr_type;
   EXCEL_CONFIG_LOADER_API ${code_index.name}_value_type get_by_${code_index.name}(${code_index.get_key_decl()});
+  EXCEL_CONFIG_LOADER_API bool contains_${code_index.name}(${code_index.get_key_decl()});
+private:
+  ${code_index.name}_value_type _get_by_${code_index.name}(${code_index.get_key_decl()}, bool ignore_not_found);
+public:
 % endif
 % if code_index.is_vector():
   using ${code_index.name}_container_type = excel_config_type_traits::shared_ptr<const std::vector<${code_index.name}_value_type> >;

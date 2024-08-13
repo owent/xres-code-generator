@@ -196,7 +196,7 @@ function DataTableSet.GetMessageDescriptor(self)
     return self.__message_descriptor
 end
 
-function DataTableSet.GetByIndex(self, index_name, ...)
+function DataTableSet._InternalGetByIndex(self, ignore_not_found, index_name, ...)
     -- lazy load index
     if self.__index_handles == nil then
         local data_container = {}
@@ -241,7 +241,7 @@ function DataTableSet.GetByIndex(self, index_name, ...)
                     return nil
                 end
 
-                if 'function' == type(DataTableService.OnError) then
+                if 'function' == type(DataTableService.OnError) or ignore_not_found then
                     local msg = string.format('Record with key(s)=(%s) can not be found on index "%s" of "%s"',
                         table.concat({ ... }, ', '), index_name, self.Name)
                     pcall(DataTableService.OnError, msg, self, index_name, ...)
@@ -252,6 +252,14 @@ function DataTableSet.GetByIndex(self, index_name, ...)
     end
 
     return data_set or {}
+end
+
+function DataTableSet.GetByIndex(self, index_name, ...)
+    return self:_InternalGetByIndex(false, index_name, ...)
+end
+
+function DataTableSet.ContainsIndex(self, index_name, ...)
+    return self:_InternalGetByIndex(true, index_name, ...) ~= nil
 end
 
 -- ===================== DataTableService =====================

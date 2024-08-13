@@ -243,7 +243,7 @@ function DataTableSet.GetMessageDescriptor(self)
     return self.__message_descriptor
 end
 
-function DataTableSet.GetByIndex(self, index_name, ...)
+function DataTableSet._InternalGetByIndex(self, ignore_not_found, index_name, ...)
     -- lazy load index
     if self.__index_handles == nil then
         local data_container = {}
@@ -284,7 +284,7 @@ function DataTableSet.GetByIndex(self, index_name, ...)
             if index_set.options.isList then
                 return {}
             else
-                if index_set.options.allowNotFound then
+                if index_set.options.allowNotFound or ignore_not_found then
                     return nil
                 end
 
@@ -299,6 +299,14 @@ function DataTableSet.GetByIndex(self, index_name, ...)
     end
 
     return data_set or {}
+end
+
+function DataTableSet.GetByIndex(self, index_name, ...)
+    return self:_InternalGetByIndex(false, index_name, ...)
+end
+
+function DataTableSet.ContainsIndex(self, index_name, ...)
+    return self:_InternalGetByIndex(true, index_name, ...) ~= nil
 end
 
 -- ===================== DataTableService =====================

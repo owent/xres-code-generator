@@ -98,12 +98,22 @@ EXCEL_CONFIG_LOADER_API ${current_code_item_value_type}
     ${code_index.get_key_decl()});
 EXCEL_CONFIG_LOADER_API ${current_code_item_value_type}
   get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()});
+EXCEL_CONFIG_LOADER_API std::size_t count_${loader.code.class_name}_in_${code_index.name}(
+    const excel_config_type_traits::shared_ptr<config_group_t>&,
+    ${code_index.get_key_decl()});
+EXCEL_CONFIG_LOADER_API std::size_t count_${loader.code.class_name}_in_${code_index.name}(
+    ${code_index.get_key_decl()});
 EXCEL_CONFIG_LOADER_API ${current_code_proto_ptr_type}
   get_${loader.code.class_name}_by_${code_index.name}(
     const excel_config_type_traits::shared_ptr<config_group_t>&,
     ${code_index.get_key_decl()}, size_t idx);
 EXCEL_CONFIG_LOADER_API ${current_code_proto_ptr_type}
   get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()}, size_t idx);
+EXCEL_CONFIG_LOADER_API bool contains_${loader.code.class_name}_in_${code_index.name}(
+    const excel_config_type_traits::shared_ptr<config_group_t>&,
+    ${code_index.get_key_decl()}, size_t idx);
+EXCEL_CONFIG_LOADER_API bool contains_${loader.code.class_name}_in_${code_index.name}(
+    ${code_index.get_key_decl()}, size_t idx);
 %       else:
 EXCEL_CONFIG_LOADER_API ${current_code_item_value_type}
   get_${loader.code.class_name}_by_${code_index.name}(
@@ -111,6 +121,11 @@ EXCEL_CONFIG_LOADER_API ${current_code_item_value_type}
     ${code_index.get_key_decl()});
 EXCEL_CONFIG_LOADER_API ${current_code_item_value_type}
   get_${loader.code.class_name}_by_${code_index.name}(${code_index.get_key_decl()});
+EXCEL_CONFIG_LOADER_API bool contains_${loader.code.class_name}_in_${code_index.name}(
+    const excel_config_type_traits::shared_ptr<config_group_t>&,
+    ${code_index.get_key_decl()});
+EXCEL_CONFIG_LOADER_API bool contains_${loader.code.class_name}_in_${code_index.name}(
+    ${code_index.get_key_decl()});
 %       endif
 %     endfor
 %   endfor

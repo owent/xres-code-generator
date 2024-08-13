@@ -183,6 +183,13 @@ else
   print("CHECK: Index id_costtype_costvalue has (10001, 0, 0) -- failed")
 end
 
+print("Contains id_level, 10001, 10: except found, real is " ..
+  tostring(role_upgrade_cfg2:ContainsIndex("id_level", 10001, 10)))
+print("GetByIndex id_level, 20001, 10: except not found with error, real is " ..
+  tostring(role_upgrade_cfg2:GetByIndex("id_level", 20001, 10)))
+print("ContainsIndex id_level, 20001, 10: except not found without error, real is " ..
+  tostring(role_upgrade_cfg2:ContainsIndex("id_level", 20001, 10)))
+
 ' >pblua/main.lua
 
 echo '-- We will use require(...) to load
@@ -240,6 +247,13 @@ if data4 ~= nil then
 else
   print("CHECK: Index id_costtype_costvalue has (10001, 0, 0) -- failed")
 end
+
+print("Contains id_level, 10001, 10: except found, real is " ..
+  tostring(role_upgrade_cfg2:ContainsIndex("id_level", 10001, 10)))
+print("GetByIndex id_level, 20001, 10: except not found with error, real is " ..
+  tostring(role_upgrade_cfg2:GetByIndex("id_level", 20001, 10)))
+print("ContainsIndex id_level, 20001, 10: except not found without error, real is " ..
+  tostring(role_upgrade_cfg2:ContainsIndex("id_level", 20001, 10)))
 
 ' >upblua/main.lua
 
@@ -299,6 +313,14 @@ if data4 ~= nil then
 else
   print("CHECK: Index id_costtype_costvalue has (10001, 0, 0) -- failed")
 end
+
+print("enum .EnTestEnumType -> " .. pb.enum(".EnTestEnumType", "EN_TET_ONE"))
+print("Contains id_level, 10001, 10: except found, real is " ..
+  tostring(role_upgrade_cfg2:ContainsIndex("id_level", 10001, 10)))
+print("GetByIndex id_level, 20001, 10: except not found with error, real is " ..
+  tostring(role_upgrade_cfg2:GetByIndex("id_level", 20001, 10)))
+print("ContainsIndex id_level, 20001, 10: except not found without error, real is " ..
+  tostring(role_upgrade_cfg2:ContainsIndex("id_level", 20001, 10)))
 
 ' >lua-protobuf/main.lua
 

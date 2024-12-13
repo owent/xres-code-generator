@@ -281,6 +281,19 @@ def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto, message_type_suff
   return pb_loader.MakoPbMsgGetPbFieldUECppType(context, pb_field_proto)
 
 @supports_caller
+def UECppMessageFieldDefaultValue(context, pb_msg, pb_field_proto, message_type_suffix="", ue_type_prefix=None, uclass=True):
+  # pb_set = context.get("pb_set", runtime.UNDEFINED)
+  if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
+    if message_type_suffix == '*':
+      return 'nullptr'
+    return None
+  if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_STRING or pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_BYTES:
+      return 'TEXT("")'
+  if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_BOOL:
+      return 'false'
+  return '0'
+
+@supports_caller
 def UECppGetLoaderIndexKeyDecl(context, pb_msg, pb_msg_index, ue_type_prefix=None):
     decls = []
     for fd in pb_msg_index.fields:

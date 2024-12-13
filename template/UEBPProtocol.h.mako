@@ -329,8 +329,14 @@ field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVField
     TArray<${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)}> ${message_field_var_name};
 %           endif
 %         else:
+message_field_var_default_initialization = ue_excel_utils.UECppMessageFieldDefaultValue(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)
+if message_field_var_default_initialization:
+  message_field_var_default_initialization = ' = ' + message_field_var_default_initialization
+else:
+  message_field_var_default_initialization = ''
+%>\
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_class_name}")
-    ${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)} ${message_field_var_name};
+    ${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)} ${message_field_var_name}${message_field_var_default_initialization};
 %         endif
 %       endif
 %     endfor

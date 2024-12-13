@@ -221,10 +221,10 @@ message_oneof_var_name = ue_excel_utils.UECppMessageOneofName(oneof_inst.descrip
 %>
 %       if oneof_class_support_blue_print:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_struct_name}")
-    ${oneof_class_name} ${message_oneof_var_name};
+    ${oneof_class_name} ${message_oneof_var_name} = ${oneof_class_name}::${ue_excel_utils.UECppUOneofEnumValueName(oneof_inst, None, ue_bp_uenum_type_prefix)};
 %       else:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_struct_name} for ${oneof_class_name}")
-    int32 ${message_oneof_var_name};
+    int32 ${message_oneof_var_name} = 0;
 %       endif
 %     endfor
 %     for pb_field_proto in message_inst.descriptor_proto.field:
@@ -254,8 +254,15 @@ field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVField
     TArray<${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix, False)}> ${message_field_var_name};
 %           endif
 %         else:
+<%
+message_field_var_default_initialization = ue_excel_utils.UECppMessageFieldDefaultValue(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix)
+if message_field_var_default_initialization:
+  message_field_var_default_initialization = ' = ' + message_field_var_default_initialization
+else:
+  message_field_var_default_initialization = ''
+%>
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_struct_name}")
-    ${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix, False)} ${message_field_var_name};
+    ${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "", ue_bp_ustruct_type_prefix, False)} ${message_field_var_name}${message_field_var_default_initialization};
 %         endif
 %       endif
 %     endfor
@@ -299,10 +306,10 @@ message_oneof_var_name = ue_excel_utils.UECppMessageOneofName(oneof_inst.descrip
 %>
 %       if oneof_class_support_blue_print:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_with_uclass}")
-    ${oneof_class_name} ${message_oneof_var_name};
+    ${oneof_class_name} ${message_oneof_var_name} = ${oneof_class_name}::${ue_excel_utils.UECppUOneofEnumValueName(oneof_inst, None, ue_bp_uenum_type_prefix)};
 %       else:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_with_uclass} for ${oneof_class_name}")
-    int32 ${message_oneof_var_name};
+    int32 ${message_oneof_var_name} = 0;
 %       endif
 %     endfor
 %     for pb_field_proto in message_inst.descriptor_proto.field:
@@ -329,12 +336,13 @@ field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVField
     TArray<${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)}> ${message_field_var_name};
 %           endif
 %         else:
+<%
 message_field_var_default_initialization = ue_excel_utils.UECppMessageFieldDefaultValue(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)
 if message_field_var_default_initialization:
   message_field_var_default_initialization = ' = ' + message_field_var_default_initialization
 else:
   message_field_var_default_initialization = ''
-%>\
+%>
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_class_name}")
     ${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)} ${message_field_var_name}${message_field_var_default_initialization};
 %         endif

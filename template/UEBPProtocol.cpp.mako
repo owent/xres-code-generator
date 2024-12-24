@@ -283,9 +283,9 @@ field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(fi
 field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_uclass_type_prefix)
 field_message_cpp_ue_value_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "", ue_bp_uclass_type_prefix)
 if field_message_cpp_ue_key_type_name == "FString":
-    field_message_cpp_ue_key_expression = "FString(item.first.c_str())"
+    field_message_cpp_ue_key_expression = "FString(UTF8_TO_TCHAR(item.first.c_str()))"
 elif field_message_cpp_ue_key_type_name == "FName":
-    field_message_cpp_ue_key_expression = "FName(item.first.c_str())"
+    field_message_cpp_ue_key_expression = "FName(UTF8_TO_TCHAR(item.first.c_str()))"
 else:
     field_message_cpp_ue_key_expression = "static_cast<{0}>(item.first)".format(field_message_cpp_ue_key_type_name)
 %>
@@ -293,7 +293,7 @@ else:
     for (auto& item : other.${cpp_pb_field_var_name}())
     {
 %              if field_message_cpp_ue_value_type_name == "FString":
-        ${message_field_var_name}.Add(${field_message_cpp_ue_key_expression}, FString(item.second.c_str()));
+        ${message_field_var_name}.Add(${field_message_cpp_ue_key_expression}, FString(UTF8_TO_TCHAR(item.second.c_str())));
 %              elif ue_excel_utils.UECppMessageFieldIsMessage(field_message_with_map_kv_fields[2]):
         auto NewItem = NewObject<${field_message_cpp_ue_value_origin_type_name}>(this);
         if (NewItem != nullptr)
@@ -310,7 +310,7 @@ else:
     for (auto& item : other.${cpp_pb_field_var_name}())
     {
 %              if cpp_ue_field_type_name == "FString":
-        ${message_field_var_name}.Emplace(FString(item.c_str()));
+        ${message_field_var_name}.Emplace(FString(UTF8_TO_TCHAR(item.c_str())));
 %              elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
         auto NewItem = NewObject<${cpp_ue_field_origin_type_name}>(this);
         if (NewItem != nullptr)
@@ -325,7 +325,7 @@ else:
 %           endif
 %         else:
 %            if cpp_ue_field_type_name == "FString":
-    ${message_field_var_name} = FString(other.${cpp_pb_field_var_name}().c_str());
+    ${message_field_var_name} = FString(UTF8_TO_TCHAR(other.${cpp_pb_field_var_name}().c_str()));
 %            elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
     if(other.has_${cpp_pb_field_var_name}())
     {

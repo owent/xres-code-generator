@@ -161,7 +161,7 @@ ${ue_api_definition}${field_message_cpp_ue_value_type_name} ${message_class_name
 %           endif
     }
 %           if field_message_cpp_ue_value_type_name == "FString":
-    return FString(iter->second.c_str());
+    return FString(UTF8_TO_TCHAR(iter->second.c_str()));
 %           elif ue_excel_utils.UECppMessageFieldIsMessage(field_message_with_map_kv_fields[2]):
     ${field_message_cpp_ue_value_type_name} Value = NewObject<${field_message_cpp_ue_value_origin_type_name}>();
     Value->_InternalBindLifetime(lifetime_, iter->second);
@@ -208,7 +208,7 @@ ${ue_api_definition}TArray<${cpp_ue_field_type_name}> ${message_class_name}::Get
 %          elif cpp_ue_field_type_name == "float":
         Ret.Emplace(static_cast<float>(item));
 %          elif cpp_ue_field_type_name == "FString":
-        Ret.Emplace(FString(item.c_str()));
+        Ret.Emplace(FString(UTF8_TO_TCHAR(item.c_str())));
 %          elif ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
         Ret.Emplace(static_cast<${cpp_ue_field_type_name}>(item));
 %          elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
@@ -253,9 +253,9 @@ ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${messag
     ));
     return Value;
 %          elif cpp_ue_field_type_name == "FString":
-    return FString(reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}(
+    return FString(UTF8_TO_TCHAR(reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}(
         static_cast<int>(Index)
-    ).c_str());
+    ).c_str()));
 %          else:
     return static_cast<${cpp_ue_field_type_name}>(reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}(
         static_cast<int>(Index)
@@ -310,7 +310,7 @@ else:
     Value->_InternalBindLifetime(lifetime_, ${message_field_var_get_data_codes});
     return Value;
 %            elif cpp_ue_field_type_name == "FString":
-    return FString(${message_field_var_get_data_codes}.c_str());
+    return FString(UTF8_TO_TCHAR(${message_field_var_get_data_codes}.c_str()));
 %            else:
     return static_cast<${cpp_ue_field_type_name}>(${message_field_var_get_data_codes});
 %            endif

@@ -16,91 +16,93 @@ from mako.runtime import supports_caller
 
 LOCAL_PB_DB_CACHE = dict()
 
-pb_msg_cpp_keywords = set([
-  "NULL",
-  "alignas",
-  "alignof",
-  "and",
-  "and_eq",
-  "asm",
-  "auto",
-  "bitand",
-  "bitor",
-  "bool",
-  "break",
-  "case",
-  "catch",
-  "char",
-  "class",
-  "compl",
-  "const",
-  "constexpr",
-  "const_cast",
-  "continue",
-  "decltype",
-  "default",
-  "delete",
-  "do",
-  "double",
-  "dynamic_cast",
-  "else",
-  "enum",
-  "explicit",
-  "export",
-  "extern",
-  "false",
-  "float",
-  "for",
-  "friend",
-  "goto",
-  "if",
-  "inline",
-  "int",
-  "long",
-  "mutable",
-  "namespace",
-  "new",
-  "noexcept",
-  "not",
-  "not_eq",
-  "nullptr",
-  "operator",
-  "or",
-  "or_eq",
-  "private",
-  "protected",
-  "public",
-  "register",
-  "reinterpret_cast",
-  "return",
-  "short",
-  "signed",
-  "sizeof",
-  "static",
-  "static_assert",
-  "static_cast",
-  "struct",
-  "switch",
-  "template",
-  "this",
-  "thread_local",
-  "throw",
-  "true",
-  "try",
-  "typedef",
-  "typeid",
-  "typename",
-  "union",
-  "unsigned",
-  "using",
-  "virtual",
-  "void",
-  "volatile",
-  "wchar_t",
-  "while",
-  "xor",
-  "xor_eq"
-])
+pb_msg_cpp_keywords = set(
+    [
+        "NULL",
+        "alignas",
+        "alignof",
+        "and",
+        "and_eq",
+        "asm",
+        "auto",
+        "bitand",
+        "bitor",
+        "bool",
+        "break",
+        "case",
+        "catch",
+        "char",
+        "class",
+        "compl",
+        "const",
+        "constexpr",
+        "const_cast",
+        "continue",
+        "decltype",
+        "default",
+        "delete",
+        "do",
+        "double",
+        "dynamic_cast",
+        "else",
+        "enum",
+        "explicit",
+        "export",
+        "extern",
+        "false",
+        "float",
+        "for",
+        "friend",
+        "goto",
+        "if",
+        "inline",
+        "int",
+        "long",
+        "mutable",
+        "namespace",
+        "new",
+        "noexcept",
+        "not",
+        "not_eq",
+        "nullptr",
+        "operator",
+        "or",
+        "or_eq",
+        "private",
+        "protected",
+        "public",
+        "register",
+        "reinterpret_cast",
+        "return",
+        "short",
+        "signed",
+        "sizeof",
+        "static",
+        "static_assert",
+        "static_cast",
+        "struct",
+        "switch",
+        "template",
+        "this",
+        "thread_local",
+        "throw",
+        "true",
+        "try",
+        "typedef",
+        "typeid",
+        "typename",
+        "union",
+        "unsigned",
+        "using",
+        "virtual",
+        "void",
+        "volatile",
+        "wchar_t",
+        "while",
+        "xor",
+        "xor_eq",
+    ]
+)
 
 pb_msg_cpp_type_map = {
     pb2.FieldDescriptorProto.TYPE_BOOL: "bool",
@@ -118,7 +120,7 @@ pb_msg_cpp_type_map = {
     pb2.FieldDescriptorProto.TYPE_SINT64: "int64_t",
     pb2.FieldDescriptorProto.TYPE_STRING: "std::string",
     pb2.FieldDescriptorProto.TYPE_UINT32: "uint32_t",
-    pb2.FieldDescriptorProto.TYPE_UINT64: "uint64_t"
+    pb2.FieldDescriptorProto.TYPE_UINT64: "uint64_t",
 }
 
 pb_msg_cs_type_map = {
@@ -137,7 +139,7 @@ pb_msg_cs_type_map = {
     pb2.FieldDescriptorProto.TYPE_SINT64: "long",
     pb2.FieldDescriptorProto.TYPE_STRING: "string",
     pb2.FieldDescriptorProto.TYPE_UINT32: "uint",
-    pb2.FieldDescriptorProto.TYPE_UINT64: "ulong"
+    pb2.FieldDescriptorProto.TYPE_UINT64: "ulong",
 }
 
 pb_msg_cpp_type_is_signed_map = {
@@ -157,7 +159,7 @@ pb_msg_cpp_type_is_signed_map = {
     pb2.FieldDescriptorProto.TYPE_STRING: False,
     pb2.FieldDescriptorProto.TYPE_UINT32: False,
     pb2.FieldDescriptorProto.TYPE_UINT64: False,
-    pb2.FieldDescriptorProto.TYPE_MESSAGE: False
+    pb2.FieldDescriptorProto.TYPE_MESSAGE: False,
 }
 
 pb_msg_cpp_fmt_map = {
@@ -177,12 +179,12 @@ pb_msg_cpp_fmt_map = {
     pb2.FieldDescriptorProto.TYPE_STRING: "%s",
     pb2.FieldDescriptorProto.TYPE_UINT32: "%u",
     pb2.FieldDescriptorProto.TYPE_UINT64: "%u",
-    pb2.FieldDescriptorProto.TYPE_MESSAGE: "%s"
+    pb2.FieldDescriptorProto.TYPE_MESSAGE: "%s",
 }
 
 pb_msg_cpp_fmt_val_map = {
-    pb2.FieldDescriptorProto.TYPE_BOOL: "({0}?\"true\": \"false\")",
-    pb2.FieldDescriptorProto.TYPE_BYTES: "\"BYTES: {0}\"",
+    pb2.FieldDescriptorProto.TYPE_BOOL: '({0}?"true": "false")',
+    pb2.FieldDescriptorProto.TYPE_BYTES: '"BYTES: {0}"',
     pb2.FieldDescriptorProto.TYPE_DOUBLE: "{0}",
     pb2.FieldDescriptorProto.TYPE_ENUM: "static_cast<int>({0})",
     pb2.FieldDescriptorProto.TYPE_FIXED32: "static_cast<int>({0})",
@@ -196,9 +198,8 @@ pb_msg_cpp_fmt_val_map = {
     pb2.FieldDescriptorProto.TYPE_SINT64: "static_cast<long long>({0})",
     pb2.FieldDescriptorProto.TYPE_STRING: "{0}.c_str()",
     pb2.FieldDescriptorProto.TYPE_UINT32: "static_cast<unsigned int>({0})",
-    pb2.FieldDescriptorProto.TYPE_UINT64:
-    "static_cast<unsigned long long>({0})",
-    pb2.FieldDescriptorProto.TYPE_MESSAGE: "\"MESSAGE: {0}\""
+    pb2.FieldDescriptorProto.TYPE_UINT64: "static_cast<unsigned long long>({0})",
+    pb2.FieldDescriptorProto.TYPE_MESSAGE: '"MESSAGE: {0}"',
 }
 
 pb_msg_cpp_ue_blueprint_type_map = {
@@ -217,14 +218,17 @@ pb_msg_cpp_ue_blueprint_type_map = {
     pb2.FieldDescriptorProto.TYPE_SINT64: "int64",
     pb2.FieldDescriptorProto.TYPE_STRING: "FString",
     pb2.FieldDescriptorProto.TYPE_UINT32: "int64",
-    pb2.FieldDescriptorProto.TYPE_UINT64: "int64"
+    pb2.FieldDescriptorProto.TYPE_UINT64: "int64",
 }
+
 
 def FirstCharUpper(str):
     return str[0:1].upper() + str[1:]
 
+
 SPLIT_WORDS_RULE = re.compile("[_\\.:/\\\\]")
 LOWERCASE_RULE = re.compile("[a-z]")
+
 
 def ToCamelName(str):
     strlist = [x for x in filter(lambda x: x, SPLIT_WORDS_RULE.split(str))]
@@ -232,11 +236,14 @@ def ToCamelName(str):
         strlist[i] = FirstCharUpper(strlist[i])
     return "".join(strlist)
 
+
 def PbMsgGetPbOneofVarName(oneof):
     return oneof.name.lower()
 
+
 def PbMsgGetPbOneofFn(field):
     return "{0}_case()".format(PbMsgGetPbOneofVarName(field))
+
 
 def PbMsgGetPbFieldVarName(field):
     lower_name = field.name.lower()
@@ -244,9 +251,11 @@ def PbMsgGetPbFieldVarName(field):
         return lower_name + "_"
     else:
         return lower_name
-    
+
+
 def PbMsgGetPbFieldFn(field):
     return "{0}()".format(PbMsgGetPbFieldVarName(field))
+
 
 def PbMsgGetPbFieldCppType(field):
     global pb_msg_cpp_type_map
@@ -254,11 +263,13 @@ def PbMsgGetPbFieldCppType(field):
         return pb_msg_cpp_type_map[field.type]
     return field.type_name
 
+
 def PbMsgGetPbFieldUECppType(field):
     global pb_msg_cpp_ue_blueprint_type_map
     if field.type in pb_msg_cpp_ue_blueprint_type_map:
         return pb_msg_cpp_ue_blueprint_type_map[field.type]
     return field.type_name
+
 
 def PbMsgGetPbFieldCsType(field):
     global pb_msg_cs_type_map
@@ -285,54 +296,63 @@ def PbMsgPbFieldFmtValue(field, input):
     global pb_msg_cpp_fmt_val_map
     if field.type in pb_msg_cpp_fmt_val_map:
         return pb_msg_cpp_fmt_val_map[field.type].format(input)
-    return "\"UNKNOWN TYPE: {0}\"".format(input)
+    return '"UNKNOWN TYPE: {0}"'.format(input)
 
 
 @supports_caller
 def MakoPbMsgGetPbFieldCsType(context, arg):
     return PbMsgGetPbFieldCsType(arg)
 
+
 @supports_caller
 def MakoFirstCharUpper(context, arg):
     return FirstCharUpper(arg)
+
 
 @supports_caller
 def MakoToCamelName(context, str):
     return ToCamelName(str)
 
+
 @supports_caller
 def MakoPbMsgGetCppOneofVarName(context, arg):
     return PbMsgGetPbOneofVarName(arg)
+
 
 @supports_caller
 def MakoPbMsgGetCppOneof(context, arg):
     return PbMsgGetPbOneofFn(arg)
 
+
 @supports_caller
 def MakoPbMsgGetCppFieldVarName(context, arg):
     return PbMsgGetPbFieldVarName(arg)
+
 
 @supports_caller
 def MakoPbMsgGetCppField(context, arg):
     return PbMsgGetPbFieldFn(arg)
 
+
 @supports_caller
 def MakoPbMsgGetPbFieldCppType(context, arg):
     return PbMsgGetPbFieldCppType(arg)
+
 
 @supports_caller
 def MakoPbMsgGetPbFieldUECppType(context, arg):
     return PbMsgGetPbFieldUECppType(arg)
 
+
 @supports_caller
 def CppNamespaceBegin(context, arg):
-    return "\n".join([("namespace {0}".format(x) + " {")
-                     for x in arg.split(".")])
+    return "\n".join([("namespace {0}".format(x) + " {") for x in arg.split(".")])
+
 
 @supports_caller
 def CppNamespaceEnd(context, arg):
-    return "\n".join([("{0}  // namespace {1}".format("}", x))
-                     for x in arg.split(".")])
+    return "\n".join([("{0}  // namespace {1}".format("}", x)) for x in arg.split(".")])
+
 
 @supports_caller
 def CppFullPath(context, arg):
@@ -354,7 +374,8 @@ class PbDatabase(object):
         self.raw_files = dict()
         self.raw_symbols = dict()
         self.default_factory = _message_factory.MessageFactory(
-            _descriptor_pool.Default())
+            _descriptor_pool.Default()
+        )
         self.extended_factory = _message_factory.MessageFactory()
         self.extended_well_known_files = []
         self._cache_files = dict()
@@ -363,10 +384,7 @@ class PbDatabase(object):
         self._cache_services = dict()
 
     def _register_by_pb_fds(self, factory, file_protos):
-        file_by_name = {
-            file_proto.name: file_proto
-            for file_proto in file_protos
-        }
+        file_by_name = {file_proto.name: file_proto for file_proto in file_protos}
         added_file = set()
 
         def _AddFile(file_proto):
@@ -387,47 +405,64 @@ class PbDatabase(object):
         while file_by_name:
             _AddFile(file_by_name.popitem()[1])
         # call GetMessages to register all types
-        return factory.GetMessages(
-            [file_proto.name for file_proto in file_protos])
+        import google.protobuf as _protobuf
+
+        protobuf_version = [int(x) for x in _protobuf.__version__.split(".")]
+        if protobuf_version[0] > 4 or (
+            protobuf_version[0] == 4 and protobuf_version[1] >= 23
+        ):
+            from google.protobuf import message_factory as _message_factory
+
+            return _message_factory.GetMessageClassesForFiles(
+                [file_proto.name for file_proto in file_protos], factory.pool
+            )
+        else:
+            return factory.GetMessages([file_proto.name for file_proto in file_protos])
 
     def _extended_raw_message(self, package, message_proto):
-        self.raw_symbols["{0}.{1}".format(package,
-                                          message_proto.name)] = message_proto
+        self.raw_symbols["{0}.{1}".format(package, message_proto.name)] = message_proto
         for enum_type in message_proto.enum_type:
             self._extended_raw_enum(
-                "{0}.{1}".format(package, message_proto.name), enum_type)
+                "{0}.{1}".format(package, message_proto.name), enum_type
+            )
         for nested_type in message_proto.nested_type:
             self._extended_raw_message(
-                "{0}.{1}".format(package, message_proto.name), nested_type)
+                "{0}.{1}".format(package, message_proto.name), nested_type
+            )
         for extension in message_proto.extension:
-            self.raw_symbols["{0}.{1}.{2}".format(package, message_proto.name,
-                                                  extension.name)] = extension
+            self.raw_symbols[
+                "{0}.{1}.{2}".format(package, message_proto.name, extension.name)
+            ] = extension
         for field in message_proto.field:
-            self.raw_symbols["{0}.{1}.{2}".format(package, message_proto.name,
-                                                  field.name)] = field
+            self.raw_symbols[
+                "{0}.{1}.{2}".format(package, message_proto.name, field.name)
+            ] = field
         for oneof_decl in message_proto.oneof_decl:
-            self.raw_symbols["{0}.{1}.{2}".format(
-                package, message_proto.name, oneof_decl.name)] = oneof_decl
+            self.raw_symbols[
+                "{0}.{1}.{2}".format(package, message_proto.name, oneof_decl.name)
+            ] = oneof_decl
 
     def _extended_raw_enum(self, package, enum_type):
         self.raw_symbols["{0}.{1}".format(package, enum_type.name)] = enum_type
         for enum_value in enum_type.value:
-            self.raw_symbols["{0}.{1}.{2}".format(
-                package, enum_type.name, enum_value.name)] = enum_value
+            self.raw_symbols[
+                "{0}.{1}.{2}".format(package, enum_type.name, enum_value.name)
+            ] = enum_value
 
     def _extended_raw_service(self, package, service_proto):
-        self.raw_symbols["{0}.{1}".format(package,
-                                          service_proto.name)] = service_proto
+        self.raw_symbols["{0}.{1}".format(package, service_proto.name)] = service_proto
         for method in service_proto.method:
-            self.raw_symbols["{0}.{1}.{2}".format(package, service_proto.name,
-                                                  method.name)] = method
+            self.raw_symbols[
+                "{0}.{1}.{2}".format(package, service_proto.name, method.name)
+            ] = method
 
     def _extended_raw_file(self, file_proto):
         for enum_type in file_proto.enum_type:
             self._extended_raw_enum(file_proto.package, enum_type)
         for extension in file_proto.extension:
-            self.raw_symbols["{0}.{1}".format(file_proto.package,
-                                              extension.name)] = extension
+            self.raw_symbols["{0}.{1}".format(file_proto.package, extension.name)] = (
+                extension
+            )
         for message_type in file_proto.message_type:
             self._extended_raw_message(file_proto.package, message_type)
         for service in file_proto.service:
@@ -449,37 +484,27 @@ class PbDatabase(object):
             type_pb2,
             wrappers_pb2,
         )
+
         protobuf_well_known_types = []
-        protobuf_well_known_type_descriptors = dict({
-            descriptor_pb2.DESCRIPTOR.name:
-            descriptor_pb2.DESCRIPTOR.serialized_pb,
-            any_pb2.DESCRIPTOR.name:
-            any_pb2.DESCRIPTOR.serialized_pb,
-            api_pb2.DESCRIPTOR.name:
-            api_pb2.DESCRIPTOR.serialized_pb,
-            duration_pb2.DESCRIPTOR.name:
-            duration_pb2.DESCRIPTOR.serialized_pb,
-            empty_pb2.DESCRIPTOR.name:
-            empty_pb2.DESCRIPTOR.serialized_pb,
-            field_mask_pb2.DESCRIPTOR.name:
-            field_mask_pb2.DESCRIPTOR.serialized_pb,
-            source_context_pb2.DESCRIPTOR.name:
-            source_context_pb2.DESCRIPTOR.serialized_pb,
-            struct_pb2.DESCRIPTOR.name:
-            struct_pb2.DESCRIPTOR.serialized_pb,
-            timestamp_pb2.DESCRIPTOR.name:
-            timestamp_pb2.DESCRIPTOR.serialized_pb,
-            type_pb2.DESCRIPTOR.name:
-            type_pb2.DESCRIPTOR.serialized_pb,
-            wrappers_pb2.DESCRIPTOR.name:
-            wrappers_pb2.DESCRIPTOR.serialized_pb,
-        })
+        protobuf_well_known_type_descriptors = dict(
+            {
+                descriptor_pb2.DESCRIPTOR.name: descriptor_pb2.DESCRIPTOR.serialized_pb,
+                any_pb2.DESCRIPTOR.name: any_pb2.DESCRIPTOR.serialized_pb,
+                api_pb2.DESCRIPTOR.name: api_pb2.DESCRIPTOR.serialized_pb,
+                duration_pb2.DESCRIPTOR.name: duration_pb2.DESCRIPTOR.serialized_pb,
+                empty_pb2.DESCRIPTOR.name: empty_pb2.DESCRIPTOR.serialized_pb,
+                field_mask_pb2.DESCRIPTOR.name: field_mask_pb2.DESCRIPTOR.serialized_pb,
+                source_context_pb2.DESCRIPTOR.name: source_context_pb2.DESCRIPTOR.serialized_pb,
+                struct_pb2.DESCRIPTOR.name: struct_pb2.DESCRIPTOR.serialized_pb,
+                timestamp_pb2.DESCRIPTOR.name: timestamp_pb2.DESCRIPTOR.serialized_pb,
+                type_pb2.DESCRIPTOR.name: type_pb2.DESCRIPTOR.serialized_pb,
+                wrappers_pb2.DESCRIPTOR.name: wrappers_pb2.DESCRIPTOR.serialized_pb,
+            }
+        )
 
         pb_file_buffer_list = [open(x, "rb").read() for x in pb_file_paths]
         pb_fds_patched = []
-        pb_fds_list = [
-            pb2.FileDescriptorSet.FromString(x) for x in pb_file_buffer_list
-        ]
+        pb_fds_list = [pb2.FileDescriptorSet.FromString(x) for x in pb_file_buffer_list]
         for pb_fds in pb_fds_list:
             pb_fds_patched.extend([x for x in pb_fds.file])
 
@@ -488,20 +513,18 @@ class PbDatabase(object):
                 protobuf_well_known_type_descriptors[x.name] = None
 
         for patch_inner_name in protobuf_well_known_type_descriptors:
-            patch_inner_pb_data = protobuf_well_known_type_descriptors[
-                patch_inner_name]
+            patch_inner_pb_data = protobuf_well_known_type_descriptors[patch_inner_name]
             if patch_inner_pb_data is not None:
                 protobuf_well_known_types.append(
-                    pb2.FileDescriptorProto.FromString(patch_inner_pb_data))
+                    pb2.FileDescriptorProto.FromString(patch_inner_pb_data)
+                )
 
         pb_fds_patched.extend(protobuf_well_known_types)
         self._register_by_pb_fds(self.default_factory, pb_fds_patched)
 
         # Extend the pool with the extended factory.
         pb_fds_patched = []
-        pb_fds_list = [
-            pb2.FileDescriptorSet.FromString(x) for x in pb_file_buffer_list
-        ]
+        pb_fds_list = [pb2.FileDescriptorSet.FromString(x) for x in pb_file_buffer_list]
         for pb_fds in pb_fds_list:
             pb_fds_patched.extend([x for x in pb_fds.file])
             for file_proto in pb_fds.file:
@@ -552,8 +575,7 @@ class PbDatabase(object):
             return None
         if full_name in self._cache_messages:
             return self._cache_messages[full_name]
-        target_desc = self.extended_factory.pool.FindMessageTypeByName(
-            full_name)
+        target_desc = self.extended_factory.pool.FindMessageTypeByName(full_name)
         if target_desc is None:
             return None
         return target_desc
@@ -593,8 +615,12 @@ class PbMsgIndex:
         self.name = None
         self.pb_msg = pb_msg
         self.index_set = index_set
-        self.field_names = [[x.strip() for x in y.split(".")] for y in pb_ext_index.fields]
-        self.sort_by_names = [[x.strip() for x in y.split(".")] for y in pb_ext_index.sort_by]
+        self.field_names = [
+            [x.strip() for x in y.split(".")] for y in pb_ext_index.fields
+        ]
+        self.sort_by_names = [
+            [x.strip() for x in y.split(".")] for y in pb_ext_index.sort_by
+        ]
         if pb_ext_index.name:
             self.name = pb_ext_index.name
         else:
@@ -618,20 +644,26 @@ class PbMsgIndex:
                     break
             if pb_fd is None:
                 sys.stderr.write(
-                    '[XRESCODE ERROR] index {0} invalid, because field {1} is not found in {2}\n'
-                    .format(self.name, fd, pb_msg.name))
+                    "[XRESCODE ERROR] index {0} invalid, because field {1} is not found in {2}\n".format(
+                        self.name, fd, pb_msg.name
+                    )
+                )
                 self.fields.clear()
                 break
             if pb_fd.label == pb_fd.LABEL_REPEATED:
                 sys.stderr.write(
-                    '[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n'
-                    .format(self.name, fd, pb_msg.name))
+                    "[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n".format(
+                        self.name, fd, pb_msg.name
+                    )
+                )
                 self.fields.clear()
                 break
             if pb_fd.type == pb_fd.TYPE_MESSAGE:
                 sys.stderr.write(
-                    '[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be message\n'
-                    .format(self.name, fd, pb_msg.name))
+                    "[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be message\n".format(
+                        self.name, fd, pb_msg.name
+                    )
+                )
                 self.fields.clear()
                 break
             self.fields.append(pb_fd)
@@ -644,18 +676,24 @@ class PbMsgIndex:
                     break
             if pb_fd is None:
                 sys.stderr.write(
-                    '[XRESCODE ERROR] index {0} invalid, because field {1} is not found in {2}\n'
-                    .format(self.name, fd, pb_msg.name))
+                    "[XRESCODE ERROR] index {0} invalid, because field {1} is not found in {2}\n".format(
+                        self.name, fd, pb_msg.name
+                    )
+                )
                 break
             if pb_fd.label == pb_fd.LABEL_REPEATED:
                 sys.stderr.write(
-                    '[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n'
-                    .format(self.name, fd, pb_msg.name))
+                    "[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n".format(
+                        self.name, fd, pb_msg.name
+                    )
+                )
                 break
             if pb_fd.type == pb_fd.TYPE_MESSAGE:
                 sys.stderr.write(
-                    '[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be message\n'
-                    .format(self.name, fd, pb_msg.name))
+                    "[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be message\n".format(
+                        self.name, fd, pb_msg.name
+                    )
+                )
                 break
             self.sort_by.append(pb_fd)
         if pb_ext_index.index_type:
@@ -669,16 +707,24 @@ class PbMsgIndex:
         if self.index_type == self.index_set.IV or self.index_type == self.index_set.IL:
             if len(self.fields) != 1:
                 sys.stderr.write(
-                    '[XRESCODE ERROR] index {0} invalid, vector index only can has only 1 integer key field\n'
-                    .format(self.name))
+                    "[XRESCODE ERROR] index {0} invalid, vector index only can has only 1 integer key field\n".format(
+                        self.name
+                    )
+                )
                 return False
         return True
 
     def is_list(self):
-        return self.index_type == self.index_set.KL.number or self.index_type == self.index_set.IL.number
+        return (
+            self.index_type == self.index_set.KL.number
+            or self.index_type == self.index_set.IL.number
+        )
 
     def is_vector(self):
-        return self.index_type == self.index_set.IV.number or self.index_type == self.index_set.IL.number
+        return (
+            self.index_type == self.index_set.IV.number
+            or self.index_type == self.index_set.IL.number
+        )
 
     def get_key_decl(self):
         decls = []
@@ -689,8 +735,9 @@ class PbMsgIndex:
     def get_cs_key_decl(self):
         decls = []
         for fd in self.fields:
-            decls.append("{0} {1}".format(PbMsgGetPbFieldCsType(fd),
-                                          ToCamelName(fd.name)))
+            decls.append(
+                "{0} {1}".format(PbMsgGetPbFieldCsType(fd), ToCamelName(fd.name))
+            )
         return ", ".join(decls)
 
     def get_key_params(self):
@@ -704,7 +751,7 @@ class PbMsgIndex:
         for fd in self.fields:
             decls.append(fd.name)
         return quote + (quote + ", " + quote).join(decls) + quote
-    
+
     def get_cs_key_params(self):
         decls = []
         for fd in self.fields:
@@ -730,39 +777,47 @@ class PbMsgIndex:
                 fileds_mapping[fd.name.lower()] = fd.name
             self.get_file_expression = []
             self.get_file_expression.append(
-                "    std::stringstream {0}_generated_file_path;".format(
-                    self.name))
+                "    std::stringstream {0}_generated_file_path;".format(self.name)
+            )
             if self.file_mapping:
                 next_index = 0
-                for mo in re.finditer('\\{\\s*([\\w_]+)s*\\}', self.file_mapping):
+                for mo in re.finditer("\\{\\s*([\\w_]+)s*\\}", self.file_mapping):
                     key_var_name = mo.group(1).lower()
                     if key_var_name not in fileds_mapping:
                         sys.stderr.write(
                             "[XRESCODE ERROR] {0} in file_mapping is not exists in key fields of index {1}\n",
-                            mo.group(1), self.name)
+                            mo.group(1),
+                            self.name,
+                        )
                     else:
                         if next_index < mo.start():
                             self.get_file_expression.append(
-                                "    {0}_generated_file_path<< \"{1}\";".
-                                format(
+                                '    {0}_generated_file_path<< "{1}";'.format(
                                     self.name,
-                                    self.file_mapping[next_index:mo.start()]))
+                                    self.file_mapping[next_index : mo.start()],
+                                )
+                            )
                         self.get_file_expression.append(
                             "    {0}_generated_file_path<< {1};".format(
-                                self.name, fileds_mapping[key_var_name]))
+                                self.name, fileds_mapping[key_var_name]
+                            )
+                        )
 
                     next_index = mo.end()
                 if next_index < len(self.file_mapping):
                     self.get_file_expression.append(
-                        "    {0}_generated_file_path<< \"{1}\";".format(
-                            self.name, self.file_mapping[next_index:]))
+                        '    {0}_generated_file_path<< "{1}";'.format(
+                            self.name, self.file_mapping[next_index:]
+                        )
+                    )
             else:
                 self.get_file_expression.append(
-                    "    {0}_generated_file_path << \"{0}\";".format(
-                        self.name))
+                    '    {0}_generated_file_path << "{0}";'.format(self.name)
+                )
         code_lines.extend(self.get_file_expression)
-        code_lines.append("    {0} = {1}_generated_file_path.str();".format(
-            var_name, self.name))
+        code_lines.append(
+            "    {0} = {1}_generated_file_path.str();".format(var_name, self.name)
+        )
         code_lines.append("} while (false);")
         return code_lines
 
@@ -776,40 +831,49 @@ class PbMsgIndex:
                 fileds_mapping[fd.name.lower()] = fd.name
             self.get_file_expression = []
             self.get_file_expression.append(
-                "    StringBuilder {0}_generated_file_path = new StringBuilder();"
-                .format(self.name))
+                "    StringBuilder {0}_generated_file_path = new StringBuilder();".format(
+                    self.name
+                )
+            )
             if self.file_mapping:
                 next_index = 0
-                for mo in re.finditer('\\{\\s*([\\w_]+)s*\\}', self.file_mapping):
+                for mo in re.finditer("\\{\\s*([\\w_]+)s*\\}", self.file_mapping):
                     key_var_name = mo.group(1).lower()
                     if key_var_name not in fileds_mapping:
                         sys.stderr.write(
                             "[XRESCODE ERROR] {0} in file_mapping is not exists in key fields of index {1}\n",
-                            mo.group(1), self.name)
+                            mo.group(1),
+                            self.name,
+                        )
                     else:
                         if next_index < mo.start():
                             self.get_file_expression.append(
-                                "    {0}_generated_file_path.Append(\"{1}\");".
-                                format(
+                                '    {0}_generated_file_path.Append("{1}");'.format(
                                     self.name,
-                                    self.file_mapping[next_index:mo.start()]))
+                                    self.file_mapping[next_index : mo.start()],
+                                )
+                            )
                         self.get_file_expression.append(
                             "    {0}_generated_file_path.Append({1});".format(
-                                self.name, fileds_mapping[key_var_name]))
+                                self.name, fileds_mapping[key_var_name]
+                            )
+                        )
 
                     next_index = mo.end()
                 if next_index < len(self.file_mapping):
                     self.get_file_expression.append(
-                        "    {0}_generated_file_path.Append(\"{1}\");".format(
-                            self.name, self.file_mapping[next_index:]))
+                        '    {0}_generated_file_path.Append("{1}");'.format(
+                            self.name, self.file_mapping[next_index:]
+                        )
+                    )
             else:
                 self.get_file_expression.append(
-                    "    {0}_generated_file_path.Append(\"{0}\");".format(
-                        self.name))
+                    '    {0}_generated_file_path.Append("{0}");'.format(self.name)
+                )
         code_lines.extend(self.get_file_expression)
         code_lines.append(
-            "    {0} = {1}_generated_file_path.ToString();".format(
-                var_name, self.name))
+            "    {0} = {1}_generated_file_path.ToString();".format(var_name, self.name)
+        )
         return code_lines
 
     def get_key_params_fmt_value_list(self):
@@ -830,7 +894,7 @@ class PbMsgIndex:
             decls.append(PbMsgGetPbFieldCsType(fd))
         return ", ".join(decls)
 
-    def get_key_value_list(self, prefix=''):
+    def get_key_value_list(self, prefix=""):
         decls = []
         for fd in self.fields:
             decls.append("{0}{1}".format(prefix, PbMsgGetPbFieldFn(fd)))
@@ -842,18 +906,19 @@ class PbMsgIndex:
             decls.append(PbMsgPbFieldFmt(fd))
         return ", ".join(decls)
 
-    def get_key_fmt_value_list(self, prefix=''):
+    def get_key_fmt_value_list(self, prefix=""):
         decls = []
         for fd in self.fields:
             decls.append(
-                PbMsgPbFieldFmtValue(
-                    fd, "{0}{1}".format(prefix, PbMsgGetPbFieldFn(fd))))
+                PbMsgPbFieldFmtValue(fd, "{0}{1}".format(prefix, PbMsgGetPbFieldFn(fd)))
+            )
         return ", ".join(decls)
 
 
 class PbMsgCodeExt:
-    def __init__(self, outer_file, outer_msg, inner_file, inner_msg, loader,
-                 package, index_set):
+    def __init__(
+        self, outer_file, outer_msg, inner_file, inner_msg, loader, package, index_set
+    ):
         self.outer_file = outer_file
         self.outer_msg = outer_msg
         self.inner_file = inner_file
@@ -899,8 +964,9 @@ class PbMsgCodeExt:
 
 
 class PbMsgLoader:
-    def __init__(self, pb_file, pb_msg, msg_prefix, nested_from_prefix,
-                 pb_loader, index_set):
+    def __init__(
+        self, pb_file, pb_msg, msg_prefix, nested_from_prefix, pb_loader, index_set
+    ):
         self.pb_file = pb_file
         self.pb_msg = pb_msg
         self.msg_prefix = msg_prefix
@@ -909,11 +975,15 @@ class PbMsgLoader:
         self.extended_nested_name = pb_msg.name
         if nested_from_prefix:
             self.full_name = nested_from_prefix + self.full_name
-            self.extended_nested_name = (nested_from_prefix + self.extended_nested_name).replace(".", "_")
+            self.extended_nested_name = (
+                nested_from_prefix + self.extended_nested_name
+            ).replace(".", "_")
         self.extended_nested_full_name = self.extended_nested_name
         if pb_file.package:
-            self.full_name = '{0}.{1}'.format(pb_file.package, pb_msg.name)
-            self.extended_nested_full_name = '{0}.{1}'.format(pb_file.package, self.extended_nested_name)
+            self.full_name = "{0}.{1}".format(pb_file.package, pb_msg.name)
+            self.extended_nested_full_name = "{0}.{1}".format(
+                pb_file.package, self.extended_nested_name
+            )
         self.code = None
         self.code_field = None
         self.pb_outer_class_name = None
@@ -931,42 +1001,60 @@ class PbMsgLoader:
         if not self.pb_loader:
             return
 
-        if self.pb_file.package == 'google.protobuf':
+        if self.pb_file.package == "google.protobuf":
             return
 
         if self.pb_loader.code_field:
             code_ext = None
             for fd in self.pb_msg.field:
                 if fd.name == self.pb_loader.code_field:
-                    if not fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE or not fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
+                    if (
+                        not fd.type == pb2.FieldDescriptorProto.TYPE_MESSAGE
+                        or not fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED
+                    ):
                         fds.add_failed_count()
                         sys.stderr.write(
-                            '[XRESCODE ERROR] code field {0} of {1} must be repeated message\n'
-                            .format(fd.name, self.full_name))
+                            "[XRESCODE ERROR] code field {0} of {1} must be repeated message\n".format(
+                                fd.name, self.full_name
+                            )
+                        )
                         break
                     inner_msg = fds.get_msg_by_type(fd.type_name)
                     if inner_msg is None:
                         fds.add_failed_count()
                         sys.stderr.write(
-                            '[XRESCODE ERROR] can not find message {0} for code field {1} of {2}\n'
-                            .format(fd.type_name, fd.name, self.full_name))
+                            "[XRESCODE ERROR] can not find message {0} for code field {1} of {2}\n".format(
+                                fd.type_name, fd.name, self.full_name
+                            )
+                        )
                         break
-                    code_ext = PbMsgCodeExt(self.pb_file, self.pb_msg,
-                                            inner_msg.pb_file,
-                                            inner_msg.pb_msg, self.pb_loader,
-                                            self.pb_file.package,
-                                            self.index_set)
+                    code_ext = PbMsgCodeExt(
+                        self.pb_file,
+                        self.pb_msg,
+                        inner_msg.pb_file,
+                        inner_msg.pb_msg,
+                        self.pb_loader,
+                        self.pb_file.package,
+                        self.index_set,
+                    )
                     break
             if code_ext is None:
                 fds.add_failed_count()
                 sys.stderr.write(
-                    '[XRESCODE ERROR] code field {0} can not be found in {1}\n'
-                    .format(self.pb_loader.code_field, self.full_name))
+                    "[XRESCODE ERROR] code field {0} can not be found in {1}\n".format(
+                        self.pb_loader.code_field, self.full_name
+                    )
+                )
         else:
-            code_ext = PbMsgCodeExt(fds.shared_outer_msg.pb_file,
-                                    fds.shared_outer_msg.pb_msg, self.pb_file,
-                                    self.pb_msg, self.pb_loader,
-                                    self.pb_file.package, self.index_set)
+            code_ext = PbMsgCodeExt(
+                fds.shared_outer_msg.pb_file,
+                fds.shared_outer_msg.pb_msg,
+                self.pb_file,
+                self.pb_msg,
+                self.pb_loader,
+                self.pb_file.package,
+                self.index_set,
+            )
 
         if code_ext and code_ext.is_valid():
             self.code = code_ext
@@ -977,37 +1065,42 @@ class PbMsgLoader:
             if self.pb_loader.file_list:
                 fds.add_failed_count()
                 print(
-                    '[XRESCODE WARNING] message {0} has file_list but without valid field, ignored'
-                    .format(self.full_name))
+                    "[XRESCODE WARNING] message {0} has file_list but without valid field, ignored".format(
+                        self.full_name
+                    )
+                )
             if self.pb_loader.file_path:
                 fds.add_failed_count()
                 print(
-                    '[XRESCODE WARNING] message {0} has file_path but without valid field, ignored'
-                    .format(self.full_name))
+                    "[XRESCODE WARNING] message {0} has file_path but without valid field, ignored".format(
+                        self.full_name
+                    )
+                )
         else:
             if self.code.invalid_index_count > 0:
                 fds.add_failed_count()
             if self.code.file_list and self.code.file_path:
                 fds.add_failed_count()
                 print(
-                    '[XRESCODE WARNING] message {0} has both file_list and file_path, should only has one'
-                    .format(self.full_name))
+                    "[XRESCODE WARNING] message {0} has both file_list and file_path, should only has one".format(
+                        self.full_name
+                    )
+                )
 
     def has_code(self):
         return self.code is not None
 
     def get_upb_lua_path(self):
         base_file = self.pb_file.name
-        suffix_pos = base_file.rfind('.')
+        suffix_pos = base_file.rfind(".")
         if suffix_pos < 0:
-            return base_file.replace('/', '.').replace('\\', '.') + "_pb"
+            return base_file.replace("/", ".").replace("\\", ".") + "_pb"
         else:
-            return base_file[0:suffix_pos].replace('/', '.').replace(
-                '\\', '.') + "_pb"
+            return base_file[0:suffix_pos].replace("/", ".").replace("\\", ".") + "_pb"
 
     def get_pb_header_path(self):
         base_file = os.path.basename(self.pb_file.name)
-        suffix_pos = base_file.rfind('.')
+        suffix_pos = base_file.rfind(".")
         if suffix_pos < 0:
             return base_file + ".pb.h"
         else:
@@ -1018,7 +1111,9 @@ class PbMsgLoader:
             return self.pb_outer_class_name
         cpp_package_prefix = self.code.outer_file.package.replace(".", "::")
         if cpp_package_prefix:
-            self.pb_outer_class_name = "::" + cpp_package_prefix + "::" + self.code.outer_msg.name
+            self.pb_outer_class_name = (
+                "::" + cpp_package_prefix + "::" + self.code.outer_msg.name
+            )
         else:
             self.pb_outer_class_name = "::" + self.code.outer_msg.name
         return self.pb_outer_class_name
@@ -1031,7 +1126,9 @@ class PbMsgLoader:
             return ""
         cpp_package_prefix = self.code.inner_file.package.replace(".", "::")
         if cpp_package_prefix:
-            self.pb_inner_class_name = "::" + cpp_package_prefix + "::" + self.code.inner_msg.name
+            self.pb_inner_class_name = (
+                "::" + cpp_package_prefix + "::" + self.code.inner_msg.name
+            )
         else:
             self.pb_inner_class_name = "::" + self.code.inner_msg.name
         return self.pb_inner_class_name
@@ -1044,8 +1141,7 @@ class PbMsgLoader:
             return ""
 
         if self.msg_prefix:
-            self.cpp_class_name = "{0}{1}".format(self.msg_prefix,
-                                                  self.code.class_name)
+            self.cpp_class_name = "{0}{1}".format(self.msg_prefix, self.code.class_name)
         else:
             self.cpp_class_name = self.code.class_name
         return self.cpp_class_name
@@ -1058,8 +1154,7 @@ class PbMsgLoader:
             return ""
 
         if self.msg_prefix:
-            self.cs_class_name = "{0}{1}".format(self.msg_prefix,
-                                                 self.code.class_name)
+            self.cs_class_name = "{0}{1}".format(self.msg_prefix, self.code.class_name)
         else:
             self.cs_class_name = self.code.class_name
         return self.cs_class_name
@@ -1073,11 +1168,13 @@ class PbMsgLoader:
 
         cs_package_prefix = self.code.outer_file.package
         if cs_package_prefix:
-            cs_arr = self.code.outer_file.package.split('.')
+            cs_arr = self.code.outer_file.package.split(".")
             for i in range(len(cs_arr)):
                 cs_arr[i] = FirstCharUpper(cs_arr[i])
-            cs_package_prefix = '.'.join(cs_arr)
-            self.cs_pb_outer_class_name = cs_package_prefix + "." + self.code.outer_msg.name
+            cs_package_prefix = ".".join(cs_arr)
+            self.cs_pb_outer_class_name = (
+                cs_package_prefix + "." + self.code.outer_msg.name
+            )
         else:
             self.cs_pb_outer_class_name = self.code.outer_msg.name
         return self.cs_pb_outer_class_name
@@ -1091,7 +1188,9 @@ class PbMsgLoader:
 
         cs_package_prefix = self.code.inner_file.package
         if cs_package_prefix:
-            self.cs_pb_inner_class_name = cs_package_prefix + "." + self.code.inner_msg.name
+            self.cs_pb_inner_class_name = (
+                cs_package_prefix + "." + self.code.inner_msg.name
+            )
         else:
             self.cs_pb_inner_class_name = self.code.inner_msg.name
         return self.cs_pb_inner_class_name
@@ -1105,7 +1204,8 @@ class PbMsgLoader:
 
         cpp_package_prefix = self.code.package.replace(".", "::")
         if cpp_package_prefix:
-            self.cpp_class_full_name = cpp_package_prefix + "::" + self.get_cpp_class_name(
+            self.cpp_class_full_name = (
+                cpp_package_prefix + "::" + self.get_cpp_class_name()
             )
         else:
             self.cpp_class_full_name = self.get_cpp_class_name()
@@ -1147,8 +1247,9 @@ class PbMsgLoader:
     def get_cpp_if_guard_name(self):
         if self.cpp_if_guard_name is not None:
             return self.cpp_if_guard_name
-        self.cpp_if_guard_name = "_" + self.get_cpp_class_full_name().replace(
-            "::", "_").upper()
+        self.cpp_if_guard_name = (
+            "_" + self.get_cpp_class_full_name().replace("::", "_").upper()
+        )
         return self.cpp_if_guard_name
 
     def get_cpp_public_var_name(self):
@@ -1172,6 +1273,7 @@ class PbMsgLoader:
     def get_camel_code_field_name(self):
         return ToCamelName(self.code_field.name)
 
+
 class PbFile:
     def __init__(self, db, pb_file, index_set):
         self.db = db
@@ -1194,9 +1296,12 @@ class PbFile:
         for msg in self.pb_msgs.values():
             deps = set()
             for field_inst in msg.fields.values():
-                if field_inst.pb_field.message_type is not None and field_inst.pb_field.message_type.file == self.pb_file:
+                if (
+                    field_inst.pb_field.message_type is not None
+                    and field_inst.pb_field.message_type.file == self.pb_file
+                ):
                     dep_full_name = field_inst.pb_field.message_type.full_name
-                    if dep_full_name.startswith('.'):
+                    if dep_full_name.startswith("."):
                         dep_full_name = dep_full_name[1:]
                     if dep_full_name == msg.full_name:
                         continue
@@ -1205,7 +1310,7 @@ class PbFile:
                         topological_notify[dep_full_name].add(msg.full_name)
                     else:
                         topological_notify[dep_full_name] = set([msg.full_name])
-            topological_map[msg.full_name] = { "instance" : msg, "deps": deps }
+            topological_map[msg.full_name] = {"instance": msg, "deps": deps}
         topological_readys = []
         for msg_inst in topological_map.values():
             if not msg_inst["deps"]:
@@ -1215,7 +1320,9 @@ class PbFile:
             ret.append(msg_inst["instance"])
             if msg_inst["instance"].full_name in topological_notify:
                 for dep_full_name in topological_notify[msg_inst["instance"].full_name]:
-                    topological_map[dep_full_name]["deps"].remove(msg_inst["instance"].full_name)
+                    topological_map[dep_full_name]["deps"].remove(
+                        msg_inst["instance"].full_name
+                    )
                     if not topological_map[dep_full_name]["deps"]:
                         topological_readys.append(topological_map[dep_full_name])
         self.__topological_sorted_messages_cache = ret
@@ -1223,33 +1330,33 @@ class PbFile:
 
     def get_file_path_without_ext(self):
         if self.name.endswith(".proto"):
-            return self.name[:-len(".proto")]
+            return self.name[: -len(".proto")]
         return self.name
-    
+
     def get_file_basename_without_ext(self):
         if self.base_name.endswith(".proto"):
-            return self.base_name[:-len(".proto")]
+            return self.base_name[: -len(".proto")]
         return self.base_name
-    
+
     def get_file_camelname(self):
         return ToCamelName(self.get_file_path_without_ext())
-    
+
     def get_file_base_camelname(self):
         return ToCamelName(self.get_file_basename_without_ext())
-    
-    def get_file_path_camelname(self, basename_prefix = ""):
+
+    def get_file_path_camelname(self, basename_prefix=""):
         res = os.path.dirname(self.name)
         if res:
             return res + "/" + basename_prefix + self.get_file_base_camelname()
         else:
             return self.get_file_base_camelname()
-        
+
     def get_directory_path(self):
         return os.path.dirname(self.name)
-    
+
     def get_directory_camelname(self):
         return ToCamelName(self.get_directory_path())
-    
+
     def get_cpp_namespace_decl_begin(self):
         if not self.package:
             return ""
@@ -1275,23 +1382,32 @@ class PbFile:
         for ns in package_names:
             ns_ls.append("{0}  // namespace {1}".format("}", ns))
         return "\n".join(ns_ls)
-    
+
     def get_field_cpp_protobuf_type(self, pb_field_proto):
         if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_ENUM:
             enum_descriptor_proto = self.db.get_enum(pb_field_proto.type_name)
             if enum_descriptor_proto:
                 return pb_field_proto.type_name.replace(".", "::")
-            enum_descriptor_proto = self.db.get_enum(self.package + "." + pb_field_proto.type_name)
+            enum_descriptor_proto = self.db.get_enum(
+                self.package + "." + pb_field_proto.type_name
+            )
             if enum_descriptor_proto:
-                return (self.package + "." + pb_field_proto.type_name).replace(".", "::")
+                return (self.package + "." + pb_field_proto.type_name).replace(
+                    ".", "::"
+                )
         elif pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
             msg_descriptor_proto = self.db.get_message(pb_field_proto.type_name)
             if msg_descriptor_proto:
                 return pb_field_proto.type_name.replace(".", "::")
-            msg_descriptor_proto = self.db.get_message(self.package + "." + pb_field_proto.type_name)
+            msg_descriptor_proto = self.db.get_message(
+                self.package + "." + pb_field_proto.type_name
+            )
             if msg_descriptor_proto:
-                return (self.package + "." + pb_field_proto.type_name).replace(".", "::")
+                return (self.package + "." + pb_field_proto.type_name).replace(
+                    ".", "::"
+                )
         return PbMsgGetPbFieldCppType(pb_field_proto)
+
 
 class PbEnum:
     def __init__(self, db, pb_file, pb_enum, nested_from_prefix, index_set):
@@ -1302,11 +1418,15 @@ class PbEnum:
         self.extended_nested_name = pb_enum.name
         if nested_from_prefix:
             self.full_name = nested_from_prefix + self.full_name
-            self.extended_nested_name = (nested_from_prefix + self.extended_nested_name).replace(".", "_")
+            self.extended_nested_name = (
+                nested_from_prefix + self.extended_nested_name
+            ).replace(".", "_")
         self.extended_nested_full_name = self.extended_nested_name
         if pb_file.package:
-            self.full_name = '{0}.{1}'.format(pb_file.package, self.full_name)
-            self.extended_nested_full_name = '{0}.{1}'.format(pb_file.package, self.extended_nested_full_name)
+            self.full_name = "{0}.{1}".format(pb_file.package, self.full_name)
+            self.extended_nested_full_name = "{0}.{1}".format(
+                pb_file.package, self.extended_nested_full_name
+            )
         self.pb_enum = db.get_enum(self.full_name)
         self.descriptor_proto = pb_enum
         self.index_set = index_set
@@ -1323,25 +1443,28 @@ class PbEnum:
             use_name = self.full_name
         else:
             use_name = self.descriptor_proto.name
-        ret = "".join([x[0:1].upper() + x[1:].lower() for x in use_name.split('_')])
+        ret = "".join([x[0:1].upper() + x[1:].lower() for x in use_name.split("_")])
         return LOWERCASE_RULE.sub("", ret)
+
 
 class PbField:
     def __init__(self, db, pb_msg, pb_field_proto, index_set):
         self.db = db
         self.pb_msg = pb_msg
         self.pb_file = pb_msg.pb_file
-        self.full_name = '{0}.{1}'.format(pb_msg.full_name, pb_field_proto.name)
+        self.full_name = "{0}.{1}".format(pb_msg.full_name, pb_field_proto.name)
         self.descriptor_proto = pb_field_proto
         self.pb_field = pb_msg.pb_msg.fields_by_number[pb_field_proto.number]
         self.index_set = index_set
         self.pb_oneof = None
 
     def get_cpp_oneof_field_name(self):
-        return 'k{0}'.format(ToCamelName(self.descriptor_proto.name))
-    
+        return "k{0}".format(ToCamelName(self.descriptor_proto.name))
+
     def get_cpp_oneof_field_full_name(self):
-        return '{0}::{1}'.format(self.pb_msg.full_name.replace(".", "::"), self.get_cpp_oneof_field_name())
+        return "{0}::{1}".format(
+            self.pb_msg.full_name.replace(".", "::"), self.get_cpp_oneof_field_name()
+        )
 
     def get_extension(self, path):
         extension_handle = self.db.get_extension(path)
@@ -1351,27 +1474,32 @@ class PbField:
             return None
         return self.pb_field.GetOptions().Extensions[extension_handle]
 
+
 class PbOneof:
     def __init__(self, db, pb_msg, pb_oneof_proto, index_set, oneofs_by_name):
         self.db = db
         self.pb_msg = pb_msg
         self.pb_file = pb_msg.pb_file
-        self.full_name = '{0}.{1}'.format(pb_msg.full_name, pb_oneof_proto.name)
+        self.full_name = "{0}.{1}".format(pb_msg.full_name, pb_oneof_proto.name)
         self.descriptor_proto = pb_oneof_proto
         self.pb_oneof = oneofs_by_name[pb_oneof_proto.name]
         self.index_set = index_set
         self.fields = dict()
 
     def get_cpp_case_call(self):
-        return '{0}_case()'.format(self.descriptor_proto.name)
-    
+        return "{0}_case()".format(self.descriptor_proto.name)
+
     def get_cpp_case_type(self):
-        return '{0}::{1}Case'.format(self.pb_msg.full_name.replace(".", "::"), ToCamelName(self.descriptor_proto.name))
+        return "{0}::{1}Case".format(
+            self.pb_msg.full_name.replace(".", "::"),
+            ToCamelName(self.descriptor_proto.name),
+        )
 
 
 class PbMsg:
-    def __init__(self, db, pb_file, pb_msg_proto, msg_prefix, nested_from_prefix,
-                 index_set):
+    def __init__(
+        self, db, pb_file, pb_msg_proto, msg_prefix, nested_from_prefix, index_set
+    ):
         self.db = db
         self.pb_file = pb_file
         self.msg_prefix = msg_prefix
@@ -1380,11 +1508,15 @@ class PbMsg:
         self.extended_nested_name = pb_msg_proto.name
         if nested_from_prefix:
             self.full_name = nested_from_prefix + self.full_name
-            self.extended_nested_name = (nested_from_prefix + self.extended_nested_name).replace(".", "_")
+            self.extended_nested_name = (
+                nested_from_prefix + self.extended_nested_name
+            ).replace(".", "_")
         self.extended_nested_full_name = self.extended_nested_name
         if pb_file.package:
-            self.full_name = '{0}.{1}'.format(pb_file.package, self.full_name)
-            self.extended_nested_full_name = '{0}.{1}'.format(pb_file.package, self.extended_nested_full_name)
+            self.full_name = "{0}.{1}".format(pb_file.package, self.full_name)
+            self.extended_nested_full_name = "{0}.{1}".format(
+                pb_file.package, self.extended_nested_full_name
+            )
         self.pb_msg = db.get_message(self.full_name)
         self.descriptor_proto = pb_msg_proto
         self.loaders = []
@@ -1395,7 +1527,9 @@ class PbMsg:
         for oneof_desc in self.pb_msg.oneofs:
             oneofs_by_name[oneof_desc.name] = oneof_desc
         for pb_field_proto in pb_msg_proto.field:
-            self.fields[pb_field_proto.name] = PbField(db, self, pb_field_proto, index_set)
+            self.fields[pb_field_proto.name] = PbField(
+                db, self, pb_field_proto, index_set
+            )
         for pb_oneof_proto in pb_msg_proto.oneof_decl:
             oneof_inst = PbOneof(db, self, pb_oneof_proto, index_set, oneofs_by_name)
             self.oneofs[pb_oneof_proto.name] = oneof_inst
@@ -1408,10 +1542,10 @@ class PbMsg:
                 field_inst.pb_oneof = oneof_inst
 
     def setup_code(self, fds, include_tags, exclude_tags):
-        if self.pb_file.package == 'google.protobuf':
+        if self.pb_file.package == "google.protobuf":
             return
 
-        loader_extension = self.db.get_extension('xrescode.loader')
+        loader_extension = self.db.get_extension("xrescode.loader")
         if loader_extension not in self.pb_msg.GetOptions().Extensions:
             return
 
@@ -1433,16 +1567,21 @@ class PbMsg:
             if skip_message:
                 continue
 
-            loader_inst = PbMsgLoader(self.pb_file, self.pb_msg,
-                                      self.msg_prefix, self.nested_from_prefix,
-                                      loader, self.index_set)
+            loader_inst = PbMsgLoader(
+                self.pb_file,
+                self.pb_msg,
+                self.msg_prefix,
+                self.nested_from_prefix,
+                loader,
+                self.index_set,
+            )
             loader_inst.setup_code(fds)
             if loader_inst.has_code():
                 self.loaders.append(loader_inst)
 
     def has_loader(self):
         return len(self.loaders) > 0
-    
+
     def get_extension(self, path):
         extension_handle = self.db.get_extension(path)
         if extension_handle is None:
@@ -1450,53 +1589,72 @@ class PbMsg:
         if extension_handle not in self.pb_msg.GetOptions().Extensions:
             return None
         return self.pb_msg.GetOptions().Extensions[extension_handle]
-    
+
     def get_pb_header_path(self):
         base_file = os.path.basename(self.pb_file.name)
-        suffix_pos = base_file.rfind('.')
+        suffix_pos = base_file.rfind(".")
         if suffix_pos < 0:
             return base_file + ".pb.h"
         else:
             return base_file[0:suffix_pos] + ".pb.h"
-        
+
     def get_field_cpp_protobuf_type(self, pb_field_proto):
         if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_ENUM:
             enum_descriptor_proto = self.db.get_enum(pb_field_proto.type_name)
             if enum_descriptor_proto:
                 return pb_field_proto.type_name.replace(".", "::")
-            enum_descriptor_proto = self.db.get_enum(self.full_name + "." + pb_field_proto.type_name)
+            enum_descriptor_proto = self.db.get_enum(
+                self.full_name + "." + pb_field_proto.type_name
+            )
             if enum_descriptor_proto:
-                return (self.full_name + "." + pb_field_proto.type_name).replace(".", "::")
-            enum_descriptor_proto = self.db.get_enum(self.pb_file.package + "." + pb_field_proto.type_name)
+                return (self.full_name + "." + pb_field_proto.type_name).replace(
+                    ".", "::"
+                )
+            enum_descriptor_proto = self.db.get_enum(
+                self.pb_file.package + "." + pb_field_proto.type_name
+            )
             if enum_descriptor_proto:
-                return (self.pb_file.package + "." + pb_field_proto.type_name).replace(".", "::")
+                return (self.pb_file.package + "." + pb_field_proto.type_name).replace(
+                    ".", "::"
+                )
         elif pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
             msg_descriptor_proto = self.db.get_message(pb_field_proto.type_name)
             if msg_descriptor_proto:
                 return pb_field_proto.type_name.replace(".", "::")
-            msg_descriptor_proto = self.db.get_message(self.full_name + "." + pb_field_proto.type_name)
+            msg_descriptor_proto = self.db.get_message(
+                self.full_name + "." + pb_field_proto.type_name
+            )
             if msg_descriptor_proto:
-                return (self.full_name + "." + pb_field_proto.type_name).replace(".", "::")
-            msg_descriptor_proto = self.db.get_message(self.pb_file.package + "." + pb_field_proto.type_name)
+                return (self.full_name + "." + pb_field_proto.type_name).replace(
+                    ".", "::"
+                )
+            msg_descriptor_proto = self.db.get_message(
+                self.pb_file.package + "." + pb_field_proto.type_name
+            )
             if msg_descriptor_proto:
-                return (self.pb_file.package + "." + pb_field_proto.type_name).replace(".", "::")
+                return (self.pb_file.package + "." + pb_field_proto.type_name).replace(
+                    ".", "::"
+                )
         return PbMsgGetPbFieldCppType(pb_field_proto)
 
+
 class PbDescSet:
-    def __init__(self,
-                 pb_file_paths,
-                 tags=[],
-                 msg_prefix='',
-                 proto_v3=False,
-                 pb_include_prefix="",
-                 exclude_tags=[],
-                 shared_outer_type='org.xresloader.pb.xresloader_datablocks',
-                 shared_outer_field='data_block',
-                 index_extended_well_known_type=False,
-                 index_include_well_known_type=set(),
-                 index_exclude_well_known_type=set(),
-                 pb_exclude_files=[],
-                 pb_exclude_packages=[]):
+    def __init__(
+        self,
+        pb_file_paths,
+        tags=[],
+        msg_prefix="",
+        proto_v3=False,
+        pb_include_prefix="",
+        exclude_tags=[],
+        shared_outer_type="org.xresloader.pb.xresloader_datablocks",
+        shared_outer_field="data_block",
+        index_extended_well_known_type=False,
+        index_include_well_known_type=set(),
+        index_exclude_well_known_type=set(),
+        pb_exclude_files=[],
+        pb_exclude_packages=[],
+    ):
         self.proto_v3 = proto_v3
         self.pb_include_prefix = pb_include_prefix
         self.custom_variables = dict()
@@ -1505,10 +1663,10 @@ class PbDescSet:
         pb_file_has_xrescode_extension = False
         for pb_file_path in pb_file_paths:
             local_pb_fds = pb2.FileDescriptorSet.FromString(
-                open(pb_file_path, 'rb').read())
+                open(pb_file_path, "rb").read()
+            )
             for pb_file in local_pb_fds.file:
-                if os.path.basename(
-                        pb_file.name) == "xrescode_extensions_v3.proto":
+                if os.path.basename(pb_file.name) == "xrescode_extensions_v3.proto":
                     has_xrescode_loader_message = False
                     has_xrescode_loader_extension = False
                     if pb_file.package != "xrescode":
@@ -1529,17 +1687,23 @@ class PbDescSet:
             self.db.load(pb_file_paths)
         else:
             pendig_to_load_files = [
-                os.path.join(os.path.dirname(__file__), '..', 'pb_extension',
-                             'xrescode_extensions_v3.pb'), pb_file_path
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "pb_extension",
+                    "xrescode_extensions_v3.pb",
+                ),
+                pb_file_path,
             ]
             pendig_to_load_files.extend(pb_file_paths)
             self.db.load(pendig_to_load_files)
-        self.index_set_type = self.db.get_enum('xrescode.xrescode_index_type')
+        self.index_set_type = self.db.get_enum("xrescode.xrescode_index_type")
         self.index_set = PbMsgIndexType(
-            self.index_set_type.values_by_name['EN_INDEX_KV'],
-            self.index_set_type.values_by_name['EN_INDEX_KL'],
-            self.index_set_type.values_by_name['EN_INDEX_IV'],
-            self.index_set_type.values_by_name['EN_INDEX_IL'])
+            self.index_set_type.values_by_name["EN_INDEX_KV"],
+            self.index_set_type.values_by_name["EN_INDEX_KL"],
+            self.index_set_type.values_by_name["EN_INDEX_IV"],
+            self.index_set_type.values_by_name["EN_INDEX_IL"],
+        )
         self.generate_message = []
         self.pb_files = dict()
         self.pb_msgs = dict()
@@ -1570,19 +1734,26 @@ class PbDescSet:
                     continue
             pb_file = PbFile(self.db, pb_file_proto, self.index_set)
             for enum_type_proto in pb_file_proto.enum_type:
-                pb_enum = PbEnum(self.db, pb_file, enum_type_proto, None, self.index_set)
+                pb_enum = PbEnum(
+                    self.db, pb_file, enum_type_proto, None, self.index_set
+                )
                 self.pb_enums[pb_enum.full_name] = pb_enum
                 pb_file.pb_enums[pb_enum.full_name] = pb_enum
             self.pb_files[pb_file_proto.name] = pb_file
         if index_extended_well_known_type or len(index_include_well_known_type) > 0:
             for pb_file_proto in self.db.extended_well_known_files:
-                if len(index_include_well_known_type) > 0 and pb_file_proto.name not in index_include_well_known_type:
+                if (
+                    len(index_include_well_known_type) > 0
+                    and pb_file_proto.name not in index_include_well_known_type
+                ):
                     continue
                 if pb_file_proto.name in index_exclude_well_known_type:
                     continue
                 pb_file = PbFile(self.db, pb_file_proto, self.index_set)
                 for enum_type_proto in pb_file_proto.enum_type:
-                    pb_enum = PbEnum(self.db, pb_file, enum_type_proto, None, self.index_set)
+                    pb_enum = PbEnum(
+                        self.db, pb_file, enum_type_proto, None, self.index_set
+                    )
                     self.pb_enums[pb_enum.full_name] = pb_enum
                     pb_file.pb_enums[pb_enum.full_name] = pb_enum
                 self.pb_files[pb_file_proto.name] = pb_file
@@ -1596,25 +1767,32 @@ class PbDescSet:
         self.shared_outer_msg = self.get_msg_by_type(shared_outer_type)
         if self.shared_outer_msg:
             for fd in self.shared_outer_msg.pb_msg.fields:
-                if fd.name == shared_outer_field and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED:
+                if (
+                    fd.name == shared_outer_field
+                    and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED
+                ):
                     self.shared_code_field = fd
                     break
         else:
             sys.stderr.write(
-                "[XRESCODE ERROR] Can not find shared outer message {0}\n".
-                format(shared_outer_type))
-            if shared_outer_type == 'org.xresloader.pb.xresloader_datablocks':
+                "[XRESCODE ERROR] Can not find shared outer message {0}\n".format(
+                    shared_outer_type
+                )
+            )
+            if shared_outer_type == "org.xresloader.pb.xresloader_datablocks":
                 if len(pb_file_paths) == 1:
                     pb_file_path_maessage = pb_file_paths[0]
                 else:
-                    pb_file_path_maessage = "any one of {0}".format(", ".join([str(x) for x in pb_file_paths]))
+                    pb_file_path_maessage = "any one of {0}".format(
+                        ", ".join([str(x) for x in pb_file_paths])
+                    )
                 sys.stderr.write(
-                    "[XRESCODE ERROR] Please consider package {0} or {1} into {2}\n".
-                format(
-                    "https://github.com/xresloader/xresloader-protocol/blob/main/core/pb_header_v3.proto",
-                    "https://github.com/xresloader/xresloader-protocol/blob/main/core/pb_header.proto",
-                    pb_file_path_maessage
-                ))
+                    "[XRESCODE ERROR] Please consider package {0} or {1} into {2}\n".format(
+                        "https://github.com/xresloader/xresloader-protocol/blob/main/core/pb_header_v3.proto",
+                        "https://github.com/xresloader/xresloader-protocol/blob/main/core/pb_header.proto",
+                        pb_file_path_maessage,
+                    )
+                )
             self.add_failed_count()
         for k in self.pb_msgs:
             v = self.pb_msgs[k]
@@ -1624,17 +1802,32 @@ class PbDescSet:
         self.generate_message.sort(key=lambda x: x.full_name)
 
     def setup_pb_msg(self, pb_file, pb_msg_proto, msg_prefix, nested_from_prefix=""):
-        msg_obj = PbMsg(self.db, pb_file, pb_msg_proto, msg_prefix,
-                        nested_from_prefix, self.index_set)
+        msg_obj = PbMsg(
+            self.db,
+            pb_file,
+            pb_msg_proto,
+            msg_prefix,
+            nested_from_prefix,
+            self.index_set,
+        )
         self.pb_msgs[msg_obj.full_name] = msg_obj
         pb_file.pb_msgs[msg_obj.full_name] = msg_obj
         for nested_type in pb_msg_proto.nested_type:
-            self.setup_pb_msg(pb_file, nested_type, msg_prefix,
-                              nested_from_prefix + pb_msg_proto.name + ".")
-            
+            self.setup_pb_msg(
+                pb_file,
+                nested_type,
+                msg_prefix,
+                nested_from_prefix + pb_msg_proto.name + ".",
+            )
+
         for enum_type_proto in pb_msg_proto.enum_type:
-            pb_enum = PbEnum(self.db, pb_file, enum_type_proto, nested_from_prefix + pb_msg_proto.name + ".",
-                             self.index_set)
+            pb_enum = PbEnum(
+                self.db,
+                pb_file,
+                enum_type_proto,
+                nested_from_prefix + pb_msg_proto.name + ".",
+                self.index_set,
+            )
             self.pb_enums[pb_enum.full_name] = pb_enum
             pb_file.pb_enums[pb_enum.full_name] = pb_enum
 
@@ -1644,15 +1837,15 @@ class PbDescSet:
         if type_name and type_name[0:1] == ".":
             type_name = type_name[1:]
         return self.pb_msgs.get(type_name, None)
-    
+
     def get_msg_by_type(self, type_name):
         return self.get_message_by_type(type_name)
-    
+
     def get_enum_by_type(self, type_name):
         if type_name and type_name[0:1] == ".":
             type_name = type_name[1:]
         return self.pb_enums.get(type_name, None)
-    
+
     def get_file_by_name(self, name):
         return self.pb_files.get(name, None)
 

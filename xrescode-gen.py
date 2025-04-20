@@ -8,8 +8,13 @@ import codecs
 import shutil
 import sysconfig
 import re
+import threading
+import concurrent.futures
+from subprocess import PIPE, Popen, TimeoutExpired
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
+LOCAL_WOKER_POOL: concurrent.futures.ThreadPoolExecutor = None
+LOCAL_WOKER_FUTURES = dict()
 
 
 class MakoModuleTempDir:
@@ -38,6 +43,83 @@ if sys.platform == "win32":
         if len(paths[0]) != 1:
             return False
         return paths[1][0:1] == "/" or paths[1][0:1] == "\\"
+
+
+def print_exception_with_traceback(e: Exception, fmt: str = None, *args):
+    import traceback
+
+    if fmt:
+        if not fmt.startswith("[ERROR]:"):
+            fmt = "[ERROR]: " + fmt
+        if not fmt.endswith("\n") and not fmt.endswith("\r"):
+            fmt = fmt + "\n"
+        sys.stderr.write(fmt.format(*args))
+
+    sys.stderr.write("[ERROR]: {0}.\n{1}\n".format(str(e), traceback.format_exc()))
+
+
+def __format_codes(output_file, data, clang_format_path, clang_format_rule_re):
+    if not clang_format_path or not clang_format_rule_re:
+        return data
+    if clang_format_rule_re.search(output_file) is None:
+        return data
+    try:
+        pexec = Popen(
+            [clang_format_path, "--assume-filename={}".format(output_file)],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=None,
+            shell=False,
+        )
+        (stdout, _stderr) = pexec.communicate(data)
+        if pexec.returncode == 0:
+            return stdout
+        return data
+
+    except Exception as e:
+        print_exception_with_traceback(e, "format code file {0} failed.", output_file)
+        return data
+
+
+def __worker_action_write_code_if_different(
+    output_file, encoding, content, clang_format_path, clang_format_rule_re
+):
+    data = __format_codes(
+        output_file,
+        content.encode(encoding),
+        clang_format_path,
+        clang_format_rule_re,
+    )
+
+    content_changed = False
+    if not os.path.exists(output_file):
+        content_changed = True
+    else:
+        old_data = open(output_file, mode="rb").read()
+        if old_data != data:
+            content_changed = True
+
+    if content_changed:
+        open(output_file, mode="wb").write(data)
+
+
+def write_code_if_different(
+    output_file, encoding, content, clang_format_path, clang_format_rule_re
+):
+    global LOCAL_WOKER_POOL
+    global LOCAL_WOKER_FUTURES
+    if LOCAL_WOKER_POOL is None:
+        LOCAL_WOKER_POOL = concurrent.futures.ThreadPoolExecutor()
+
+    future = LOCAL_WOKER_POOL.submit(
+        __worker_action_write_code_if_different,
+        output_file,
+        encoding,
+        content,
+        clang_format_path,
+        clang_format_rule_re,
+    )
+    LOCAL_WOKER_FUTURES[future] = {"output_file": output_file}
 
 
 def decode_rule(pattern):
@@ -153,6 +235,10 @@ def add_package_prefix_paths(packag_paths):
 
 
 def main():
+    # lizard forgives
+    global LOCAL_WOKER_POOL
+    global LOCAL_WOKER_FUTURES
+
     os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
     from optparse import OptionParser
 
@@ -388,6 +474,20 @@ def main():
         dest="add_package_prefix",
         default=[],
     )
+    parser.add_option(
+        "--clang-format-path",
+        action="store",
+        help="set path of clang-format to format output codes",
+        dest="clang_format_path",
+        default=None,
+    )
+    parser.add_option(
+        "--clang-format-rule",
+        action="store",
+        help="set regex rule for file path to use clang-format to format",
+        dest="clang_format_rule",
+        default="\\.(c|cc|cpp|cxx|h|hpp|hxx|i|ii|ixx|tcc|cppm|c\\+\\+|proto)$",
+    )
 
     (options, left_args) = parser.parse_args()
 
@@ -466,7 +566,10 @@ def main():
     )
     make_module_cache_dir = temp_dir_holder.directory_path
 
+    clang_format_rule_re = re.compile(options.clang_format_rule, re.IGNORECASE)
+
     def gen_source(list_container, pb_file=None, pb_msg=None, loader=None):
+        nonlocal clang_format_rule_re
         for rule in list_container:
             is_message_header = False
             is_message_source = False
@@ -582,20 +685,13 @@ def main():
                         msg_prefix=options.msg_prefix,
                         global_package=options.global_package,
                     )
-                    if os.path.exists(output_name):
-                        f = codecs.open(
-                            str(output_name), mode="r", encoding=options.encoding
-                        )
-                        if f.read() == render_output:
-                            f.close()
-                            continue
-                        f.close()
-                    elif not os.path.exists(os.path.dirname(output_name)):
-                        os.makedirs(os.path.dirname(output_name))
-
-                    codecs.open(
-                        str(output_name), mode="w", encoding=options.encoding
-                    ).write(str(render_output))
+                    write_code_if_different(
+                        str(output_name),
+                        options.encoding,
+                        str(render_output),
+                        options.clang_format_path,
+                        clang_format_rule_re,
+                    )
 
     file_ignore_packages = set(options.file_ignore_package)
     file_include_rules = None
@@ -703,6 +799,20 @@ def main():
                 )
 
     del temp_dir_holder
+
+    if LOCAL_WOKER_POOL is not None:
+        LOCAL_WOKER_POOL.shutdown(wait=True)
+    for future in concurrent.futures.as_completed(LOCAL_WOKER_FUTURES):
+        future_data = LOCAL_WOKER_FUTURES[future]
+        try:
+            future_result = future.result()
+            if future_result is not None and future_result != 0:
+                ret = 1
+        except Exception as e:
+            print_exception_with_traceback(
+                e, "generate file {0} failed.", future_data["output_file"]
+            )
+            ret = 1
     sys.exit(pb_set.failed_count)
 
 

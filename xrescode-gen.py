@@ -595,12 +595,6 @@ def main():
             output_dir = os.getcwd()
             if options.output_dir is not None:
                 output_dir = options.output_dir
-                if not os.path.exists(options.output_dir):
-                    os.makedirs(options.output_dir)
-                else:
-                    os.chmod(
-                        options.output_dir, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO
-                    )
 
             if rule_output is not None:
                 output_render_tmpl = Template(rule_output, lookup=project_lookup)
@@ -654,9 +648,6 @@ def main():
 
             output_name = os.path.join(options.output_dir, output_name)
 
-            if os.path.exists(output_name):
-                os.chmod(output_name, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO)
-
             if options.print_output_file:
                 print(output_name)
             else:
@@ -668,6 +659,19 @@ def main():
                             )
                         )
                 else:
+                    if os.path.exists(output_name):
+                        os.chmod(
+                            output_name, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO
+                        )
+                    else:
+                        output_dir = os.path.dirname(output_name)
+                        if not os.path.exists(output_dir):
+                            os.makedirs(output_dir)
+                        else:
+                            os.chmod(
+                                output_dir,
+                                stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO,
+                            )
                     if not options.quiet:
                         print(
                             "[XRESCODE] Genarate template from {0} to {1}".format(

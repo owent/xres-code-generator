@@ -163,7 +163,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             {
                 return ret;
             }
-%         if  loader.code.file_list and code_index.file_mapping:
+%         if loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
             string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);
@@ -186,7 +186,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             {
                 return ret;
             }
-%         if  loader.code.file_list and code_index.file_mapping:
+%         if loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
             string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);
@@ -228,7 +228,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
             if (ret == null)
             {
-%         if  loader.code.file_list and code_index.file_mapping:
+%         if loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
                 string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);
@@ -250,7 +250,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             ${code_index.camelname}Data.TryGetValue(key, out ret);
             if (ret == null)
             {
-%         if  loader.code.file_list and code_index.file_mapping:
+%         if loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
                 string file_path = ${"$\"" + code_line + "\""};
                 Load(file_path);
@@ -287,7 +287,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             {
                 return ret;
             }
-%         if  loader.code.file_list and code_index.file_mapping:
+%         if loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
             string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);
@@ -310,7 +310,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             {
                 return ret;
             }
-%         if  loader.code.file_list and code_index.file_mapping:
+%         if loader.code.file_list and code_index.file_mapping:
 <%     code_line = code_index.get_cs_file_path() %>
             string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);

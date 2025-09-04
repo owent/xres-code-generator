@@ -626,7 +626,6 @@ class PbMsgIndex:
             self.name = "_".join(["_".join(x) for x in self.field_names]).lower()
 
         self.camelname = ToCamelName(self.name)
-        self.pascalname = FirstCharUpper(self.camelname)
 
         self.file_mapping = pb_ext_index.file_mapping
         self.allow_not_found = pb_ext_index.allow_not_found

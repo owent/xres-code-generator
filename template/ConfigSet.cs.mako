@@ -86,43 +86,61 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             int count = table.${loader.get_camel_code_field_name()}.Count;
             for (var i = 0; i < count; i++)
             {
-                ${last_code_index.camelname}ValueItemType iteminfo = ConfigSetManager.Instance.Parse<${last_code_index.camelname}ValueItemType>(table.${loader.get_camel_code_field_name()}[i].ToByteArray(), ${last_code_index.camelname}ValueItemType.Parser);
-                if (iteminfo == null) continue;
-                MergeData(iteminfo);
+                ${last_code_index.camelname}ValueItemType itemInfo = ConfigSetManager.Instance.Parse<${last_code_index.camelname}ValueItemType>(table.${loader.get_camel_code_field_name()}[i].ToByteArray(), ${last_code_index.camelname}ValueItemType.Parser);
+                if (itemInfo == null) continue;
+                MergeData(itemInfo);
             }
         }
 
-        protected void MergeData(${last_code_index.camelname}ValueItemType iteminfo) {
-            if (iteminfo == null) return;
+        protected void MergeData(${last_code_index.camelname}ValueItemType itemInfo) {
+            if (itemInfo == null) return;
 %   for code_index in loader.code.indexes:
+
+            do {
 %     if len(code_index.fields) == 1:
-            var key${code_index.pascalname} = (${code_index.get_cs_key_type_list()})iteminfo.${code_index.get_cs_key_params()};
+                var key${code_index.pascalname} = (${code_index.get_cs_key_type_list()})itemInfo.${code_index.get_cs_key_params()};
 %     else:
-            var key${code_index.pascalname} = new ValueTuple<${code_index.get_cs_key_type_list()}>(
+                var key${code_index.pascalname} = new ValueTuple<${code_index.get_cs_key_type_list()}>(
 %       for index, fd in enumerate(code_index.fields): 
 %         if index > 0:
-                ,
+                    ,
 %         endif
-                (${pb_loader.MakoPbMsgGetPbFieldCsType(fd)})iteminfo.${pb_loader.MakoFirstCharUpper(fd.json_name)}
+                    (${pb_loader.MakoPbMsgGetPbFieldCsType(fd)})itemInfo.${pb_loader.MakoFirstCharUpper(fd.json_name)}
 %       endfor
-            );
+                );
 %     endif
 
 %     if code_index.is_vector():
-            while (${code_index.camelname}Data.Count < key${code_index.pascalname}) ${code_index.camelname}Data.Add(iteminfo);
+                while (${code_index.camelname}Data.Count < key${code_index.pascalname}) ${code_index.camelname}Data.Add(itemInfo);
 %     else:
+%       if code_index.ignore_any_default_key:
+%         if len(code_index.fields) == 1:
+                if (ConfigSetUtils.IsDefault(key${code_index.pascalname})) break;
+%         else:
+                if (ConfigSetUtils.IsAnyDefault(key${code_index.pascalname})) break;
+%         endif
+%       endif
+%       if code_index.ignore_all_default_key:
+%         if len(code_index.fields) == 1:
+                if (ConfigSetUtils.IsDefault(key${code_index.pascalname})) break;
+%         else:
+                if (ConfigSetUtils.IsAllDefault(key${code_index.pascalname})) break;
+%         endif
+%       endif
 %       if code_index.is_list():
-            if (!${code_index.camelname}Data.ContainsKey(key${code_index.pascalname})) ${code_index.camelname}Data.Add(key${code_index.pascalname}, new ${code_index.camelname}ValueType());
+                if (!${code_index.camelname}Data.ContainsKey(key${code_index.pascalname})) ${code_index.camelname}Data.Add(key${code_index.pascalname}, new ${code_index.camelname}ValueType());
 %       else:
-            if (!${code_index.camelname}Data.ContainsKey(key${code_index.pascalname})) ${code_index.camelname}Data.Add(key${code_index.pascalname}, iteminfo);
+                if (!${code_index.camelname}Data.ContainsKey(key${code_index.pascalname})) ${code_index.camelname}Data.Add(key${code_index.pascalname}, itemInfo);
 %       endif
 %     endif
 
 %     if code_index.is_list():
-            ${code_index.camelname}Data[key${code_index.pascalname}].Add(iteminfo);
+                ${code_index.camelname}Data[key${code_index.pascalname}].Add(itemInfo);
 %     else:
-            ${code_index.camelname}Data[key${code_index.pascalname}] = iteminfo;
+                ${code_index.camelname}Data[key${code_index.pascalname}] = itemInfo;
 %     endif
+            }
+            while (false);
 %   endfor
         }
         

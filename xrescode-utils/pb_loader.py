@@ -229,7 +229,6 @@ def FirstCharUpper(str):
 SPLIT_WORDS_RULE = re.compile("[_\\.:/\\\\]")
 LOWERCASE_RULE = re.compile("[a-z]")
 
-
 def ToCamelName(str):
     strlist = [x for x in filter(lambda x: x, SPLIT_WORDS_RULE.split(str))]
     for i in range(len(strlist)):
@@ -627,6 +626,7 @@ class PbMsgIndex:
             self.name = "_".join(["_".join(x) for x in self.field_names]).lower()
 
         self.camelname = ToCamelName(self.name)
+        self.pascalname = FirstCharUpper(self.camelname)
 
         self.file_mapping = pb_ext_index.file_mapping
         self.allow_not_found = pb_ext_index.allow_not_found
@@ -926,7 +926,7 @@ class PbMsgCodeExt:
         self.invalid_index_count = 0
         self.file_list = None
         self.file_path = None
-        self.indexes = []
+        self.indexes  = []
         self.tags = set()
         self.class_name = inner_msg.name
         self.loader = loader
@@ -1157,6 +1157,7 @@ class PbMsgLoader:
             self.cs_class_name = "{0}{1}".format(self.msg_prefix, self.code.class_name)
         else:
             self.cs_class_name = self.code.class_name
+        self.cs_class_name = ToCamelName(self.cs_class_name)
         return self.cs_class_name
 
     def get_cs_pb_outer_class_name(self):

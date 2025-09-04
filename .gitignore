@@ -110,6 +110,7 @@ venv.bak/
 .mypy_cache/
 
 # editors
+.vs
 .vscode
 .idea
 

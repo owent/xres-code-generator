@@ -324,8 +324,8 @@ PREBUILT_PROTOC="$("$PYTHON_BIN" "$REPO_DIR/tools/find_protoc.py")"
 "$PREBUILT_PROTOC" -I "$REPO_DIR/sample/proto" -I "$REPO_DIR/pb_extension" "$REPO_DIR/sample/proto/"*.proto -o "$REPO_DIR/sample/sample.pb" ;
 
 python "$REPO_DIR/xrescode-gen.py" -i "$REPO_DIR/template" -p "$REPO_DIR/sample/sample.pb" -o "$REPO_DIR/sample/pbcs"   \
-    -g "$REPO_DIR/template/ConfigSet.cs.mako"                                                                           \
-    -l "$REPO_DIR/template/ConfigSetManager.cs.mako"                                                                    \
+    -g "$REPO_DIR/template/ConfigSetManager.cs.mako"                                                                           \
+    -l "$REPO_DIR/template/ConfigSet.cs.mako"                                                                    \
     "$@"
 
 ```

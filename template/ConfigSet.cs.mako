@@ -96,9 +96,9 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             if (iteminfo == null) return;
 %   for code_index in loader.code.indexes:
 %     if len(code_index.fields) == 1:
-            var key_${code_index.name} = (${code_index.get_cs_key_type_list()})iteminfo.${code_index.get_cs_key_params()};
+            var key${code_index.pascalname} = (${code_index.get_cs_key_type_list()})iteminfo.${code_index.get_cs_key_params()};
 %     else:
-            var key_${code_index.name} = new ValueTuple<${code_index.get_cs_key_type_list()}>(
+            var key${code_index.pascalname} = new ValueTuple<${code_index.get_cs_key_type_list()}>(
 %       for index, fd in enumerate(code_index.fields): 
 %         if index > 0:
                 ,
@@ -109,19 +109,19 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %     endif
 
 %     if code_index.is_vector():
-            while (${code_index.camelname}Data.Count < key_${code_index.name}) ${code_index.camelname}Data.Add(iteminfo);
+            while (${code_index.camelname}Data.Count < key${code_index.pascalname}) ${code_index.camelname}Data.Add(iteminfo);
 %     else:
 %       if code_index.is_list():
-            if (!${code_index.camelname}Data.ContainsKey(key_${code_index.name})) ${code_index.camelname}Data.Add(key_${code_index.name}, new ${code_index.camelname}ValueType());
+            if (!${code_index.camelname}Data.ContainsKey(key${code_index.pascalname})) ${code_index.camelname}Data.Add(key${code_index.pascalname}, new ${code_index.camelname}ValueType());
 %       else:
-            if (!${code_index.camelname}Data.ContainsKey(key_${code_index.name})) ${code_index.camelname}Data.Add(key_${code_index.name}, iteminfo);
+            if (!${code_index.camelname}Data.ContainsKey(key${code_index.pascalname})) ${code_index.camelname}Data.Add(key${code_index.pascalname}, iteminfo);
 %       endif
 %     endif
 
 %     if code_index.is_list():
-            ${code_index.camelname}Data[key_${code_index.name}].Add(iteminfo);
+            ${code_index.camelname}Data[key${code_index.pascalname}].Add(iteminfo);
 %     else:
-            ${code_index.camelname}Data[key_${code_index.name}] = iteminfo;
+            ${code_index.camelname}Data[key${code_index.pascalname}] = iteminfo;
 %     endif
 %   endfor
         }

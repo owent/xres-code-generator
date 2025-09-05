@@ -49,14 +49,24 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 
         private static ${loader.get_cs_class_name()} _instance;
 
-        public static ${loader.get_cs_class_name()} Instance {
-            get { return _instance ?? (_instance = new ${loader.get_cs_class_name()}()); }
-        }
+        public static ${loader.get_cs_class_name()} Instance => _instance ??= new ${loader.get_cs_class_name()}();
+
+%   if loader.code.file_list:
+        public readonly string FileList = "${loader.code.file_list}";
+        public readonly string[] FileArray = [
+%     for one_file_path in loader.code.file_path:
+            "${one_file_path}",
+%     endfor
+        ];
+%   else:
+        public readonly string FilePath = "${loader.code.file_path}";
+        public readonly string[] FileArray = ["${loader.code.file_path}"];
+%   endif
 
         public void Reload() {
-            Clear();
+    Clear();
 %   if loader.code.file_list:
-            LoadByList("${loader.code.file_list}");
+            LoadByList(filelist: "${loader.code.file_list}");
 %   else:
             Load("${loader.code.file_path}");
 %   endif

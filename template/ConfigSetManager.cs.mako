@@ -55,10 +55,8 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 
         private static ConfigSetManager _instance;
 
-        public static ConfigSetManager Instance {
-            get { return _instance ?? (_instance = new ConfigSetManager()); }
-        }
-        
+        public static ConfigSetManager Instance => _instance ??= new ConfigSetManager();
+
         public T Parse<T>(byte[] bytes, MessageParser parser) where T : class, IMessage {
             try {
                 return (T)parser.ParseFrom(bytes);
@@ -77,23 +75,33 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             return Parse<T>(bytes, parser);
         }
 
+        public List<string> GetAllFilePath() {
+            List<string> retList = new List<string>();
+% for pb_msg in pb_set.generate_message:
+%   for loader in pb_msg.loaders:
+            foreach (var path in ${loader.get_cs_class_name()}.Instance.FileArray) {
+                retList.Add(path);
+            }
+%   endfor
+% endfor
+            return retList;
+        }
+
         public void Reload() {
             Clear();
-
-            % for pb_msg in pb_set.generate_message:
-            %   for loader in pb_msg.loaders:
+% for pb_msg in pb_set.generate_message:
+%   for loader in pb_msg.loaders:
             ${loader.get_cs_class_name()}.Instance.Reload();
-            %   endfor
-            % endfor
+%   endfor
+% endfor
         }
         
         public void Clear() {
-            
-            % for pb_msg in pb_set.generate_message:
-            %   for loader in pb_msg.loaders:
+% for pb_msg in pb_set.generate_message:
+%   for loader in pb_msg.loaders:
             ${loader.get_cs_class_name()}.Instance.Clear();
-            %   endfor
-            % endfor
+%   endfor
+% endfor
         }
     }
 ${pb_loader.CsNamespaceEnd(global_package)} // ${global_package}

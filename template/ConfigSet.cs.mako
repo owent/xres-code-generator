@@ -11,7 +11,6 @@ from pb_loader import ToCamelName
 using System;
 using System.Text;
 using System.Collections.Generic;
-using Org.Xresloader.Pb;
 using Google.Protobuf;
 
 ${pb_loader.CsNamespaceBegin(global_package)}
@@ -53,22 +52,22 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 
 %   if loader.code.file_list:
         public readonly string FileList = "${loader.code.file_list}";
-        public readonly string[] FileArray = [
+        public readonly string[] FileArray = new string[] {
 %     for one_file_path in loader.code.file_path:
             "${one_file_path}",
 %     endfor
-        ];
+        };
 %   else:
         public readonly string FilePath = "${loader.code.file_path}";
-        public readonly string[] FileArray = ["${loader.code.file_path}"];
+        public readonly string[] FileArray = new string[] { "${loader.code.file_path}" };
 %   endif
 
         public void Reload() {
-    Clear();
+            Clear();
 %   if loader.code.file_list:
-            LoadByList(filelist: "${loader.code.file_list}");
+            LoadByList(FileList);
 %   else:
-            Load("${loader.code.file_path}");
+            Load(FilePath);
 %   endif
         }
         
@@ -179,11 +178,12 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             Load(file_path);
 %         else:
 %           if not isinstance(loader.code.file_path, str):
-%             for one_file_path in loader.code.file_path:
-            Load("${one_file_path}");
-%             endfor
+            foreach (var path in FileArray)
+            {
+                Load(path);
+            }
 %           else:
-            Load("${loader.code.file_path}");
+            Load(FilePath);
 %           endif
 %         endif
             ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
@@ -202,11 +202,12 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             Load(file_path);
 %         else:
 %           if not isinstance(loader.code.file_path, str):
-%             for one_file_path in loader.code.file_path:
-            Load("${one_file_path}");
-%             endfor
+            foreach (var path in FileArray)
+            {
+                Load(path);
+            }
 %           else:
-            Load("${loader.code.file_path}");
+            Load(FilePath);
 %           endif
 %         endif
             ${code_index.camelname}Data.TryGetValue(key, out ret);
@@ -244,11 +245,12 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             Load(file_path);
 %         else:
 %           if not isinstance(loader.code.file_path, str):
-%             for one_file_path in loader.code.file_path:
-            Load("${one_file_path}");
-%             endfor
+            foreach (var path in FileArray)
+            {
+                Load(path);
+            }
 %           else:
-            Load("${loader.code.file_path}");
+            Load(FilePath);
 %           endif
 %         endif
                 ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
@@ -266,11 +268,12 @@ ${pb_loader.CsNamespaceBegin(global_package)}
                 Load(file_path);
 %         else:
 %           if not isinstance(loader.code.file_path, str):
-%             for one_file_path in loader.code.file_path:
-                Load("${one_file_path}");
-%             endfor
+                foreach (var path in FileArray)
+                {
+                    Load(path);
+                }
 %           else:
-                Load("${loader.code.file_path}");
+                Load(FilePath);
 %           endif
 %         endif
                 ${code_index.camelname}Data.TryGetValue(key, out ret);
@@ -303,11 +306,12 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             Load(file_path);
 %         else:
 %           if not isinstance(loader.code.file_path, str):
-%             for one_file_path in loader.code.file_path:
-            Load("${one_file_path}");
-%             endfor
+            foreach (var path in FileArray)
+            {
+                Load(path);
+            }
 %           else:
-            Load("${loader.code.file_path}");
+            Load(FilePath);
 %           endif
 %         endif
             ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
@@ -326,11 +330,12 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             Load(file_path);
 %         else:
 %           if not isinstance(loader.code.file_path, str):
-%             for one_file_path in loader.code.file_path:
-            Load("${one_file_path}");
-%             endfor
+            foreach (var path in FileArray)
+            {
+                Load(path);
+            }
 %           else:
-            Load("${loader.code.file_path}");
+            Load(FilePath);
 %           endif
 %         endif
             ${code_index.camelname}Data.TryGetValue(key, out ret);

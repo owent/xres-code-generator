@@ -376,7 +376,7 @@ def main():
         "-i",
         "--input-dir",
         action="append",
-        help="add tempalte directory",
+        help="add template directory",
         dest="input_dir",
         default=[],
     )

@@ -10,7 +10,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using Org.Xresloader.Pb;
 using Google.Protobuf;
 
 ${pb_loader.CsNamespaceBegin(global_package)}

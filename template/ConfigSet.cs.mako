@@ -58,8 +58,15 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %     endfor
         };
 %   else:
-        public readonly string FilePath = "${loader.code.file_path}";
+%     if not isinstance(loader.code.file_path, str):
+        public readonly string[] FileArray = new string[] {
+%       for one_file_path in loader.code.file_path:
+            "${one_file_path}",
+%       endfor
+        };
+%     else:
         public readonly string[] FileArray = new string[] { "${loader.code.file_path}" };
+%     endif
 %   endif
 
         public void Reload() {
@@ -67,7 +74,9 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %   if loader.code.file_list:
             LoadByList(FileList);
 %   else:
-            Load(FilePath);
+            foreach (var FilePath in FileArray) {
+                Load(FilePath);
+            }
 %   endif
         }
         
@@ -177,14 +186,10 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);
 %         else:
-%           if not isinstance(loader.code.file_path, str):
             foreach (var path in FileArray)
             {
                 Load(path);
             }
-%           else:
-            Load(FilePath);
-%           endif
 %         endif
             ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
             return ret ?? new ${code_index.camelname}ValueType();
@@ -201,14 +206,10 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);
 %         else:
-%           if not isinstance(loader.code.file_path, str):
             foreach (var path in FileArray)
             {
                 Load(path);
             }
-%           else:
-            Load(FilePath);
-%           endif
 %         endif
             ${code_index.camelname}Data.TryGetValue(key, out ret);
 
@@ -244,14 +245,10 @@ ${pb_loader.CsNamespaceBegin(global_package)}
                 string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);
 %         else:
-%           if not isinstance(loader.code.file_path, str):
             foreach (var path in FileArray)
             {
                 Load(path);
             }
-%           else:
-            Load(FilePath);
-%           endif
 %         endif
                 ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
             }
@@ -267,14 +264,10 @@ ${pb_loader.CsNamespaceBegin(global_package)}
                 string file_path = ${"$\"" + code_line + "\""};
                 Load(file_path);
 %         else:
-%           if not isinstance(loader.code.file_path, str):
                 foreach (var path in FileArray)
                 {
                     Load(path);
                 }
-%           else:
-                Load(FilePath);
-%           endif
 %         endif
                 ${code_index.camelname}Data.TryGetValue(key, out ret);
             }
@@ -305,14 +298,10 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);
 %         else:
-%           if not isinstance(loader.code.file_path, str):
             foreach (var path in FileArray)
             {
                 Load(path);
             }
-%           else:
-            Load(FilePath);
-%           endif
 %         endif
             ${code_index.camelname}Data.TryGetValue(${code_index.get_cs_key_params()}, out ret);
             return ret;
@@ -329,14 +318,10 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             string file_path = ${"$\"" + code_line + "\""};
             Load(file_path);
 %         else:
-%           if not isinstance(loader.code.file_path, str):
             foreach (var path in FileArray)
             {
                 Load(path);
             }
-%           else:
-            Load(FilePath);
-%           endif
 %         endif
             ${code_index.camelname}Data.TryGetValue(key, out ret);
             return ret;

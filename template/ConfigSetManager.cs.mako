@@ -78,9 +78,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
             List<string> retList = new List<string>();
 % for pb_msg in pb_set.generate_message:
 %   for loader in pb_msg.loaders:
-            foreach (var path in ${loader.get_cs_class_name()}.Instance.FileArray) {
-                retList.Add(path);
-            }
+            retList.AddRange(${loader.get_cs_class_name()}.Instance.FileArray);
 %   endfor
 % endfor
             return retList;

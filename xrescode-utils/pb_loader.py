@@ -142,6 +142,25 @@ pb_msg_cs_type_map = {
     pb2.FieldDescriptorProto.TYPE_UINT64: "ulong",
 }
 
+pb_msg_go_type_map = {
+    pb2.FieldDescriptorProto.TYPE_BOOL: "bool",
+    pb2.FieldDescriptorProto.TYPE_BYTES: "byte[]",
+    pb2.FieldDescriptorProto.TYPE_DOUBLE: "double",
+    pb2.FieldDescriptorProto.TYPE_ENUM: "int32",
+    pb2.FieldDescriptorProto.TYPE_FIXED32: "int32",
+    pb2.FieldDescriptorProto.TYPE_FIXED64: "int64",
+    pb2.FieldDescriptorProto.TYPE_FLOAT: "float",
+    pb2.FieldDescriptorProto.TYPE_INT32: "int32",
+    pb2.FieldDescriptorProto.TYPE_INT64: "int64",
+    pb2.FieldDescriptorProto.TYPE_SFIXED32: "int32",
+    pb2.FieldDescriptorProto.TYPE_SFIXED64: "int64",
+    pb2.FieldDescriptorProto.TYPE_SINT32: "int32",
+    pb2.FieldDescriptorProto.TYPE_SINT64: "int64",
+    pb2.FieldDescriptorProto.TYPE_STRING: "string",
+    pb2.FieldDescriptorProto.TYPE_UINT32: "uint32",
+    pb2.FieldDescriptorProto.TYPE_UINT64: "uint64",
+}
+
 pb_msg_cpp_type_is_signed_map = {
     pb2.FieldDescriptorProto.TYPE_BOOL: False,
     pb2.FieldDescriptorProto.TYPE_BYTES: False,
@@ -276,6 +295,11 @@ def PbMsgGetPbFieldCsType(field):
         return pb_msg_cs_type_map[field.type]
     return field.type_name
 
+def PbMsgGetPbFieldGoType(field):
+    global pb_msg_go_type_map
+    if field.type in pb_msg_go_type_map:
+        return pb_msg_go_type_map[field.type]
+    return field.type_name
 
 def PbMsgPbFieldisSigned(field):
     global pb_msg_cpp_type_is_signed_map
@@ -337,6 +361,9 @@ def MakoPbMsgGetCppField(context, arg):
 def MakoPbMsgGetPbFieldCppType(context, arg):
     return PbMsgGetPbFieldCppType(arg)
 
+@supports_caller
+def MakoPbMsgGetPbFieldGoType(context, arg):
+    return PbMsgGetPbFieldGoType(arg)
 
 @supports_caller
 def MakoPbMsgGetPbFieldUECppType(context, arg):
@@ -739,6 +766,12 @@ class PbMsgIndex:
             )
         return ", ".join(decls)
 
+    def get_go_key_decl(self):
+        decls = []
+        for fd in self.fields:
+            decls.append("{0} {1}".format(ToCamelName(fd.name), PbMsgGetPbFieldGoType(fd)))
+        return ", ".join(decls)
+
     def get_key_params(self):
         decls = []
         for fd in self.fields:
@@ -752,6 +785,12 @@ class PbMsgIndex:
         return quote + (quote + ", " + quote).join(decls) + quote
 
     def get_cs_key_params(self):
+        decls = []
+        for fd in self.fields:
+            decls.append(ToCamelName(fd.name))
+        return ", ".join(decls)
+
+    def get_go_key_params(self):
         decls = []
         for fd in self.fields:
             decls.append(ToCamelName(fd.name))
@@ -1277,6 +1316,11 @@ class PbMsgLoader:
     def get_camel_code_field_name(self):
         return ToCamelName(self.code_field.name)
 
+    def get_go_pb_name(self):
+        if self.code is None:
+            return ""
+
+        return self.code.class_name
 
 class PbFile:
     def __init__(self, db, pb_file, index_set):

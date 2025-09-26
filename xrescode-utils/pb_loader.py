@@ -1320,7 +1320,7 @@ class PbMsgLoader:
         if self.code is None:
             return ""
 
-        return self.code.class_name
+        return ToCamelName(self.code.class_name)
 
 class PbFile:
     def __init__(self, db, pb_file, index_set):

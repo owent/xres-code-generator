@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package xrescode;
 
+option go_package = "github.com/xresloader/xres-code-generator";
+
 import "google/protobuf/descriptor.proto";
 
 enum xrescode_index_type {

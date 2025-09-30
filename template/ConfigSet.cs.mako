@@ -131,7 +131,7 @@ ${pb_loader.CsNamespaceBegin(global_package)}
 %     endif
 
 %     if code_index.is_vector():
-                while (${code_index.camelname}Data.Count < key${code_index.camelname}) ${code_index.camelname}Data.Add(itemInfo);
+                while (${code_index.camelname}Data.Count <= key${code_index.camelname}) ${code_index.camelname}Data.Add(itemInfo);
 %     else:
 %       if code_index.ignore_any_default_key:
 %         if len(code_index.fields) == 1:

@@ -56,19 +56,6 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #  pragma warning(disable : 6001)
 #  pragma warning(disable : 6244)
 #  pragma warning(disable : 6246)
-
-#  ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
-#  endif
-#  include <Windows.h>
-#endif
-
-#ifdef max
-#undef max
-#endif
-
-#ifdef min
-#undef min
 #endif
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
@@ -108,6 +95,31 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #  endif
 #endif
 
+#pragma push_macro("GetObject")
+#ifdef GetObject
+#  undef GetObject
+#endif
+#pragma push_macro("max")
+#ifdef max
+#  undef max
+#endif
+#pragma push_macro("min")
+#ifdef min
+#  undef min
+#endif
+#pragma push_macro("check")
+#ifdef check
+#  undef check
+#endif
+#pragma push_macro("verify")
+#ifdef verify
+#  undef verify
+#endif
+#pragma push_macro("cast")
+#ifdef cast
+#  undef cast
+#endif
+
 #include <google/protobuf/arena.h>
 #include <google/protobuf/arenastring.h>
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
@@ -117,6 +129,13 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #include <google/protobuf/metadata_lite.h>
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/stubs/common.h>
+
+#pragma pop_macro("cast")
+#pragma pop_macro("verify")
+#pragma pop_macro("check")
+#pragma pop_macro("min")
+#pragma pop_macro("max")
+#pragma pop_macro("GetObject")
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
 #  if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
@@ -129,6 +148,7 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #if defined(_MSC_VER)
 #  pragma warning(pop)
 #endif
+
 
 #include "${cpp_include_prefix}config_manager.h"
 

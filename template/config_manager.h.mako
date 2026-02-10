@@ -47,18 +47,30 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #  pragma warning(disable : 6244)
 #  pragma warning(disable : 6246)
 
-#  ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
+#  pragma push_macro("GetObject")
+#  ifdef GetObject
+#    undef GetObject
 #  endif
-#  include <Windows.h>
-#endif
-
-#ifdef max
-#undef max
-#endif
-
-#ifdef min
-#undef min
+#  pragma push_macro("max")
+#  ifdef max
+#    undef max
+#  endif
+#  pragma push_macro("min")
+#  ifdef min
+#    undef min
+#  endif
+#  pragma push_macro("check")
+#  ifdef check
+#    undef check
+#  endif
+#  pragma push_macro("verify")
+#  ifdef verify
+#    undef verify
+#  endif
+#  pragma push_macro("cast")
+#  ifdef cast
+#    undef cast
+#  endif
 #endif
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
@@ -98,6 +110,31 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #  endif
 #endif
 
+#pragma push_macro("GetObject")
+#ifdef GetObject
+#  undef GetObject
+#endif
+#pragma push_macro("max")
+#ifdef max
+#  undef max
+#endif
+#pragma push_macro("min")
+#ifdef min
+#  undef min
+#endif
+#pragma push_macro("check")
+#ifdef check
+#  undef check
+#endif
+#pragma push_macro("verify")
+#ifdef verify
+#  undef verify
+#endif
+#pragma push_macro("cast")
+#ifdef cast
+#  undef cast
+#endif
+
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
 
@@ -108,6 +145,21 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #include "${loader.get_cpp_header_path()}"
 %   endfor
 % endfor
+
+% for block_file in pb_set.get_custom_blocks("custom_config_include"):
+// include custom_config_include: ${block_file}
+<%include file="${block_file}" />
+% endfor
+
+#include "${cpp_include_prefix}config_traits.h"
+#include "${cpp_include_prefix}spin_rw_lock.h"
+
+#pragma pop_macro("cast")
+#pragma pop_macro("verify")
+#pragma pop_macro("check")
+#pragma pop_macro("min")
+#pragma pop_macro("max")
+#pragma pop_macro("GetObject")
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
 #  if (__GNUC__ * 100 + __GNUC_MINOR__ * 10) >= 460
@@ -120,14 +172,6 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #if defined(_MSC_VER)
 #  pragma warning(pop)
 #endif
-
-% for block_file in pb_set.get_custom_blocks("custom_config_include"):
-// include custom_config_include: ${block_file}
-<%include file="${block_file}" />
-% endfor
-
-#include "${cpp_include_prefix}config_traits.h"
-#include "${cpp_include_prefix}spin_rw_lock.h"
 
 #ifndef EXCEL_CONFIG_LOADER_API
 #  define EXCEL_CONFIG_LOADER_API

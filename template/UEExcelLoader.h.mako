@@ -54,7 +54,7 @@ else:
 % if include_headers:
 %   if protobuf_include_prefix:
 // clang-format off
-#include "${protobuf_include_prefix}"
+#include "${protobuf_include_prefix}" // NOLINT(misc-include-cleaner)
 // clang-format on
 %   endif
 
@@ -64,7 +64,7 @@ else:
 
 %   if protobuf_include_suffix:
 // clang-format off
-#include "${protobuf_include_suffix}"
+#include "${protobuf_include_suffix}" // NOLINT(misc-include-cleaner)
 // clang-format on
 %   endif
 % endif

@@ -41,7 +41,7 @@ current_file_include_path = re.sub("//+", "/", current_file_include_path)
 
 % if protobuf_include_prefix:
 // clang-format off
-#include "${protobuf_include_prefix}"
+#include "${protobuf_include_prefix}" // NOLINT(misc-include-cleaner)
 // clang-format on
 % endif
 
@@ -54,7 +54,7 @@ current_file_include_path = re.sub("//+", "/", current_file_include_path)
 
 % if protobuf_include_suffix:
 // clang-format off
-#include "${protobuf_include_suffix}"
+#include "${protobuf_include_suffix}" // NOLINT(misc-include-cleaner)
 // clang-format on
 % endif
 

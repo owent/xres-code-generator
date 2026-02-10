@@ -57,7 +57,7 @@ if enable_excel_loader != "0" and enable_excel_loader != "no" and enable_excel_l
 
 % if protobuf_include_prefix:
 // clang-format off
-#include "${protobuf_include_prefix}"
+#include "${protobuf_include_prefix}" // NOLINT(misc-include-cleaner)
 // clang-format on
 % endif
 
@@ -70,7 +70,7 @@ if enable_excel_loader != "0" and enable_excel_loader != "no" and enable_excel_l
 
 % if protobuf_include_suffix:
 // clang-format off
-#include "${protobuf_include_suffix}"
+#include "${protobuf_include_suffix}" // NOLINT(misc-include-cleaner)
 // clang-format on
 % endif
 

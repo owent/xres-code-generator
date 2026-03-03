@@ -136,7 +136,7 @@ field_message_cpp_ue_key_type_name = ue_excel_utils.UECppMessageFieldTypeName(fi
 field_message_cpp_ue_value_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*")
 field_message_cpp_ue_value_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2])
 %>
-${ue_api_definition}${field_message_cpp_ue_value_type_name} ${message_class_name}::Find${message_field_var_name}(${field_message_cpp_ue_key_type_name} Index, bool& IsValid)
+${ue_api_definition}const ${field_message_cpp_ue_value_type_name} ${message_class_name}::Find${message_field_var_name}(${field_message_cpp_ue_key_type_name} Index, bool& IsValid)
 {
 %           if field_message_cpp_ue_key_type_name == "FString":
     auto iter = reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}().find(TCHAR_TO_UTF8(*Index));
@@ -163,70 +163,106 @@ ${ue_api_definition}${field_message_cpp_ue_value_type_name} ${message_class_name
 %           if field_message_cpp_ue_value_type_name == "FString":
     return FString(UTF8_TO_TCHAR(iter->second.c_str()));
 %           elif ue_excel_utils.UECppMessageFieldIsMessage(field_message_with_map_kv_fields[2]):
-    ${field_message_cpp_ue_value_type_name} Value = NewObject<${field_message_cpp_ue_value_origin_type_name}>();
+    auto& cached_map = cached_find_${message_field_var_name}_;
+    auto cached_iter = cached_map.Find(Index);
+    if (cached_iter != nullptr && *cached_iter != nullptr)
+    {
+        return *cached_iter;
+    }
+    ${field_message_cpp_ue_value_type_name} Value = NewObject<${field_message_cpp_ue_value_origin_type_name}>(this);
     Value->_InternalBindLifetime(lifetime_, iter->second);
+    cached_map.Add(Index, Value);
     return Value;
 %           else:
     return static_cast<${field_message_cpp_ue_value_type_name}>(iter->second);
 %           endif
 }
 
-${ue_api_definition}TArray<${cpp_ue_field_type_name}> ${message_class_name}::GetAllOf${message_field_var_name}()
+${ue_api_definition}const TArray<${cpp_ue_field_type_name}>& ${message_class_name}::GetAllOf${message_field_var_name}()
 {
-    TArray<${cpp_ue_field_type_name}> Ret;
+    if (cached_all_${message_field_var_name}_initialized_)
+    {
+        return cached_all_${message_field_var_name}_;
+    }
+    cached_all_${message_field_var_name}_initialized_ = true;
     if (nullptr == current_message_)
     {
-        return Ret;
+        return cached_all_${message_field_var_name}_;
     }
     auto& map_entrys = reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}();
-    Ret.Reserve(static_cast<TArray<${cpp_ue_field_type_name}>::SizeType>(map_entrys.size()));
+    cached_all_${message_field_var_name}_.Reserve(static_cast<TArray<${cpp_ue_field_type_name}>::SizeType>(map_entrys.size()));
     for(auto& item : map_entrys)
     {
-        ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>();
+        ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>(this);
         Value->_InternalBindLifetime(lifetime_, &item);
-        Ret.Emplace(Value);
+        cached_all_${message_field_var_name}_.Emplace(Value);
     }
 
-    return Ret;
+    return cached_all_${message_field_var_name}_;
 }
 %         else:
 
-${ue_api_definition}TArray<${cpp_ue_field_type_name}> ${message_class_name}::GetAllOf${message_field_var_name}()
+${ue_api_definition}const TArray<${cpp_ue_field_type_name}>& ${message_class_name}::GetAllOf${message_field_var_name}()
 {
-    TArray<${cpp_ue_field_type_name}> Ret;
+%          if ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
+    if (cached_all_${message_field_var_name}_initialized_)
+    {
+        return cached_all_${message_field_var_name}_;
+    }
+    cached_all_${message_field_var_name}_initialized_ = true;
     if (nullptr == current_message_)
     {
-        return Ret;
+        return cached_all_${message_field_var_name}_;
     }
 
     auto& array_entrys = reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}();
-    Ret.Reserve(static_cast<TArray<${cpp_ue_field_type_name}>::SizeType>(array_entrys.size()));
+    cached_all_${message_field_var_name}_.Reserve(static_cast<TArray<${cpp_ue_field_type_name}>::SizeType>(array_entrys.size()));
     for(auto& item : array_entrys)
     {
-%          if cpp_ue_field_type_name == "bool":
-        Ret.Emplace(item);
-%          elif cpp_ue_field_type_name == "float":
-        Ret.Emplace(static_cast<float>(item));
-%          elif cpp_ue_field_type_name == "FString":
-        Ret.Emplace(FString(UTF8_TO_TCHAR(item.c_str())));
-%          elif ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
-        Ret.Emplace(static_cast<${cpp_ue_field_type_name}>(item));
-%          elif ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
-        ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>();
+        ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>(this);
         if (nullptr != Value)
         {
             Value->_InternalBindLifetime(lifetime_, item);
-            Ret.Emplace(Value);
+            cached_all_${message_field_var_name}_.Emplace(Value);
         }
-%          else:
-        Ret.Emplace(static_cast<${cpp_ue_field_type_name}>(item));
-%          endif
     }
 
-    return Ret;
+    return cached_all_${message_field_var_name}_;
+%          else:
+    static const TArray<${cpp_ue_field_type_name}> EmptyArray;
+    if (nullptr == current_message_)
+    {
+        return EmptyArray;
+    }
+
+    if (cached_all_${message_field_var_name}_initialized_)
+    {
+        return cached_all_${message_field_var_name}_;
+    }
+    cached_all_${message_field_var_name}_initialized_ = true;
+
+    auto& array_entrys = reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}();
+    cached_all_${message_field_var_name}_.Reserve(static_cast<TArray<${cpp_ue_field_type_name}>::SizeType>(array_entrys.size()));
+    for(auto& item : array_entrys)
+    {
+%            if cpp_ue_field_type_name == "bool":
+        cached_all_${message_field_var_name}_.Emplace(item);
+%            elif cpp_ue_field_type_name == "float":
+        cached_all_${message_field_var_name}_.Emplace(static_cast<float>(item));
+%            elif cpp_ue_field_type_name == "FString":
+        cached_all_${message_field_var_name}_.Emplace(FString(UTF8_TO_TCHAR(item.c_str())));
+%            elif ue_excel_utils.UECppMessageFieldIsEnum(pb_field_proto):
+        cached_all_${message_field_var_name}_.Emplace(static_cast<${cpp_ue_field_type_name}>(item));
+%            else:
+        cached_all_${message_field_var_name}_.Emplace(static_cast<${cpp_ue_field_type_name}>(item));
+%            endif
+    }
+
+    return cached_all_${message_field_var_name}_;
+%          endif
 }
 
-${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${message_field_var_name}(int64 Index, bool& IsValid)
+${ue_api_definition}const ${cpp_ue_field_type_name} ${message_class_name}::Get${message_field_var_name}(int64 Index, bool& IsValid)
 {
     IsValid = nullptr != current_message_ && Index >= 0 && Get${message_field_var_name}Size() > Index;
     if (!IsValid)
@@ -247,15 +283,21 @@ ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${messag
     }
 
 %          if ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
-    ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>();
+    auto* cached_ptr = cached_index_${message_field_var_name}_.Find(Index);
+    if (cached_ptr != nullptr && *cached_ptr != nullptr)
+    {
+        return *cached_ptr;
+    }
+    ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>(this);
     Value->_InternalBindLifetime(lifetime_, reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}(
         static_cast<int>(Index)
     ));
+    cached_index_${message_field_var_name}_.Add(Index, Value);
     return Value;
 %          elif cpp_ue_field_type_name == "FString":
-    return FString(UTF8_TO_TCHAR(reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}(
+    return FString(UTF8_TO_TCHAR((reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}(
         static_cast<int>(Index)
-    ).c_str()));
+    ).c_str())));
 %          else:
     return static_cast<${cpp_ue_field_type_name}>(reinterpret_cast<const ${cpp_pb_message_type}*>(current_message_)->${cpp_pb_field_var_name}(
         static_cast<int>(Index)
@@ -265,7 +307,7 @@ ${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${messag
 %         endif
 %       else:
 %         if not ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto) or pb_field_proto.name == "key" or pb_field_proto.name == "value":
-${ue_api_definition}${cpp_ue_field_type_name} ${message_class_name}::Get${message_field_var_name}(bool& IsValid)
+${ue_api_definition}const ${cpp_ue_field_type_name} ${message_class_name}::Get${message_field_var_name}(bool& IsValid)
 {
     IsValid = nullptr != current_message_;
     if (!IsValid)
@@ -306,11 +348,15 @@ else:
   message_field_var_get_data_codes = 'reinterpret_cast<const ' + cpp_pb_message_type + '*>(current_message_)->' + cpp_pb_field_var_name + '()'
 %>
 %            if ue_excel_utils.UECppMessageFieldIsMessage(pb_field_proto):
-    ${cpp_ue_field_type_name} Value = NewObject<${cpp_ue_field_origin_type_name}>();
-    Value->_InternalBindLifetime(lifetime_, ${message_field_var_get_data_codes});
-    return Value;
+    if (cached_${message_field_var_name}_ != nullptr)
+    {
+        return cached_${message_field_var_name}_;
+    }
+    cached_${message_field_var_name}_ = NewObject<${cpp_ue_field_origin_type_name}>(this);
+    cached_${message_field_var_name}_->_InternalBindLifetime(lifetime_, ${message_field_var_get_data_codes});
+    return cached_${message_field_var_name}_;
 %            elif cpp_ue_field_type_name == "FString":
-    return FString(UTF8_TO_TCHAR(${message_field_var_get_data_codes}.c_str()));
+    return FString(UTF8_TO_TCHAR((${message_field_var_get_data_codes}.c_str())));
 %            else:
     return static_cast<${cpp_ue_field_type_name}>(${message_field_var_get_data_codes});
 %            endif

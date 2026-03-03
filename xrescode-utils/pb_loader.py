@@ -322,6 +322,14 @@ def PbMsgPbFieldFmtValue(field, input):
     return '"UNKNOWN TYPE: {0}"'.format(input)
 
 
+def PbMsgPbFieldIsRepeated(field):
+    import google.protobuf
+    version = google.protobuf.__version__
+    if version >= '7.0.0':
+        return field.is_repeated
+    return field.label == pb2.FieldDescriptorProto.LABEL_REPEATED
+
+
 @supports_caller
 def MakoPbMsgGetPbFieldCsType(context, arg):
     return PbMsgGetPbFieldCsType(arg)
@@ -676,7 +684,7 @@ class PbMsgIndex:
                 )
                 self.fields.clear()
                 break
-            if pb_fd.label == pb_fd.LABEL_REPEATED:
+            if PbMsgPbFieldIsRepeated(pb_fd):
                 sys.stderr.write(
                     "[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n".format(
                         self.name, fd, pb_msg.name
@@ -707,7 +715,7 @@ class PbMsgIndex:
                     )
                 )
                 break
-            if pb_fd.label == pb_fd.LABEL_REPEATED:
+            if PbMsgPbFieldIsRepeated(pb_fd):
                 sys.stderr.write(
                     "[XRESCODE ERROR] index {0} invalid, field {1} in {2} must not be repeated\n".format(
                         self.name, fd, pb_msg.name
@@ -1823,7 +1831,7 @@ class PbDescSet:
             for fd in self.shared_outer_msg.pb_msg.fields:
                 if (
                     fd.name == shared_outer_field
-                    and fd.label == pb2.FieldDescriptorProto.LABEL_REPEATED
+                    and PbMsgPbFieldIsRepeated(fd)
                 ):
                     self.shared_code_field = fd
                     break

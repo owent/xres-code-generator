@@ -329,11 +329,11 @@ message_field_var_name = ue_excel_utils.UECppMessageFieldName(pb_field_proto)
 field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
 %>
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_class_name}")
-    TMap<${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], "", ue_bp_uclass_type_prefix)}, ${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*", ue_bp_uclass_type_prefix)}> ${message_field_var_name};
+    TMap<${ue_excel_utils.UECppMessageFieldTypeNameWithTObjectPtr(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1], ue_bp_uclass_type_prefix)}, ${ue_excel_utils.UECppMessageFieldTypeNameWithTObjectPtr(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], ue_bp_uclass_type_prefix)}> ${message_field_var_name};
 %           else:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_class_name}")
-    TArray<${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)}> ${message_field_var_name};
+    TArray<${ue_excel_utils.UECppMessageFieldTypeNameWithTObjectPtr(message_inst, pb_field_proto, ue_bp_uclass_type_prefix)}> ${message_field_var_name};
 %           endif
 %         else:
 <%
@@ -344,7 +344,7 @@ else:
   message_field_var_default_initialization = ''
 %>
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Protocol ${message_class_name}")
-    ${ue_excel_utils.UECppMessageFieldTypeName(message_inst, pb_field_proto, "*", ue_bp_uclass_type_prefix)} ${message_field_var_name}${message_field_var_default_initialization};
+    ${ue_excel_utils.UECppMessageFieldTypeNameWithTObjectPtr(message_inst, pb_field_proto, ue_bp_uclass_type_prefix)} ${message_field_var_name}${message_field_var_default_initialization};
 %         endif
 %       endif
 %     endfor

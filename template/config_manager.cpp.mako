@@ -245,6 +245,11 @@ static thread_local_config_group_data& get_tls_config_group() {
   return ret;
 }
 #endif
+
+static thread_local_config_group_data& get_static_config_group() {
+  static thread_local_config_group_data ret;
+  return ret;
+}
 }  // namespace details
 
 EXCEL_CONFIG_LOADER_API config_manager::log_caller_info_t::log_caller_info_t(): level_id(log_level_t::LOG_LW_DISABLED), level_name(NULL), file_path(NULL), line_number(0), func_name(NULL) {}
@@ -502,6 +507,7 @@ EXCEL_CONFIG_LOADER_API int config_manager::reload_all(bool del_when_failed) {
       wlh = ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock>{config_group_lock_};
     }
     config_group_list_.pop_back();
+    ++ reload_version_;
 
     if (on_group_destroyed_ && cfg_group) {
       on_group_destroyed_(cfg_group);
@@ -553,7 +559,7 @@ EXCEL_CONFIG_LOADER_API void config_manager::set_version_loader(read_version_fun
 }
 
 EXCEL_CONFIG_LOADER_API const config_manager::config_group_ptr_t& config_manager::get_current_config_group() {
-  details::thread_local_config_group_data& tls_cache = details::get_tls_config_group();
+  details::thread_local_config_group_data& tls_cache = enable_multithread_lock_? details::get_tls_config_group() : details::get_static_config_group();
   if (tls_cache.current_version == reload_version_.load(std::memory_order_acquire) && tls_cache.current_group) {
     return tls_cache.current_group;
   }

@@ -262,6 +262,25 @@ def UECppUOneofClassValueName(context, pb_oneof, pb_field):
   return pb_loader.MakoToCamelName(context, pb_oneof.descriptor_proto.name) + pb_loader.MakoToCamelName(context, pb_field.descriptor_proto.name)
 
 @supports_caller
+def UECppMessageFieldTypeNameWithTObjectPtr(context, pb_msg, pb_field_proto, ue_type_prefix=None, uclass=True):
+  # pb_set = context.get("pb_set", runtime.UNDEFINED)
+  if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:
+    if uclass:
+      return "TObjectPtr<" + UECppUClassName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto), ue_type_prefix) +  ">"
+    else:
+      return "TObjectPtr<" + UECppUStructName(context, UECppMessageFieldGetPbMsg(context, pb_msg, pb_field_proto), ue_type_prefix) +  ">"
+  if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_ENUM:
+    # UE blue print only support enum type base uint8, but protobuf use int32 instead
+    return 'int32'
+    # pb_enum_inst = pb_set.get_enum_by_type(pb_field_proto.type_name)
+    # if not pb_enum_inst:
+    #   pb_enum_inst = pb_set.get_enum_by_type(pb_msg.full_name + '.' + pb_field_proto.type_name)
+    # if not pb_enum_inst:
+    #   pb_enum_inst = pb_set.get_enum_by_type(pb_msg.pb_file.package + '.' + pb_field_proto.type_name)
+    # return UECppUEnumName(context, pb_enum_inst)
+  return pb_loader.MakoPbMsgGetPbFieldUECppType(context, pb_field_proto)
+
+@supports_caller
 def UECppMessageFieldTypeName(context, pb_msg, pb_field_proto, message_type_suffix="", ue_type_prefix=None, uclass=True):
   # pb_set = context.get("pb_set", runtime.UNDEFINED)
   if pb_field_proto.type == pb2.FieldDescriptorProto.TYPE_MESSAGE:

@@ -16,10 +16,12 @@ generated_get_version_loaders = set()
 #include <vector>
 #include <cstddef>
 
+// clang-format off
 % for block_file in pb_set.get_custom_blocks("custom_config_easy_api_include"):
 // include custom_config_easy_api_include: ${block_file}
 <%include file="${block_file}" />
 % endfor
+// clang-format on
 
 #include "${cpp_include_prefix}config_traits.h"
 

@@ -22,10 +22,12 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #include <cstring>
 #include <list>
 
-% for block_file in pb_set.get_custom_blocks("custom_config_include"):
-// include custom_config_include: ${block_file}
+// clang-format off
+% for block_file in pb_set.get_custom_blocks("custom_config_set_include"):
+// include custom_config_set_include: ${block_file}
 <%include file="${block_file}" />
 % endfor
+// clang-format on
 
 #include "${cpp_include_prefix}config_traits.h"
 #include "${cpp_include_prefix}spin_rw_lock.h"

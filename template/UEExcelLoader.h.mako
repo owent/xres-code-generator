@@ -211,22 +211,22 @@ cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, 
 field_message_with_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, pb_field_proto)
 %>
     UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
-    ${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*")} Find${message_field_var_name}(${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1])} Index, bool& IsValid);
+    const ${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[2], "*")} Find${message_field_var_name}(${ue_excel_utils.UECppMessageFieldTypeName(field_message_with_map_kv_fields[0], field_message_with_map_kv_fields[1])} Index, bool& IsValid);
 
     UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get All Of ${message_field_var_name}")
-    TArray<${cpp_ue_field_type_name}> GetAllOf${message_field_var_name}();
+    const TArray<${cpp_ue_field_type_name}>& GetAllOf${message_field_var_name}();
 %         else:
 
     UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name} Get All Of ${message_field_var_name}")
-    TArray<${cpp_ue_field_type_name}> GetAllOf${message_field_var_name}();
+    const TArray<${cpp_ue_field_type_name}>& GetAllOf${message_field_var_name}();
 
     UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
-    ${cpp_ue_field_type_name} Get${message_field_var_name}(int64 Index, bool& IsValid);
+    const ${cpp_ue_field_type_name} Get${message_field_var_name}(int64 Index, bool& IsValid);
 %         endif
 %       else:
 %         if not ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto) or pb_field_proto.name == "key" or pb_field_proto.name == "value":
     UFUNCTION(BlueprintCallable, Category = "Excel Config ${message_class_name}")
-    ${cpp_ue_field_type_name} Get${message_field_var_name}(bool& IsValid);
+    const ${cpp_ue_field_type_name} Get${message_field_var_name}(bool& IsValid);
 %         endif
 %       endif
 %     endif
@@ -257,5 +257,51 @@ private:
     const ${protobuf_namespace_prefix}::Message* current_message_;
 %   endif
     std::shared_ptr<const ${protobuf_namespace_prefix}::Message> lifetime_;
+
+    // Cached sub-objects for message-type fields
+%   for cache_pb_field_proto in message_inst.descriptor_proto.field:
+%     if ue_excel_utils.UECppMessageFieldValid(message_inst, cache_pb_field_proto):
+<%
+cache_field_var_name = ue_excel_utils.UECppMessageFieldName(cache_pb_field_proto)
+cache_cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, cache_pb_field_proto, "*")
+cache_cpp_ue_field_origin_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, cache_pb_field_proto)
+%>
+%       if ue_excel_utils.UECppMessageFieldIsRepeated(cache_pb_field_proto):
+%         if ue_excel_utils.UECppMessageFieldIsMap(message_inst, cache_pb_field_proto):
+<%
+cache_map_kv_fields = ue_excel_utils.UECppMessageFieldGetMapKVFields(message_inst, cache_pb_field_proto)
+cache_map_key_type = ue_excel_utils.UECppMessageFieldTypeName(cache_map_kv_fields[0], cache_map_kv_fields[1])
+cache_map_value_type = ue_excel_utils.UECppMessageFieldTypeName(cache_map_kv_fields[0], cache_map_kv_fields[2])
+%>
+%           if ue_excel_utils.UECppMessageFieldIsMessage(cache_map_kv_fields[2]):
+    UPROPERTY()
+    TMap<${cache_map_key_type}, TObjectPtr<${cache_map_value_type}>> cached_find_${cache_field_var_name}_;
+%           endif
+%           if ue_excel_utils.UECppMessageFieldIsMessage(cache_pb_field_proto):
+    UPROPERTY()
+    TArray<TObjectPtr<${cache_cpp_ue_field_origin_type_name}>> cached_all_${cache_field_var_name}_;
+%           else:
+    TArray<${cache_cpp_ue_field_type_name}> cached_all_${cache_field_var_name}_;
+%           endif
+    bool cached_all_${cache_field_var_name}_initialized_ = false;
+%         else:
+%           if ue_excel_utils.UECppMessageFieldIsMessage(cache_pb_field_proto):
+    UPROPERTY()
+    TMap<int64, TObjectPtr<${cache_cpp_ue_field_origin_type_name}>> cached_index_${cache_field_var_name}_;
+    UPROPERTY()
+    TArray<TObjectPtr<${cache_cpp_ue_field_origin_type_name}>> cached_all_${cache_field_var_name}_;
+%           else:
+    TArray<${cache_cpp_ue_field_type_name}> cached_all_${cache_field_var_name}_;
+%           endif
+    bool cached_all_${cache_field_var_name}_initialized_ = false;
+%         endif
+%       else:
+%         if (not ue_excel_utils.UECppMessageIsMap(message_inst.descriptor_proto) or cache_pb_field_proto.name == "key" or cache_pb_field_proto.name == "value") and ue_excel_utils.UECppMessageFieldIsMessage(cache_pb_field_proto):
+    UPROPERTY()
+    TObjectPtr<${cache_cpp_ue_field_origin_type_name}> cached_${cache_field_var_name}_ = nullptr;
+%         endif
+%       endif
+%     endif
+%   endfor
 };
 % endfor

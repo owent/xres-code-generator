@@ -3,6 +3,8 @@
 import time
 %><%
 cpp_include_prefix = pb_set.get_custom_variable("cpp_include_prefix", "config/excel/")
+spin_lock_namespace = pb_set.get_custom_variable("spin_lock_namespace", "::excel")
+spin_lock_include_prefix = pb_set.get_custom_variable("spin_lock_include_prefix", cpp_include_prefix)
 xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefix", pb_set.pb_include_prefix)
 %><%namespace name="pb_loader" module="pb_loader"/>
 // Copyright ${time.strftime("%Y")} xresloader. All rights reserved.
@@ -15,12 +17,12 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #include <cstddef>
 #include <functional>
 #include <vector>
+#include <list>
 #include <string>
 #include <map>
 #include <unordered_map>
 #include <memory>
 #include <cstring>
-#include <list>
 
 // clang-format off
 % for block_file in pb_set.get_custom_blocks("custom_config_set_include"):
@@ -30,7 +32,7 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 // clang-format on
 
 #include "${cpp_include_prefix}config_traits.h"
-#include "${cpp_include_prefix}spin_rw_lock.h"
+#include "${spin_lock_include_prefix}lock/spin_rw_lock.h"
 
 #ifndef EXCEL_CONFIG_LOADER_API
 #  define EXCEL_CONFIG_LOADER_API
@@ -52,12 +54,14 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #  pragma warning(disable : 4251)
 #  pragma warning(disable : 4267)
 #  pragma warning(disable : 4668)
+#  pragma warning(disable : 4702)
 #  pragma warning(disable : 4715)
 #  pragma warning(disable : 4800)
 #  pragma warning(disable : 4946)
 #  pragma warning(disable : 6001)
 #  pragma warning(disable : 6244)
 #  pragma warning(disable : 6246)
+
 #endif
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
@@ -109,6 +113,7 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #ifdef min
 #  undef min
 #endif
+// Unreal Engine will define these macros
 #pragma push_macro("check")
 #ifdef check
 #  undef check
@@ -144,10 +149,6 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #  pragma warning(pop)
 #endif
 
-#ifndef EXCEL_CONFIG_LOADER_API
-#  define EXCEL_CONFIG_LOADER_API
-#endif
-
 ${pb_loader.CppNamespaceBegin(global_package)}
 
 #ifndef EXCEL_CONFIG_LOADER_TRAITS
@@ -158,12 +159,12 @@ using excel_config_type_traits = ::excel::traits::config_traits<::excel::traits:
 ${loader.get_cpp_namespace_decl_begin()}
 
 class ${loader.get_cpp_class_name()} {
-public:
+ public:
   using item_type = const ${loader.get_pb_inner_class_name()};
   using proto_type = ${loader.get_pb_inner_class_name()};
   using item_ptr_type = excel_config_type_traits::shared_ptr<item_type>;
 
-public:
+ public:
   EXCEL_CONFIG_LOADER_API ${loader.get_cpp_class_name()}();
   EXCEL_CONFIG_LOADER_API ~${loader.get_cpp_class_name()}();
 
@@ -179,16 +180,17 @@ public:
 
   EXCEL_CONFIG_LOADER_API const std::vector<item_ptr_type>& get_all_data() const noexcept;
 
-private:
+ private:
   int load_file(const std::string& file_path);
   int load_list(const char*);
   int reload_file_lists();
   void merge_data(item_ptr_type);
 
-private:
-  ::excel::lock::spin_rw_lock           load_file_lock_;
+ private:
+  ${spin_lock_namespace}::lock::spin_rw_lock           load_file_lock_;
   std::unordered_map<std::string, bool> file_status_; // true: already loaded
   std::list<org::xresloader::pb::xresloader_data_source> datasource_;
+
   bool all_loaded_;
   bool enable_multithread_lock_;
   std::size_t hash_code_verison_;
@@ -196,7 +198,7 @@ private:
 
 % for code_index in loader.code.indexes:
   // ------------------------- index: ${code_index.name} -------------------------
-public:
+ public:
 % if code_index.is_list():
   using ${code_index.name}_value_type = excel_config_type_traits::shared_ptr<const std::vector<item_ptr_type> >;
   EXCEL_CONFIG_LOADER_API ${code_index.name}_value_type
@@ -224,7 +226,7 @@ public:
 % endif
   EXCEL_CONFIG_LOADER_API const ${code_index.name}_container_type& get_all_of_${code_index.name}() const;
 
-private:
+ private:
 % if code_index.is_vector():
   ${code_index.name}_container_type ${code_index.name}_data_;
 % else:

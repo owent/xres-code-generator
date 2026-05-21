@@ -6,6 +6,8 @@ from pb_loader import PbMsgPbFieldisSigned,PbMsgGetPbFieldFn
 
 %><%
 cpp_include_prefix = pb_set.get_custom_variable("cpp_include_prefix", "config/excel/")
+spin_lock_namespace = pb_set.get_custom_variable("spin_lock_namespace", "::excel")
+spin_lock_include_prefix = pb_set.get_custom_variable("spin_lock_include_prefix", cpp_include_prefix)
 pb_msg_class_name = loader.get_cpp_class_name()
 %><%namespace name="pb_loader" module="pb_loader"/>
 // Copyright ${time.strftime("%Y")} xresloader. All rights reserved.
@@ -50,12 +52,14 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #  pragma warning(disable : 4251)
 #  pragma warning(disable : 4267)
 #  pragma warning(disable : 4668)
+#  pragma warning(disable : 4702)
 #  pragma warning(disable : 4715)
 #  pragma warning(disable : 4800)
 #  pragma warning(disable : 4946)
 #  pragma warning(disable : 6001)
 #  pragma warning(disable : 6244)
 #  pragma warning(disable : 6246)
+
 #endif
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
@@ -76,7 +80,7 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #    pragma GCC diagnostic ignored "-Wsuggest-override"
 #  endif
 #elif defined(__clang__) || defined(__apple_build_version__)
-#pragma clang diagnostic push
+#  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wunused-parameter"
 #  pragma clang diagnostic ignored "-Wtype-limits"
 #  pragma clang diagnostic ignored "-Wsign-compare"
@@ -107,6 +111,7 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #ifdef min
 #  undef min
 #endif
+// Unreal Engine will define these macros
 #pragma push_macro("check")
 #ifdef check
 #  undef check
@@ -149,7 +154,8 @@ pb_msg_class_name = loader.get_cpp_class_name()
 #  pragma warning(pop)
 #endif
 
-
+#include "${spin_lock_include_prefix}lock/spin_rw_lock.h"
+#include "${spin_lock_include_prefix}lock/lock_holder.h"
 #include "${cpp_include_prefix}config_manager.h"
 
 #ifndef UTIL_STRFUNC_SNPRINTF
@@ -223,9 +229,9 @@ EXCEL_CONFIG_LOADER_API ${pb_msg_class_name}::~${pb_msg_class_name}(){
 EXCEL_CONFIG_LOADER_API int ${pb_msg_class_name}::on_inited(bool enable_multithread_lock) {
   enable_multithread_lock_ = enable_multithread_lock;
 
-  ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh;
+  ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock> wlh;
   if (enable_multithread_lock_) {
-    wlh = ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
+    wlh = ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock>{load_file_lock_};
   }
 
   file_status_.clear();
@@ -239,9 +245,9 @@ EXCEL_CONFIG_LOADER_API int ${pb_msg_class_name}::load_all() {
     return ret;
   }
 
-  ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh;
+  ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock> wlh;
   if (enable_multithread_lock_) {
-    wlh = ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
+    wlh = ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock>{load_file_lock_};
   }
 
   for (std::unordered_map<std::string, bool>::iterator iter = file_status_.begin(); iter != file_status_.end(); ++ iter) {
@@ -261,9 +267,9 @@ EXCEL_CONFIG_LOADER_API int ${pb_msg_class_name}::load_all() {
 }
 
 EXCEL_CONFIG_LOADER_API void ${pb_msg_class_name}::clear() {
-  ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh;
+  ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock> wlh;
   if (enable_multithread_lock_) {
-    wlh = ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
+    wlh = ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock>{load_file_lock_};
   }
 
 % for code_index in loader.code.indexes:
@@ -592,9 +598,9 @@ EXCEL_CONFIG_LOADER_API std::size_t ${pb_msg_class_name}::get_sizeof_${code_inde
 
 ${pb_msg_class_name}::${code_index.name}_value_type
   ${pb_msg_class_name}::_get_list_by_${code_index.name}(${code_index.get_key_decl()}, bool ${ignore_not_found_var}) {
-  ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh;
+  ${spin_lock_namespace}::lock::read_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock> rlh;
   if (enable_multithread_lock_) {
-    rlh = ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
+    rlh = ${spin_lock_namespace}::lock::read_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock>{load_file_lock_};
   }
 
 % if code_index.is_vector():
@@ -623,9 +629,9 @@ ${pb_msg_class_name}::${code_index.name}_value_type
   int res;
   {
     rlh.reset();
-    ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh;
+    ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock> wlh;
     if (enable_multithread_lock_) {
-      wlh = ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
+      wlh = ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock>{load_file_lock_};
     }
 %   if loader.code.file_list and code_index.file_mapping:
 %       for code_line in code_index.get_load_file_code("file_path"):
@@ -647,7 +653,7 @@ ${pb_msg_class_name}::${code_index.name}_value_type
 %   endif
     wlh.reset();
     if (enable_multithread_lock_) {
-      rlh = ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
+      rlh = ${spin_lock_namespace}::lock::read_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock>{load_file_lock_};
     }
   }
 
@@ -766,9 +772,9 @@ ${pb_msg_class_name}::${code_index.name}_value_type
     return ${code_index.name}_data_[idx];
   }
 % else:
-  ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock> rlh;
+  ${spin_lock_namespace}::lock::read_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock> rlh;
   if (enable_multithread_lock_) {
-    rlh = ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
+    rlh = ${spin_lock_namespace}::lock::read_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock>{load_file_lock_};
   }
   ${code_index.name}_container_type::iterator iter = ${code_index.name}_data_.find(std::make_tuple(${code_index.get_key_params()}));
   if (iter != ${code_index.name}_data_.end()) {
@@ -779,9 +785,9 @@ ${pb_msg_class_name}::${code_index.name}_value_type
   int res;
   {
     rlh.reset();
-    ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock> wlh;
+    ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock> wlh;
     if (enable_multithread_lock_) {
-      wlh = ::excel::lock::write_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
+      wlh = ${spin_lock_namespace}::lock::write_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock>{load_file_lock_};
     }
 %   if loader.code.file_list and code_index.file_mapping:
 %       for code_line in code_index.get_load_file_code("file_path"):
@@ -804,7 +810,7 @@ ${pb_msg_class_name}::${code_index.name}_value_type
 %   endif
     wlh.reset();
     if (enable_multithread_lock_) {
-      rlh = ::excel::lock::read_lock_holder<::excel::lock::spin_rw_lock>{load_file_lock_};
+      rlh = ${spin_lock_namespace}::lock::read_lock_holder<${spin_lock_namespace}::lock::spin_rw_lock>{load_file_lock_};
     }
   }
 

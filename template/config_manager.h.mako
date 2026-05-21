@@ -3,6 +3,8 @@
 import time
 %><%
 cpp_include_prefix = pb_set.get_custom_variable("cpp_include_prefix", "config/excel/")
+spin_lock_namespace = pb_set.get_custom_variable("spin_lock_namespace", "::excel")
+spin_lock_include_prefix = pb_set.get_custom_variable("spin_lock_include_prefix", cpp_include_prefix)
 xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefix", pb_set.pb_include_prefix)
 %><%namespace name="pb_loader" module="pb_loader"/>
 // Copyright ${time.strftime("%Y")} xresloader. All rights reserved.
@@ -40,6 +42,7 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #  pragma warning(disable : 4251)
 #  pragma warning(disable : 4267)
 #  pragma warning(disable : 4668)
+#  pragma warning(disable : 4702)
 #  pragma warning(disable : 4715)
 #  pragma warning(disable : 4800)
 #  pragma warning(disable : 4946)
@@ -47,30 +50,6 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #  pragma warning(disable : 6244)
 #  pragma warning(disable : 6246)
 
-#  pragma push_macro("GetObject")
-#  ifdef GetObject
-#    undef GetObject
-#  endif
-#  pragma push_macro("max")
-#  ifdef max
-#    undef max
-#  endif
-#  pragma push_macro("min")
-#  ifdef min
-#    undef min
-#  endif
-#  pragma push_macro("check")
-#  ifdef check
-#    undef check
-#  endif
-#  pragma push_macro("verify")
-#  ifdef verify
-#    undef verify
-#  endif
-#  pragma push_macro("cast")
-#  ifdef cast
-#    undef cast
-#  endif
 #endif
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__apple_build_version__)
@@ -122,6 +101,7 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #ifdef min
 #  undef min
 #endif
+// Unreal Engine will define these macros
 #pragma push_macro("check")
 #ifdef check
 #  undef check
@@ -154,7 +134,7 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 // clang-format on
 
 #include "${cpp_include_prefix}config_traits.h"
-#include "${cpp_include_prefix}spin_rw_lock.h"
+#include "${spin_lock_include_prefix}lock/spin_rw_lock.h"
 
 #pragma pop_macro("cast")
 #pragma pop_macro("verify")
@@ -201,7 +181,7 @@ struct config_group_t {
 % for block_file in pb_set.get_custom_blocks("custom_config_group"):
 <%include file="${block_file}" />
 % endfor
-} ;
+};
 
 class config_manager {
 public:
@@ -224,11 +204,11 @@ public:
 
   struct log_level_t {
     enum type {
-      LOG_LW_DISABLED = 0, // 关闭日志
-      LOG_LW_ERROR,        // 错误
-      LOG_LW_WARNING,
+      LOG_LW_DEBUG = 0,
       LOG_LW_INFO,
-      LOG_LW_DEBUG,
+      LOG_LW_WARNING,
+      LOG_LW_ERROR,        // 错误
+      LOG_LW_DISABLED, // 关闭日志
     };
   };
 
@@ -376,14 +356,14 @@ private:
 
   read_buffer_func_t read_file_handle_;
   read_version_func_t read_version_handle_;
-  mutable excel::lock::spin_rw_lock handle_lock_;
+  mutable ${spin_lock_namespace}::lock::spin_rw_lock handle_lock_;
 
   std::list<config_group_ptr_t> config_group_list_;
-  mutable excel::lock::spin_rw_lock config_group_lock_;
+  mutable ${spin_lock_namespace}::lock::spin_rw_lock config_group_lock_;
 
   std::string log_buffer_;
 
-  excel::lock::spin_rw_lock evt_lock_;
+  ${spin_lock_namespace}::lock::spin_rw_lock evt_lock_;
   std::unordered_map<void*, std::function<void()>> on_evt_reset_;
 };
 ${pb_loader.CppNamespaceEnd(global_package)} // ${global_package}

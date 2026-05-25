@@ -1,4 +1,4 @@
-﻿## -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 <%!
 import time
 %><%
@@ -14,7 +14,7 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #pragma once
 
 #include <atomic>
-#include <stdint.h>
+#include <cstdint>
 #include <cstddef>
 #include <cstdio>
 #include <functional>
@@ -27,21 +27,21 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #include <unordered_map>
 
 // clang-format off
-#include <config/compiler/protobuf_prefix.h>
+#include "config/compiler/protobuf_prefix.h"
 // clang-format on
 
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/message.h>
+#include "google/protobuf/descriptor.h"
+#include "google/protobuf/message.h"
 
-#include <${xresloader_include_prefix}pb_header_v3.pb.h>
+#include "${xresloader_include_prefix}pb_header_v3.pb.h"
 
+// clang-format off
 % for pb_msg in pb_set.generate_message:
 %   for loader in pb_msg.loaders:
 #include "${loader.get_cpp_header_path()}"
 %   endfor
 % endfor
 
-// clang-format off
 % for block_file in pb_set.get_custom_blocks("custom_config_manager_include"):
 // include custom_config_manager_include: ${block_file}
 <%include file="${block_file}" />
@@ -52,7 +52,7 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 #include "${spin_lock_include_prefix}lock/spin_rw_lock.h"
 
 // clang-format off
-#include <config/compiler/protobuf_suffix.h>
+#include "config/compiler/protobuf_suffix.h"
 // clang-format on
 
 #ifndef EXCEL_CONFIG_LOADER_API

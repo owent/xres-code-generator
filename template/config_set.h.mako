@@ -1,4 +1,4 @@
-﻿## -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 <%!
 import time
 %><%
@@ -48,6 +48,7 @@ xresloader_include_prefix = pb_set.get_custom_variable("xresloader_include_prefi
 // clang-format off
 #include <config/compiler/protobuf_suffix.h>
 // clang-format on
+
 
 ${pb_loader.CppNamespaceBegin(global_package)}
 

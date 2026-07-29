@@ -25,34 +25,6 @@
 namespace excel {
 namespace traits {
 
-// 使用偏特化来注入内部数据结构和Hash算法变更
-/**
-template <>
-struct EXCEL_CONFIG_SYMBOL_VISIBLE hash_traits<hash_guard> {
-  template <class Y>
-  using hash = std::hash<Y>;
-};
-
-template <>
-struct EXCEL_CONFIG_SYMBOL_VISIBLE config_traits<type_guard> : public type_guard {
-  template <class Key, class Value>
-  using map_type = std::map<Key, Value>;
-
-  template <class Y>
-  using shared_ptr = util::memory::strong_rc_ptr<Y>;
-
-  template <class Y, class... Args>
-  inline static util::memory::strong_rc_ptr<Y> make_shared(Args&&... args) {
-    return util::memory::make_strong_rc<Y>(std::forward<Args>(args)...);
-  }
-
-  template <class Y, class... Args>
-  inline static util::memory::strong_rc_ptr<Y> const_pointer_cast(Args&&... args) {
-    return util::memory::const_pointer_cast<Y>(std::forward<Args>(args)...);
-  }
-};
-**/
-
 template <class Y>
 struct EXCEL_CONFIG_SYMBOL_VISIBLE tuple_hasher;
 
@@ -81,9 +53,6 @@ struct EXCEL_CONFIG_SYMBOL_VISIBLE type_guard {
     return std::const_pointer_cast<Y>(std::forward<Args>(args)...);
   }
 };
-
-template <class T>
-struct EXCEL_CONFIG_SYMBOL_VISIBLE config_traits;
 
 template <std::size_t Index, std::size_t Size>
 struct EXCEL_CONFIG_SYMBOL_VISIBLE tuple_hasher_enable

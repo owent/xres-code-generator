@@ -1374,7 +1374,7 @@ class PbFile:
                         topological_notify[dep_full_name] = set([msg.full_name])
             topological_map[msg.full_name] = {"instance": msg, "deps": deps}
         topological_readys = []
-        for msg_inst in topological_map.values():
+        for msg_inst in dict(sorted(topological_map.items())).values():
             if not msg_inst["deps"]:
                 topological_readys.append(msg_inst)
         while topological_readys:

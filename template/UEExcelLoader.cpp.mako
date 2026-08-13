@@ -58,7 +58,7 @@ current_file_include_path = re.sub("//+", "/", current_file_include_path)
 // clang-format on
 % endif
 
-% for message_full_path in dict(sorted(pb_file.pb_msgs)):
+% for message_full_path in dict(sorted(pb_file.pb_msgs.items())):
 <%
 message_inst = pb_file.pb_msgs[message_full_path]
 message_class_name = ue_excel_utils.UECppUClassName(message_inst)

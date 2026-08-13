@@ -121,7 +121,7 @@ else:
 namespace ${namespace_name} {
 %     endif
 %   endfor
-%   for message_full_path in pb_file.pb_msgs:
+%   for message_full_path in dict(sorted(pb_file.pb_msgs)):
 class ${pb_file.pb_msgs[message_full_path].extended_nested_name};
 %   endfor
 %   for namespace_name in [x.strip() for x in pb_file.package.split(".")]:
@@ -130,7 +130,7 @@ class ${pb_file.pb_msgs[message_full_path].extended_nested_name};
 %     endif
 %   endfor
 % endif
-% for enum_full_path in pb_file.pb_enums:
+% for enum_full_path in dict(sorted(pb_file.pb_enums)):
 <%
 enum_inst = pb_file.pb_enums[enum_full_path]
 enum_class_name = ue_excel_utils.UECppUEnumName(enum_inst, ue_bp_uenum_type_prefix)
@@ -160,7 +160,7 @@ enum class ${enum_class_name} : int32
 %   endfor
 };
 % endfor
-% for message_full_path in pb_file.pb_msgs:
+% for message_full_path in dict(sorted(pb_file.pb_msgs)):
 <%
 message_inst = pb_file.pb_msgs[message_full_path]
 message_with_uclass = ue_excel_utils.UECppMessageProtocolWithUClass(message_inst)
@@ -274,7 +274,7 @@ ${ue_api_definition}const ${message_struct_name}& operator>>(const ${message_str
 
 %   endif
 % endfor
-% for message_full_path in pb_file.pb_msgs:
+% for message_full_path in dict(sorted(pb_file.pb_msgs)):
 <%
 message_inst = pb_file.pb_msgs[message_full_path]
 message_class_name = ue_excel_utils.UECppUClassName(message_inst, ue_bp_uclass_type_prefix)

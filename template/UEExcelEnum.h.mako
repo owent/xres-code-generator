@@ -90,7 +90,7 @@ else:
 // #include "${os.path.basename(current_file_include_prefix)}.generated.h"
 % endif
 
-% for enum_full_path in pb_file.pb_enums:
+% for enum_full_path in dict(sorted(pb_file.pb_enums)):
 <%
 enum_inst = pb_file.pb_enums[enum_full_path]
 enum_class_name = ue_excel_utils.UECppUEnumName(enum_inst)

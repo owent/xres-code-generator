@@ -227,7 +227,7 @@ cpp_ue_field_type_name = ue_excel_utils.UECppMessageFieldTypeName(message_inst, 
 %   endif
 
 % endfor
-% for message_full_path in pb_file.pb_msgs:
+% for message_full_path in dict(sorted(pb_file.pb_msgs)):
 <%
 message_inst = pb_file.pb_msgs[message_full_path]
 message_class_name = ue_excel_utils.UECppUClassName(message_inst, ue_bp_uclass_type_prefix)

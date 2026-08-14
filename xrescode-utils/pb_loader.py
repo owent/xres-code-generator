@@ -1381,7 +1381,7 @@ class PbFile:
             msg_inst = topological_readys.pop()
             ret.append(msg_inst["instance"])
             if msg_inst["instance"].full_name in topological_notify:
-                for dep_full_name in topological_notify[msg_inst["instance"].full_name]:
+                for dep_full_name in sorted(topological_notify[msg_inst["instance"].full_name]):
                     topological_map[dep_full_name]["deps"].remove(
                         msg_inst["instance"].full_name
                     )
